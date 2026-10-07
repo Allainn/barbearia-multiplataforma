@@ -14,7 +14,11 @@ Para mudar uma decisão já aceita, abra um ADR novo que **substitui** o anterio
 
 ## Branches e commits
 
-- `main` protegida: só entra via PR com pelo menos 1 revisão.
+- `main` protegida (desde 07/10/2026): **ninguém faz push direto**, tudo entra por PR. Para o merge, o PR precisa de:
+  - **1 aprovação** de outro integrante (o autor não conta);
+  - **aprovação do @Allainn** como code owner ([.github/CODEOWNERS](.github/CODEOWNERS)). Nos PRs do próprio Allainn, essa segunda regra é dispensada no merge, mas a aprovação de um colega continua obrigatória.
+  - Um novo push depois da aprovação invalida a aprovação; é preciso aprovar de novo.
+- Para revisar e aprovar, o integrante precisa ser colaborador do repositório com permissão de escrita.
 - Nome da branch: `adr/0007-lock-reserva`, `feat/agendamento-reserva`, `fix/...`, `docs/...`, `infra/...`.
 - Commits no padrão Conventional Commits, em português: `feat(agendamento): reserva com constraint de exclusão`, `docs(adr): aceita ADR-0006`.
 

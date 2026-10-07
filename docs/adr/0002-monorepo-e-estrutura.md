@@ -48,7 +48,9 @@
 
 Os nomes dos serviços dependem do [ADR-0004](0004-decomposicao-em-servicos.md) e da convenção de idioma ([Q23](../questoes-abertas.md#q23)).
 
-Convenções propostas: `main` protegida (só via PR com 1+ revisão), branches `adr/`, `feat/`, `fix/`, `docs/`, `infra/`, commits no padrão Conventional Commits.
+Convenções propostas: `main` protegida, branches `adr/`, `feat/`, `fix/`, `docs/`, `infra/`, commits no padrão Conventional Commits.
+
+> **Já em vigor (07/10/2026), por decisão do Allainn como dono do repositório:** a `main` só recebe mudanças por PR, com 1 aprovação de outro integrante e aprovação do @Allainn via [CODEOWNERS](../../.github/CODEOWNERS). Detalhes em [CONTRIBUTING.md](../../CONTRIBUTING.md#branches-e-commits).
 
 ## Consequências
 

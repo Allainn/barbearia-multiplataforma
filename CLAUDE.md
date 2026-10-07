@@ -15,6 +15,7 @@ O que o professor avalia: **integrações entre plataformas funcionando** e **ju
 3. **ADR aceito não se edita.** Para mudar uma decisão, crie um ADR novo que o substitui e marque o antigo como *Substituído por ADR-NNNN*.
 4. **Tudo o que estiver no diagrama C4 precisa existir no código**, e vice-versa. Ao criar ou remover um container, tópico ou seta, atualize [docs/arquitetura](docs/arquitetura/README.md) e avise que o board do Miro precisa ser atualizado.
 5. **Nada mirabolante:** prefira a solução mais simples que demonstre a integração pedida.
+6. **Nunca commitar na `main`.** Ela é protegida: trabalhe numa branch e abra PR. O merge exige 1 aprovação e a aprovação do @Allainn (code owner). Detalhes em [CONTRIBUTING.md](CONTRIBUTING.md#branches-e-commits).
 
 ## Estrutura
 

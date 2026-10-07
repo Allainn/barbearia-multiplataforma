@@ -1,0 +1,4 @@
+# Todo PR para a main precisa da aprovação do @Allainn (regra "Aprovação do code owner").
+# Para dividir a responsabilidade por pasta depois, adicione linhas mais específicas abaixo, ex.:
+# /services/agendamento-service/ @Allainn @usuario-do-colega
+* @Allainn
