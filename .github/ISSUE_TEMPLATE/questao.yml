@@ -1,0 +1,46 @@
+name: Questão para decisão
+description: Algo que muda a arquitetura e precisa ser decidido pelo grupo (vira ADR)
+title: "QNN · "
+labels: ["questao"]
+body:
+  - type: dropdown
+    id: nivel
+    attributes:
+      label: Parte do diagrama que a questão afeta
+      options:
+        - Enquadramento (o que o sistema é)
+        - C4 nível 1 · Contexto
+        - C4 nível 2 · Containers
+        - C4 nível 3 · Componentes
+        - Entrega e demo
+        - Organização do grupo
+    validations:
+      required: true
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto
+      description: Que problema ou força obriga a decidir? Cite aula e minuto, se vier do professor.
+    validations:
+      required: true
+  - type: textarea
+    id: opcoes
+    attributes:
+      label: Opções na mesa
+      description: Uma por linha, com prós e contras se já souber.
+    validations:
+      required: true
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Proposta inicial (opcional)
+  - type: input
+    id: adr
+    attributes:
+      label: ADR relacionado
+      placeholder: docs/adr/NNNN-titulo.md
+  - type: input
+    id: prazo
+    attributes:
+      label: Prazo para decidir
+      placeholder: DD/MM

@@ -1,0 +1,27 @@
+# Sistema e editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Java
+target/
+*.class
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+
+# Ambiente e dados locais do Docker
+.env
+infra/**/data/
+
+# Diagramas temporários do draw.io
+*.drawio.bkp
+.$*.drawio

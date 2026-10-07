@@ -1,0 +1,29 @@
+name: Tarefa
+description: Trabalho de implementação a partir de um ADR aceito
+labels: ["tarefa"]
+body:
+  - type: input
+    id: adr
+    attributes:
+      label: ADR aceito que justifica a tarefa
+      placeholder: docs/adr/NNNN-titulo.md
+    validations:
+      required: true
+  - type: input
+    id: servico
+    attributes:
+      label: Serviço ou pasta
+      placeholder: services/agendamento-service
+  - type: textarea
+    id: oque
+    attributes:
+      label: O que fazer
+    validations:
+      required: true
+  - type: textarea
+    id: pronto
+    attributes:
+      label: Critério de pronto
+      description: Como provar que funciona (comando curl, teste, print do Kafka UI ou do Grafana).
+    validations:
+      required: true
