@@ -10,30 +10,30 @@ Cada questão tem uma **issue** com a label `questao`, onde acontece a discussã
 
 | # | Questão | Afeta no diagrama | ADR | Prazo | Issue |
 |---|---|---|---|---|---|
-| [Q01](#q01) | Como enquadrar o sistema para ter escala? | C4 nível 1: nome e descrição do sistema; slide de abertura (volumetria) | [ADR-0003](adr/0003-enquadramento-plataforma-multi-tenant.md) | 10/10 | — |
-| [Q02](#q02) | Qual o nome do produto? | C4 nível 1 (caixa central) e nível 2 (fronteira do sistema); slides; nome do repositório | — | 10/10 | — |
-| [Q03](#q03) | Qual o escopo funcional mínimo da demo? | C4 nível 1 (o que o sistema faz) e nível 2 (quais containers precisam existir) | [ADR-0003](adr/0003-enquadramento-plataforma-multi-tenant.md), [ADR-0004](adr/0004-decomposicao-em-servicos.md) | 10/10 | — |
-| [Q04](#q04) | Quem são os atores (pessoas) do C4 nível 1? | C4 nível 1: as pessoas e as setas "usa" | [ADR-0003](adr/0003-enquadramento-plataforma-multi-tenant.md) | 10/10 | — |
-| [Q05](#q05) | Quais sistemas externos aparecem no C4 nível 1? | C4 nível 1: sistemas externos (cinza); C4 nível 2: setas que saem do sistema | [ADR-0004](adr/0004-decomposicao-em-servicos.md), [ADR-0009](adr/0009-seguranca-keycloak-e-validacao-jwt.md) | 10/10 | — |
-| [Q06](#q06) | Os front-ends aparecem no diagrama? | C4 nível 2: containers de front-end (app do cliente, painel da barbearia) | [ADR-0004](adr/0004-decomposicao-em-servicos.md) | 10/10 | — |
-| [Q07](#q07) | Quais containers (serviços) o sistema terá? | C4 nível 2 inteiro | [ADR-0004](adr/0004-decomposicao-em-servicos.md) | 12/10 | — |
-| [Q08](#q08) | Quais linguagens, e em quais serviços? | C4 nível 2: a tecnologia anotada em cada container | [ADR-0005](adr/0005-linguagens-por-servico.md) | 10/10 | — |
-| [Q09](#q09) | Um BFF para todos os canais ou um por canal? Em qual tecnologia? | C4 nível 2: container(s) de entrada | [ADR-0004](adr/0004-decomposicao-em-servicos.md), [ADR-0005](adr/0005-linguagens-por-servico.md) | 12/10 | — |
-| [Q10](#q10) | Qual broker de mensagens? Quais tópicos e chaves de partição? | C4 nível 2: container do broker e setas de publicação/consumo | [ADR-0006](adr/0006-comunicacao-sincrona-e-kafka.md) | 12/10 | — |
-| [Q11](#q11) | O que é síncrono e o que é assíncrono? (as setas do nível 2) | C4 nível 2: protocolo e descrição de cada seta | [ADR-0006](adr/0006-comunicacao-sincrona-e-kafka.md) | 12/10 | — |
-| [Q12](#q12) | Como organizar os bancos de dados? | C4 nível 2: containers de banco e setas de cada serviço para eles | [ADR-0011](adr/0011-dados-por-servico.md) | 12/10 | — |
-| [Q13](#q13) | Onde validar o JWT? Como isolar uma barbearia da outra? | C4 nível 1 (Keycloak); C4 nível 2 (setas de autenticação e validação) | [ADR-0009](adr/0009-seguranca-keycloak-e-validacao-jwt.md) | 12/10 | — |
-| [Q14](#q14) | Como impedir dois clientes no mesmo horário? (lock) | C4 nível 2 (agendamento-service → PostgreSQL); C4 nível 3 do agendamento | [ADR-0007](adr/0007-concorrencia-na-reserva-de-horario.md) | 12/10 | — |
-| [Q15](#q15) | CQRS lite ou completo na consulta de disponibilidade? | C4 nível 2: disponibilidade-service, seu banco e as setas vindas do Kafka | [ADR-0008](adr/0008-cqrs-na-consulta-de-disponibilidade.md) | 12/10 | — |
-| [Q16](#q16) | Outbox Pattern entra? Polling ou Debezium? | C4 nível 2 (seta agendamento → Kafka); C4 nível 3 do agendamento | [ADR-0012](adr/0012-garantia-de-publicacao-outbox.md) | 12/10 | — |
-| [Q17](#q17) | Lembretes (véspera e 1 h antes) entram no escopo? | C4 nível 2: notificacao-service (e um agendador de tarefas, se entrar) | [ADR-0004](adr/0004-decomposicao-em-servicos.md) | 12/10 | — |
-| [Q18](#q18) | Clean ou Hexagonal dentro dos serviços? Qual serviço ganha o C4 nível 3? | C4 nível 3 | [ADR-0010](adr/0010-arquitetura-interna-dos-servicos.md) | 14/10 | — |
-| [Q19](#q19) | Qual pipeline de CI/CD e onde roda o deploy? | Diagrama de implantação (se fizermos) e a parte de CI/CD da demo | [ADR-0013](adr/0013-entrega-continua-e-observabilidade.md) | 14/10 | — |
-| [Q20](#q20) | O que mostrar de observabilidade? | C4 nível 2 (stack de observabilidade, se for desenhada); demo | [ADR-0013](adr/0013-entrega-continua-e-observabilidade.md) | 14/10 | — |
-| [Q21](#q21) | Qual o roteiro da demo e quem apresenta cada parte? | Apresentação | — | 24/10 | — |
-| [Q22](#q22) | Qual o papel de cada integrante? | Dono de cada container do C4 nível 2 | — | 10/10 | — |
-| [Q23](#q23) | Convenções: quórum de ADR, idioma do código, commits | Nomes de containers, tópicos e endpoints no diagrama | [ADR-0001](adr/0001-registrar-decisoes-com-adr.md), [ADR-0002](adr/0002-monorepo-e-estrutura.md) | 10/10 | — |
-| [Q24](#q24) | Onde fica o diagrama oficial? | Todos os diagramas | — | 14/10 | — |
+| [Q01](#q01) | Como enquadrar o sistema para ter escala? | C4 nível 1: nome e descrição do sistema; slide de abertura (volumetria) | [ADR-0003](adr/0003-enquadramento-plataforma-multi-tenant.md) | 10/10 | [#1](https://github.com/Allainn/barbearia-multiplataforma/issues/1) |
+| [Q02](#q02) | Qual o nome do produto? | C4 nível 1 (caixa central) e nível 2 (fronteira do sistema); slides; nome do repositório | — | 10/10 | [#2](https://github.com/Allainn/barbearia-multiplataforma/issues/2) |
+| [Q03](#q03) | Qual o escopo funcional mínimo da demo? | C4 nível 1 (o que o sistema faz) e nível 2 (quais containers precisam existir) | [ADR-0003](adr/0003-enquadramento-plataforma-multi-tenant.md), [ADR-0004](adr/0004-decomposicao-em-servicos.md) | 10/10 | [#3](https://github.com/Allainn/barbearia-multiplataforma/issues/3) |
+| [Q04](#q04) | Quem são os atores (pessoas) do C4 nível 1? | C4 nível 1: as pessoas e as setas "usa" | [ADR-0003](adr/0003-enquadramento-plataforma-multi-tenant.md) | 10/10 | [#4](https://github.com/Allainn/barbearia-multiplataforma/issues/4) |
+| [Q05](#q05) | Quais sistemas externos aparecem no C4 nível 1? | C4 nível 1: sistemas externos (cinza); C4 nível 2: setas que saem do sistema | [ADR-0004](adr/0004-decomposicao-em-servicos.md), [ADR-0009](adr/0009-seguranca-keycloak-e-validacao-jwt.md) | 10/10 | [#5](https://github.com/Allainn/barbearia-multiplataforma/issues/5) |
+| [Q06](#q06) | Os front-ends aparecem no diagrama? | C4 nível 2: containers de front-end (app do cliente, painel da barbearia) | [ADR-0004](adr/0004-decomposicao-em-servicos.md) | 10/10 | [#6](https://github.com/Allainn/barbearia-multiplataforma/issues/6) |
+| [Q07](#q07) | Quais containers (serviços) o sistema terá? | C4 nível 2 inteiro | [ADR-0004](adr/0004-decomposicao-em-servicos.md) | 12/10 | [#7](https://github.com/Allainn/barbearia-multiplataforma/issues/7) |
+| [Q08](#q08) | Quais linguagens, e em quais serviços? | C4 nível 2: a tecnologia anotada em cada container | [ADR-0005](adr/0005-linguagens-por-servico.md) | 10/10 | [#8](https://github.com/Allainn/barbearia-multiplataforma/issues/8) |
+| [Q09](#q09) | Um BFF para todos os canais ou um por canal? Em qual tecnologia? | C4 nível 2: container(s) de entrada | [ADR-0004](adr/0004-decomposicao-em-servicos.md), [ADR-0005](adr/0005-linguagens-por-servico.md) | 12/10 | [#9](https://github.com/Allainn/barbearia-multiplataforma/issues/9) |
+| [Q10](#q10) | Qual broker de mensagens? Quais tópicos e chaves de partição? | C4 nível 2: container do broker e setas de publicação/consumo | [ADR-0006](adr/0006-comunicacao-sincrona-e-kafka.md) | 12/10 | [#10](https://github.com/Allainn/barbearia-multiplataforma/issues/10) |
+| [Q11](#q11) | O que é síncrono e o que é assíncrono? (as setas do nível 2) | C4 nível 2: protocolo e descrição de cada seta | [ADR-0006](adr/0006-comunicacao-sincrona-e-kafka.md) | 12/10 | [#11](https://github.com/Allainn/barbearia-multiplataforma/issues/11) |
+| [Q12](#q12) | Como organizar os bancos de dados? | C4 nível 2: containers de banco e setas de cada serviço para eles | [ADR-0011](adr/0011-dados-por-servico.md) | 12/10 | [#12](https://github.com/Allainn/barbearia-multiplataforma/issues/12) |
+| [Q13](#q13) | Onde validar o JWT? Como isolar uma barbearia da outra? | C4 nível 1 (Keycloak); C4 nível 2 (setas de autenticação e validação) | [ADR-0009](adr/0009-seguranca-keycloak-e-validacao-jwt.md) | 12/10 | [#13](https://github.com/Allainn/barbearia-multiplataforma/issues/13) |
+| [Q14](#q14) | Como impedir dois clientes no mesmo horário? (lock) | C4 nível 2 (agendamento-service → PostgreSQL); C4 nível 3 do agendamento | [ADR-0007](adr/0007-concorrencia-na-reserva-de-horario.md) | 12/10 | [#14](https://github.com/Allainn/barbearia-multiplataforma/issues/14) |
+| [Q15](#q15) | CQRS lite ou completo na consulta de disponibilidade? | C4 nível 2: disponibilidade-service, seu banco e as setas vindas do Kafka | [ADR-0008](adr/0008-cqrs-na-consulta-de-disponibilidade.md) | 12/10 | [#15](https://github.com/Allainn/barbearia-multiplataforma/issues/15) |
+| [Q16](#q16) | Outbox Pattern entra? Polling ou Debezium? | C4 nível 2 (seta agendamento → Kafka); C4 nível 3 do agendamento | [ADR-0012](adr/0012-garantia-de-publicacao-outbox.md) | 12/10 | [#16](https://github.com/Allainn/barbearia-multiplataforma/issues/16) |
+| [Q17](#q17) | Lembretes (véspera e 1 h antes) entram no escopo? | C4 nível 2: notificacao-service (e um agendador de tarefas, se entrar) | [ADR-0004](adr/0004-decomposicao-em-servicos.md) | 12/10 | [#17](https://github.com/Allainn/barbearia-multiplataforma/issues/17) |
+| [Q18](#q18) | Clean ou Hexagonal dentro dos serviços? Qual serviço ganha o C4 nível 3? | C4 nível 3 | [ADR-0010](adr/0010-arquitetura-interna-dos-servicos.md) | 14/10 | [#18](https://github.com/Allainn/barbearia-multiplataforma/issues/18) |
+| [Q19](#q19) | Qual pipeline de CI/CD e onde roda o deploy? | Diagrama de implantação (se fizermos) e a parte de CI/CD da demo | [ADR-0013](adr/0013-entrega-continua-e-observabilidade.md) | 14/10 | [#19](https://github.com/Allainn/barbearia-multiplataforma/issues/19) |
+| [Q20](#q20) | O que mostrar de observabilidade? | C4 nível 2 (stack de observabilidade, se for desenhada); demo | [ADR-0013](adr/0013-entrega-continua-e-observabilidade.md) | 14/10 | [#20](https://github.com/Allainn/barbearia-multiplataforma/issues/20) |
+| [Q21](#q21) | Qual o roteiro da demo e quem apresenta cada parte? | Apresentação | — | 24/10 | [#21](https://github.com/Allainn/barbearia-multiplataforma/issues/21) |
+| [Q22](#q22) | Qual o papel de cada integrante? | Dono de cada container do C4 nível 2 | — | 10/10 | [#22](https://github.com/Allainn/barbearia-multiplataforma/issues/22) |
+| [Q23](#q23) | Convenções: quórum de ADR, idioma do código, commits | Nomes de containers, tópicos e endpoints no diagrama | [ADR-0001](adr/0001-registrar-decisoes-com-adr.md), [ADR-0002](adr/0002-monorepo-e-estrutura.md) | 10/10 | [#23](https://github.com/Allainn/barbearia-multiplataforma/issues/23) |
+| [Q24](#q24) | Onde fica o diagrama oficial? | Todos os diagramas | — | 14/10 | [#24](https://github.com/Allainn/barbearia-multiplataforma/issues/24) |
 
 ## Enquadramento (antes do diagrama)
 
@@ -45,7 +45,7 @@ Definem o que o sistema é. Sem isso não dá para desenhar a caixa central do C
 
 - **Afeta no diagrama:** C4 nível 1: nome e descrição do sistema; slide de abertura (volumetria)
 - **ADR:** [ADR-0003: Enquadrar o sistema como plataforma multi-tenant de agendamento](adr/0003-enquadramento-plataforma-multi-tenant.md)
-- **Prazo:** 10/10 · **Issue:** _a criar_
+- **Prazo:** 10/10 · **Issue:** [#1](https://github.com/Allainn/barbearia-multiplataforma/issues/1)
 
 **Contexto.** O professor descarta sistemas pequenos ("padaria de bairro"). A agenda de uma única barbearia não tem volume que justifique Kafka nem CQRS.
 
@@ -62,7 +62,7 @@ Definem o que o sistema é. Sem isso não dá para desenhar a caixa central do C
 ### Q02 · Qual o nome do produto?
 
 - **Afeta no diagrama:** C4 nível 1 (caixa central) e nível 2 (fronteira do sistema); slides; nome do repositório
-- **Prazo:** 10/10 · **Issue:** _a criar_
+- **Prazo:** 10/10 · **Issue:** [#2](https://github.com/Allainn/barbearia-multiplataforma/issues/2)
 
 **Contexto.** O nome aparece em todos os diagramas e slides. O repositório usa o nome provisório barbearia-multiplataforma, que dá para renomear no GitHub sem perder nada.
 
@@ -81,7 +81,7 @@ Definem o que o sistema é. Sem isso não dá para desenhar a caixa central do C
 
 - **Afeta no diagrama:** C4 nível 1 (o que o sistema faz) e nível 2 (quais containers precisam existir)
 - **ADR:** [ADR-0003: Enquadrar o sistema como plataforma multi-tenant de agendamento](adr/0003-enquadramento-plataforma-multi-tenant.md) · [ADR-0004: Decomposição em serviços (containers do C4 nível 2)](adr/0004-decomposicao-em-servicos.md)
-- **Prazo:** 10/10 · **Issue:** _a criar_
+- **Prazo:** 10/10 · **Issue:** [#3](https://github.com/Allainn/barbearia-multiplataforma/issues/3)
 
 **Contexto.** Tudo o que for desenhado precisa ser implementado, e regra de negócio não vale nota. O escopo tem que ser o mínimo que exercita as integrações.
 
@@ -106,7 +106,7 @@ Quem usa o sistema e com quais sistemas externos ele conversa.
 
 - **Afeta no diagrama:** C4 nível 1: as pessoas e as setas "usa"
 - **ADR:** [ADR-0003: Enquadrar o sistema como plataforma multi-tenant de agendamento](adr/0003-enquadramento-plataforma-multi-tenant.md)
-- **Prazo:** 10/10 · **Issue:** _a criar_
+- **Prazo:** 10/10 · **Issue:** [#4](https://github.com/Allainn/barbearia-multiplataforma/issues/4)
 
 **Contexto.** Cada pessoa no diagrama vira uma role no Keycloak e um cenário de autorização (403).
 
@@ -126,7 +126,7 @@ Quem usa o sistema e com quais sistemas externos ele conversa.
 
 - **Afeta no diagrama:** C4 nível 1: sistemas externos (cinza); C4 nível 2: setas que saem do sistema
 - **ADR:** [ADR-0004: Decomposição em serviços (containers do C4 nível 2)](adr/0004-decomposicao-em-servicos.md) · [ADR-0009: Segurança: Keycloak, OAuth2/OIDC e onde validar o JWT](adr/0009-seguranca-keycloak-e-validacao-jwt.md)
-- **Prazo:** 10/10 · **Issue:** _a criar_
+- **Prazo:** 10/10 · **Issue:** [#5](https://github.com/Allainn/barbearia-multiplataforma/issues/5)
 
 **Contexto.** Todo sistema externo desenhado precisa existir na demo, nem que seja simulado (mock).
 
@@ -145,7 +145,7 @@ Quem usa o sistema e com quais sistemas externos ele conversa.
 
 - **Afeta no diagrama:** C4 nível 2: containers de front-end (app do cliente, painel da barbearia)
 - **ADR:** [ADR-0004: Decomposição em serviços (containers do C4 nível 2)](adr/0004-decomposicao-em-servicos.md)
-- **Prazo:** 10/10 · **Issue:** _a criar_
+- **Prazo:** 10/10 · **Issue:** [#6](https://github.com/Allainn/barbearia-multiplataforma/issues/6)
 
 **Contexto.** Front-end não é avaliado e a demo pode ser com curl/Postman. Mas tudo o que for desenhado precisa ser implementado.
 
@@ -167,7 +167,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 2 inteiro
 - **ADR:** [ADR-0004: Decomposição em serviços (containers do C4 nível 2)](adr/0004-decomposicao-em-servicos.md)
-- **Prazo:** 12/10 · **Issue:** _a criar_
+- **Prazo:** 12/10 · **Issue:** [#7](https://github.com/Allainn/barbearia-multiplataforma/issues/7)
 
 **Contexto.** Cada container precisa de um motivo para existir e de um dono no grupo. São 3 semanas e 7 pessoas.
 
@@ -185,7 +185,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 2: a tecnologia anotada em cada container
 - **ADR:** [ADR-0005: Linguagens por serviço](adr/0005-linguagens-por-servico.md)
-- **Prazo:** 10/10 · **Issue:** _a criar_
+- **Prazo:** 10/10 · **Issue:** [#8](https://github.com/Allainn/barbearia-multiplataforma/issues/8)
 
 **Contexto.** Precisamos de pelo menos 2 linguagens, com o motivo de cada uma: força da linguagem ou proficiência do grupo. O PizzaExpress tem tudo pronto em Python e Java.
 
@@ -204,7 +204,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 2: container(s) de entrada
 - **ADR:** [ADR-0004: Decomposição em serviços (containers do C4 nível 2)](adr/0004-decomposicao-em-servicos.md) · [ADR-0005: Linguagens por serviço](adr/0005-linguagens-por-servico.md)
-- **Prazo:** 12/10 · **Issue:** _a criar_
+- **Prazo:** 12/10 · **Issue:** [#9](https://github.com/Allainn/barbearia-multiplataforma/issues/9)
 
 **Contexto.** O BFF adapta respostas ao canal e é onde ficam 401/403 no modelo do professor. A Aula 5 vai aprofundar BFF e resiliência. Cuidado com regra de negócio no BFF (Aula 1).
 
@@ -222,7 +222,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 2: container do broker e setas de publicação/consumo
 - **ADR:** [ADR-0006: Comunicação síncrona, assíncrona e o broker de eventos (Kafka)](adr/0006-comunicacao-sincrona-e-kafka.md)
-- **Prazo:** 12/10 · **Issue:** _a criar_
+- **Prazo:** 12/10 · **Issue:** [#10](https://github.com/Allainn/barbearia-multiplataforma/issues/10)
 
 **Contexto.** Mensageria é obrigatória (ou a justificativa para tudo ser síncrono). Notificações em massa batem em API externa com limite de taxa, e o read model da disponibilidade depende de cada reserva.
 
@@ -241,7 +241,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 2: protocolo e descrição de cada seta
 - **ADR:** [ADR-0006: Comunicação síncrona, assíncrona e o broker de eventos (Kafka)](adr/0006-comunicacao-sincrona-e-kafka.md)
-- **Prazo:** 12/10 · **Issue:** _a criar_
+- **Prazo:** 12/10 · **Issue:** [#11](https://github.com/Allainn/barbearia-multiplataforma/issues/11)
 
 **Contexto.** O ponto em aberto: ao reservar, o agendamento precisa da duração do serviço e do expediente do profissional, que pertencem ao barbearia-service.
 
@@ -259,7 +259,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 2: containers de banco e setas de cada serviço para eles
 - **ADR:** [ADR-0011: Dados por serviço e isolamento por barbearia](adr/0011-dados-por-servico.md)
-- **Prazo:** 12/10 · **Issue:** _a criar_
+- **Prazo:** 12/10 · **Issue:** [#12](https://github.com/Allainn/barbearia-multiplataforma/issues/12)
 
 **Contexto.** Cada serviço é dono dos seus dados. O ambiente roda na máquina de cada um (8 GB para o Docker). O sistema é multi-tenant.
 
@@ -278,7 +278,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 1 (Keycloak); C4 nível 2 (setas de autenticação e validação)
 - **ADR:** [ADR-0009: Segurança: Keycloak, OAuth2/OIDC e onde validar o JWT](adr/0009-seguranca-keycloak-e-validacao-jwt.md)
-- **Prazo:** 12/10 · **Issue:** _a criar_
+- **Prazo:** 12/10 · **Issue:** [#13](https://github.com/Allainn/barbearia-multiplataforma/issues/13)
 
 **Contexto.** É preciso demonstrar 401 e 403 e justificar o modelo. Sistema multi-tenant com dados pessoais: o gestor da barbearia A não pode mexer na B.
 
@@ -296,7 +296,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 2 (agendamento-service → PostgreSQL); C4 nível 3 do agendamento
 - **ADR:** [ADR-0007: Concorrência na reserva de horário (lock)](adr/0007-concorrencia-na-reserva-de-horario.md)
-- **Prazo:** 12/10 · **Issue:** _a criar_
+- **Prazo:** 12/10 · **Issue:** [#14](https://github.com/Allainn/barbearia-multiplataforma/issues/14)
 
 **Contexto.** Pouca escrita (~3 reservas/s no pico), mas com disputa pelo mesmo horário. Várias instâncias atrás de load balancer: lock em memória não resolve.
 
@@ -316,7 +316,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 2: disponibilidade-service, seu banco e as setas vindas do Kafka
 - **ADR:** [ADR-0008: CQRS na consulta de disponibilidade](adr/0008-cqrs-na-consulta-de-disponibilidade.md)
-- **Prazo:** 12/10 · **Issue:** _a criar_
+- **Prazo:** 12/10 · **Issue:** [#15](https://github.com/Allainn/barbearia-multiplataforma/issues/15)
 
 **Contexto.** Consultar horários livres é ~50 vezes mais frequente que reservar, e o cálculo é caro. Rodar esse cálculo nas tabelas que têm lock trava o pico.
 
@@ -335,7 +335,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 2 (seta agendamento → Kafka); C4 nível 3 do agendamento
 - **ADR:** [ADR-0012: Garantia de publicação de eventos (Outbox Pattern)](adr/0012-garantia-de-publicacao-outbox.md)
-- **Prazo:** 12/10 · **Issue:** _a criar_
+- **Prazo:** 12/10 · **Issue:** [#16](https://github.com/Allainn/barbearia-multiplataforma/issues/16)
 
 **Contexto.** Salvar no banco e publicar no Kafka não é atômico. Sem Outbox, uma falha do Kafka perde o evento da reserva. É desejável, não obrigatório.
 
@@ -353,7 +353,7 @@ Quais containers existem, em que tecnologia, com quais bancos, e o que significa
 
 - **Afeta no diagrama:** C4 nível 2: notificacao-service (e um agendador de tarefas, se entrar)
 - **ADR:** [ADR-0004: Decomposição em serviços (containers do C4 nível 2)](adr/0004-decomposicao-em-servicos.md)
-- **Prazo:** 12/10 · **Issue:** _a criar_
+- **Prazo:** 12/10 · **Issue:** [#17](https://github.com/Allainn/barbearia-multiplataforma/issues/17)
 
 **Contexto.** Lembretes são o maior volume de mensagens e reforçam o argumento da mensageria, mas exigem agendar tarefas para o futuro.
 
@@ -375,7 +375,7 @@ Como cada serviço se organiza por dentro.
 
 - **Afeta no diagrama:** C4 nível 3
 - **ADR:** [ADR-0010: Arquitetura interna dos serviços](adr/0010-arquitetura-interna-dos-servicos.md)
-- **Prazo:** 14/10 · **Issue:** _a criar_
+- **Prazo:** 14/10 · **Issue:** [#18](https://github.com/Allainn/barbearia-multiplataforma/issues/18)
 
 **Contexto.** A arquitetura interna é livre, desde que justificada. O professor prefere Clean para padronizar; aprovou Hexagonal para outro grupo.
 
@@ -397,7 +397,7 @@ CI/CD, observabilidade e o roteiro da apresentação.
 
 - **Afeta no diagrama:** Diagrama de implantação (se fizermos) e a parte de CI/CD da demo
 - **ADR:** [ADR-0013: Entrega contínua e observabilidade](adr/0013-entrega-continua-e-observabilidade.md)
-- **Prazo:** 14/10 · **Issue:** _a criar_
+- **Prazo:** 14/10 · **Issue:** [#19](https://github.com/Allainn/barbearia-multiplataforma/issues/19)
 
 **Contexto.** A demo precisa mostrar código alterado → pipeline → publicação → chamada → Grafana. Os runners do GitHub Actions não alcançam o Minikube local. Depende do que a Aula 4 (07/10) mostrar.
 
@@ -415,7 +415,7 @@ CI/CD, observabilidade e o roteiro da apresentação.
 
 - **Afeta no diagrama:** C4 nível 2 (stack de observabilidade, se for desenhada); demo
 - **ADR:** [ADR-0013: Entrega contínua e observabilidade](adr/0013-entrega-continua-e-observabilidade.md)
-- **Prazo:** 14/10 · **Issue:** _a criar_
+- **Prazo:** 14/10 · **Issue:** [#20](https://github.com/Allainn/barbearia-multiplataforma/issues/20)
 
 **Contexto.** O PizzaExpress já traz OpenTelemetry nos serviços e Prometheus, Loki, Tempo e Grafana com dashboards.
 
@@ -432,7 +432,7 @@ CI/CD, observabilidade e o roteiro da apresentação.
 ### Q21 · Qual o roteiro da demo e quem apresenta cada parte?
 
 - **Afeta no diagrama:** Apresentação
-- **Prazo:** 24/10 · **Issue:** _a criar_
+- **Prazo:** 24/10 · **Issue:** [#21](https://github.com/Allainn/barbearia-multiplataforma/issues/21)
 
 **Contexto.** São 20 minutos no total; a sugestão é 8 de demo. Pode ser gravada.
 
@@ -453,7 +453,7 @@ Papéis, convenções e ferramentas.
 ### Q22 · Qual o papel de cada integrante?
 
 - **Afeta no diagrama:** Dono de cada container do C4 nível 2
-- **Prazo:** 10/10 · **Issue:** _a criar_
+- **Prazo:** 10/10 · **Issue:** [#22](https://github.com/Allainn/barbearia-multiplataforma/issues/22)
 
 **Contexto.** Somos 7. A Aula 1 fez a ponte com Team Topologies: times alinhados a um fluxo (um serviço) e um time de plataforma.
 
@@ -465,7 +465,7 @@ Papéis, convenções e ferramentas.
 4. barbearia-service + disponibilidade-service: CQRS (2)
 5. notificacao-service + plataforma: compose, CI/CD, observabilidade (1)
 
-**Proposta inicial (para discussão):** A divisão acima. Cada um comenta a primeira e a segunda opção.
+**Proposta inicial (para discussão):** A divisão listada nas opções (1 + 1 + 2 + 2 + 1 pessoas). Cada um comenta a primeira e a segunda opção de papel.
 
 <a id="q23"></a>
 
@@ -473,7 +473,7 @@ Papéis, convenções e ferramentas.
 
 - **Afeta no diagrama:** Nomes de containers, tópicos e endpoints no diagrama
 - **ADR:** [ADR-0001: Registrar as decisões arquiteturais com ADRs](adr/0001-registrar-decisoes-com-adr.md) · [ADR-0002: Monorepo e estrutura de pastas](adr/0002-monorepo-e-estrutura.md)
-- **Prazo:** 10/10 · **Issue:** _a criar_
+- **Prazo:** 10/10 · **Issue:** [#23](https://github.com/Allainn/barbearia-multiplataforma/issues/23)
 
 **Contexto.** O PizzaExpress está em inglês. O DDD pede a linguagem do negócio (ubíqua), que aqui é português.
 
@@ -491,7 +491,7 @@ Papéis, convenções e ferramentas.
 ### Q24 · Onde fica o diagrama oficial?
 
 - **Afeta no diagrama:** Todos os diagramas
-- **Prazo:** 14/10 · **Issue:** _a criar_
+- **Prazo:** 14/10 · **Issue:** [#24](https://github.com/Allainn/barbearia-multiplataforma/issues/24)
 
 **Contexto.** O esboço está no Miro, que é bom para discutir junto. O professor usa draw.io com a notação C4.
 

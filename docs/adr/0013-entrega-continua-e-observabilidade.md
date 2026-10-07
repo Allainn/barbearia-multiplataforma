@@ -19,7 +19,7 @@
 O Actions testa, constrói e publica a imagem no GHCR e atualiza a tag no manifesto em `infra/k8s/`. O Argo CD, rodando no Minikube, **puxa** a mudança do Git e aplica.
 
 - **Prós:** o modelo pull do GitOps resolve o problema de alcance (o cluster local busca no GitHub); é o fluxo que o professor vai ensinar; tudo gratuito.
-- **Contras:** imagens privadas no GHCR exigem `imagePullSecret` no Minikube (ou tornar os pacotes públicos); Argo CD consome RAM.
+- **Contras:** Argo CD consome RAM; o pipeline precisa de permissão para commitar a nova tag no repositório. Como o repositório é público, as imagens no GHCR também podem ser públicas, sem `imagePullSecret` no Minikube.
 
 ### B. GitHub Actions com runner self-hosted na máquina de quem apresenta + `docker compose`
 

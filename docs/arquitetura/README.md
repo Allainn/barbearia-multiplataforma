@@ -2,7 +2,7 @@
 
 > **Esboço para discussão.** Reflete os ADRs *Propostos* de 07/10/2026; nada está aceito. Onde houver **(Qnn)**, o elemento depende daquela [questão em aberto](../questoes-abertas.md).
 
-- **Board no Miro (fonte do esboço, para discutir e mexer junto):** MIRO_URL
+- **Board no Miro (fonte do esboço, para discutir e mexer junto):** <https://miro.com/app/board/uXjVEdd_Nsc=/>
 - **Esta página:** espelho em texto (Mermaid) para revisar no GitHub e versionar junto dos ADRs. Quem fechar uma questão atualiza os dois.
 - **Versão final para a apresentação:** a definir na [Q24](../questoes-abertas.md#q24) (sugestão: draw.io com a notação C4, como o professor usa).
 

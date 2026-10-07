@@ -17,7 +17,7 @@ O enquadramento com escala e a volumetria assumida estão no [ADR-0003](docs/adr
 | Regras do trabalho, checklist e data de entrega | [docs/enunciado.md](docs/enunciado.md) |
 | Decisões arquiteturais (ADRs) | [docs/adr/](docs/adr/README.md) |
 | Questões para o grupo decidir, organizadas por nível do C4 | [docs/questoes-abertas.md](docs/questoes-abertas.md) e issues com a label `questao` |
-| Esboço do C4 (níveis 1 e 2) | Board no Miro (link em [docs/arquitetura](docs/arquitetura/README.md)) + espelho em Mermaid |
+| Esboço do C4 (níveis 1 e 2) | [Board no Miro](https://miro.com/app/board/uXjVEdd_Nsc=/) + espelho em Mermaid em [docs/arquitetura](docs/arquitetura/README.md) |
 | Como contribuir (ADR, issues, PR, branches) | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Contexto para o Claude Code | [CLAUDE.md](CLAUDE.md) |
 | Código dos serviços | `services/` (vazio até os ADRs serem aceitos) |
