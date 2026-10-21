@@ -95,8 +95,9 @@ O passo a passo de cada parte, com as variáveis de ambiente, as tabelas e os te
 
 - C4 níveis 1 e 2 finais, com só o que está neste roadmap, exportados para os slides. Atualizar o Miro e o Mermaid em [docs/arquitetura](https://github.com/Allainn/barbearia-multiplataforma/blob/main/docs/arquitetura/README.md).
 - Slides: problema e volume de uso, C4, um slide por decisão com o porquê, trade-offs.
-- ADRs 0001 a 0005.
 - Revisar e aprovar os PRs no mesmo dia. A `main` exige a aprovação dele.
+
+Cada ADR fica com quem implementa a parte correspondente e é decidido no desenvolvimento. Os ADRs gerais (0001 a 0005) não pertencem a nenhuma parte e ainda não têm dono.
 
 ### João: infra, CI/CD e Grafana
 

@@ -29,7 +29,7 @@ Na demo: o cliente obtém o token no Keycloak e chama o BFF, que valida o token 
 
 | Integrante | Parte |
 |---|---|
-| Allainn Christiam Jacinto Tavares | C4, ADRs 0001 a 0005, slides e revisão dos PRs |
+| Allainn Christiam Jacinto Tavares | C4, slides e revisão dos PRs |
 | João Almeida Barbosa Júnior | Infra, CI/CD e Grafana |
 | Evandro Vieira de Carvalho Júnior | Keycloak e bff-gateway |
 | Pedro Assis Corrêa | agendamento-service |
