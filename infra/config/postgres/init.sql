@@ -1,29 +1,40 @@
--- PizzaExpress — Inicialização dos schemas por serviço
--- Cada microserviço tem seu schema isolado no mesmo banco
+-- Barbearia Multiplataforma — isolamento lógico por serviço
+-- Uma instância PostgreSQL usa um schema e um usuário para cada serviço.
 
-CREATE SCHEMA IF NOT EXISTS catalog;
-CREATE SCHEMA IF NOT EXISTS orders;
-CREATE SCHEMA IF NOT EXISTS delivery;
-CREATE SCHEMA IF NOT EXISTS notifications;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
 
--- Usuários por serviço (isolamento de acesso)
-CREATE USER catalog_svc WITH PASSWORD 'catalog_pass';
-CREATE USER order_svc WITH PASSWORD 'order_pass';
-CREATE USER delivery_svc WITH PASSWORD 'delivery_pass';
-CREATE USER notification_svc WITH PASSWORD 'notification_pass';
+CREATE SCHEMA IF NOT EXISTS barbearia;
+CREATE SCHEMA IF NOT EXISTS agendamento;
+CREATE SCHEMA IF NOT EXISTS disponibilidade;
+CREATE SCHEMA IF NOT EXISTS notificacao;
 
-GRANT USAGE, CREATE ON SCHEMA catalog TO catalog_svc;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA catalog TO catalog_svc;
-ALTER DEFAULT PRIVILEGES IN SCHEMA catalog GRANT ALL ON TABLES TO catalog_svc;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'barbearia_svc') THEN
+        CREATE ROLE barbearia_svc LOGIN PASSWORD 'barbearia_pass';
+    END IF;
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'agendamento_svc') THEN
+        CREATE ROLE agendamento_svc LOGIN PASSWORD 'agendamento_pass';
+    END IF;
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'disponibilidade_svc') THEN
+        CREATE ROLE disponibilidade_svc LOGIN PASSWORD 'disponibilidade_pass';
+    END IF;
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'notificacao_svc') THEN
+        CREATE ROLE notificacao_svc LOGIN PASSWORD 'notificacao_pass';
+    END IF;
+END
+$$;
 
-GRANT USAGE, CREATE ON SCHEMA orders TO order_svc;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA orders TO order_svc;
-ALTER DEFAULT PRIVILEGES IN SCHEMA orders GRANT ALL ON TABLES TO order_svc;
+GRANT USAGE, CREATE ON SCHEMA barbearia TO barbearia_svc;
+GRANT USAGE, CREATE ON SCHEMA agendamento TO agendamento_svc;
+GRANT USAGE, CREATE ON SCHEMA disponibilidade TO disponibilidade_svc;
+GRANT USAGE, CREATE ON SCHEMA notificacao TO notificacao_svc;
 
-GRANT USAGE, CREATE ON SCHEMA delivery TO delivery_svc;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA delivery TO delivery_svc;
-ALTER DEFAULT PRIVILEGES IN SCHEMA delivery GRANT ALL ON TABLES TO delivery_svc;
-
-GRANT USAGE, CREATE ON SCHEMA notifications TO notification_svc;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA notifications TO notification_svc;
-ALTER DEFAULT PRIVILEGES IN SCHEMA notifications GRANT ALL ON TABLES TO notification_svc;
+ALTER DEFAULT PRIVILEGES FOR ROLE barbearia_svc IN SCHEMA barbearia
+    GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON TABLES TO barbearia_svc;
+ALTER DEFAULT PRIVILEGES FOR ROLE agendamento_svc IN SCHEMA agendamento
+    GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON TABLES TO agendamento_svc;
+ALTER DEFAULT PRIVILEGES FOR ROLE disponibilidade_svc IN SCHEMA disponibilidade
+    GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON TABLES TO disponibilidade_svc;
+ALTER DEFAULT PRIVILEGES FOR ROLE notificacao_svc IN SCHEMA notificacao
+    GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON TABLES TO notificacao_svc;
