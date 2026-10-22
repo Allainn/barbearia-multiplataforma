@@ -1,0 +1,158 @@
+{
+  "description": "P90 / P95 / P99 por serviço e por rota HTTP",
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "collapsed": false, "gridPos": {"h":1,"w":24,"x":0,"y":0}, "id":1,
+      "title": "Resumo agora — P90 / P95 / P99 por serviço", "type": "row"
+    },
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults": {"color":{"mode":"thresholds"},"unit":"ms","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":300},{"color":"red","value":1000}]}}},
+      "gridPos": {"h":5,"w":8,"x":0,"y":1}, "id":2,
+      "options": {"colorMode":"background","graphMode":"area","justifyMode":"center","orientation":"horizontal","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value_and_name"},
+      "title": "P90 por Serviço", "type": "stat",
+      "targets": [{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.90, sum by (le, service_name) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\"}[5m])))","legendFormat":"{{service_name}}","refId":"A","instant":true}]
+    },
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults": {"color":{"mode":"thresholds"},"unit":"ms","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":500},{"color":"red","value":2000}]}}},
+      "gridPos": {"h":5,"w":8,"x":8,"y":1}, "id":3,
+      "options": {"colorMode":"background","graphMode":"area","justifyMode":"center","orientation":"horizontal","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value_and_name"},
+      "title": "P95 por Serviço", "type": "stat",
+      "targets": [{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.95, sum by (le, service_name) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\"}[5m])))","legendFormat":"{{service_name}}","refId":"A","instant":true}]
+    },
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults": {"color":{"mode":"thresholds"},"unit":"ms","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":1000},{"color":"red","value":5000}]}}},
+      "gridPos": {"h":5,"w":8,"x":16,"y":1}, "id":4,
+      "options": {"colorMode":"background","graphMode":"area","justifyMode":"center","orientation":"horizontal","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value_and_name"},
+      "title": "P99 por Serviço", "type": "stat",
+      "targets": [{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.99, sum by (le, service_name) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\"}[5m])))","legendFormat":"{{service_name}}","refId":"A","instant":true}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":6},"id":10,"title":"Evolução — P90 / P95 / P99 por Serviço","type":"row"},
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults":{"unit":"ms","color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":5}},"overrides":[
+        {"matcher":{"id":"byRegexp","options":".*p99.*"},"properties":[{"id":"color","value":{"fixedColor":"red","mode":"fixed"}},{"id":"custom.lineWidth","value":3}]},
+        {"matcher":{"id":"byRegexp","options":".*p95.*"},"properties":[{"id":"color","value":{"fixedColor":"orange","mode":"fixed"}},{"id":"custom.lineWidth","value":2}]},
+        {"matcher":{"id":"byRegexp","options":".*p90.*"},"properties":[{"id":"color","value":{"fixedColor":"yellow","mode":"fixed"}}]}
+      ]},
+      "gridPos": {"h":9,"w":12,"x":0,"y":7}, "id":11,
+      "options": {"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title": "barbearia-service — P90 / P95 / P99", "type": "timeseries",
+      "targets": [
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.90, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"barbearia-service\"}[$__rate_interval])))","legendFormat":"p90","refId":"A"},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.95, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"barbearia-service\"}[$__rate_interval])))","legendFormat":"p95","refId":"B"},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.99, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"barbearia-service\"}[$__rate_interval])))","legendFormat":"p99","refId":"C"}
+      ]
+    },
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults":{"unit":"ms","color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":5}},"overrides":[
+        {"matcher":{"id":"byRegexp","options":".*p99.*"},"properties":[{"id":"color","value":{"fixedColor":"red","mode":"fixed"}},{"id":"custom.lineWidth","value":3}]},
+        {"matcher":{"id":"byRegexp","options":".*p95.*"},"properties":[{"id":"color","value":{"fixedColor":"orange","mode":"fixed"}}]},
+        {"matcher":{"id":"byRegexp","options":".*p90.*"},"properties":[{"id":"color","value":{"fixedColor":"yellow","mode":"fixed"}}]}
+      ]},
+      "gridPos": {"h":9,"w":12,"x":12,"y":7}, "id":12,
+      "options": {"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title": "agendamento-service — P90 / P95 / P99", "type": "timeseries",
+      "targets": [
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.90, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"agendamento-service\"}[$__rate_interval])))","legendFormat":"p90","refId":"A"},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.95, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"agendamento-service\"}[$__rate_interval])))","legendFormat":"p95","refId":"B"},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.99, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"agendamento-service\"}[$__rate_interval])))","legendFormat":"p99","refId":"C"}
+      ]
+    },
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults":{"unit":"ms","color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":5}},"overrides":[
+        {"matcher":{"id":"byRegexp","options":".*p99.*"},"properties":[{"id":"color","value":{"fixedColor":"red","mode":"fixed"}},{"id":"custom.lineWidth","value":3}]},
+        {"matcher":{"id":"byRegexp","options":".*p95.*"},"properties":[{"id":"color","value":{"fixedColor":"orange","mode":"fixed"}}]},
+        {"matcher":{"id":"byRegexp","options":".*p90.*"},"properties":[{"id":"color","value":{"fixedColor":"yellow","mode":"fixed"}}]}
+      ]},
+      "gridPos": {"h":9,"w":12,"x":0,"y":16}, "id":13,
+      "options": {"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title": "disponibilidade-service — P90 / P95 / P99", "type": "timeseries",
+      "targets": [
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.90, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"disponibilidade-service\"}[$__rate_interval])))","legendFormat":"p90","refId":"A"},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.95, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"disponibilidade-service\"}[$__rate_interval])))","legendFormat":"p95","refId":"B"},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.99, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"disponibilidade-service\"}[$__rate_interval])))","legendFormat":"p99","refId":"C"}
+      ]
+    },
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults":{"unit":"ms","color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":5}},"overrides":[
+        {"matcher":{"id":"byRegexp","options":".*p99.*"},"properties":[{"id":"color","value":{"fixedColor":"red","mode":"fixed"}},{"id":"custom.lineWidth","value":3}]},
+        {"matcher":{"id":"byRegexp","options":".*p95.*"},"properties":[{"id":"color","value":{"fixedColor":"orange","mode":"fixed"}}]},
+        {"matcher":{"id":"byRegexp","options":".*p90.*"},"properties":[{"id":"color","value":{"fixedColor":"yellow","mode":"fixed"}}]}
+      ]},
+      "gridPos": {"h":9,"w":12,"x":12,"y":16}, "id":14,
+      "options": {"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title": "bff-gateway — P90 / P95 / P99", "type": "timeseries",
+      "targets": [
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.90, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"bff-gateway\"}[$__rate_interval])))","legendFormat":"p90","refId":"A"},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.95, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"bff-gateway\"}[$__rate_interval])))","legendFormat":"p95","refId":"B"},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.99, sum by (le) (rate(app_http_server_duration_milliseconds_bucket{service_name=\"bff-gateway\"}[$__rate_interval])))","legendFormat":"p99","refId":"C"}
+      ]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":25},"id":20,"title":"Latência por Rota HTTP — $service","type":"row"},
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults":{"unit":"ms","color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":4}}},
+      "gridPos": {"h":9,"w":24,"x":0,"y":26}, "id":21,
+      "options": {"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title": "P95 por Rota — $service", "type": "timeseries",
+      "targets": [{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.95, sum by (le, service_name, http_target, http_method) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\", http_target!=\"\"}[$__rate_interval])))","legendFormat":"{{service_name}}  {{http_method}} {{http_target}}","refId":"A"}]
+    },
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults":{"unit":"ms","color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":4}}},
+      "gridPos": {"h":9,"w":24,"x":0,"y":35}, "id":22,
+      "options": {"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title": "P99 por Rota — $service", "type": "timeseries",
+      "targets": [{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.99, sum by (le, service_name, http_target, http_method) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\", http_target!=\"\"}[$__rate_interval])))","legendFormat":"{{service_name}}  {{http_method}} {{http_target}}","refId":"A"}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":44},"id":30,"title":"Tabela Comparativa P50 / P90 / P95 / P99","type":"row"},
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults":{"unit":"ms","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":500},{"color":"red","value":2000}]},"custom":{"displayMode":"color-background"}}},
+      "gridPos": {"h":8,"w":24,"x":0,"y":45}, "id":31,
+      "options": {"sortBy":[{"displayName":"P99 (ms)","desc":true}]},
+      "title": "Comparativo por Serviço — últimos 5 min", "type": "table",
+      "targets": [
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.50, sum by (le, service_name) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\"}[5m])))","legendFormat":"{{service_name}}","refId":"p50","instant":true},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.90, sum by (le, service_name) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\"}[5m])))","legendFormat":"{{service_name}}","refId":"p90","instant":true},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.95, sum by (le, service_name) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\"}[5m])))","legendFormat":"{{service_name}}","refId":"p95","instant":true},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.99, sum by (le, service_name) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\"}[5m])))","legendFormat":"{{service_name}}","refId":"p99","instant":true}
+      ],
+      "transformations":[{"id":"merge","options":{}},{"id":"organize","options":{"renameByName":{"Value #p50":"P50 (ms)","Value #p90":"P90 (ms)","Value #p95":"P95 (ms)","Value #p99":"P99 (ms)","service_name":"Serviço"}}}]
+    },
+    {
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "fieldConfig": {"defaults":{"unit":"ms","color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":500},{"color":"red","value":2000}]},"custom":{"displayMode":"color-background"}}},
+      "gridPos": {"h":10,"w":24,"x":0,"y":53}, "id":32,
+      "options": {"sortBy":[{"displayName":"P99 (ms)","desc":true}]},
+      "title": "Comparativo por Rota — últimos 5 min", "type": "table",
+      "targets": [
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.50, sum by (le, service_name, http_target, http_method) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\", http_target!=\"\"}[5m])))","legendFormat":"{{service_name}}  {{http_method}} {{http_target}}","refId":"p50","instant":true},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.90, sum by (le, service_name, http_target, http_method) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\", http_target!=\"\"}[5m])))","legendFormat":"{{service_name}}  {{http_method}} {{http_target}}","refId":"p90","instant":true},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.95, sum by (le, service_name, http_target, http_method) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\", http_target!=\"\"}[5m])))","legendFormat":"{{service_name}}  {{http_method}} {{http_target}}","refId":"p95","instant":true},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.99, sum by (le, service_name, http_target, http_method) (rate(app_http_server_duration_milliseconds_bucket{service_name=~\"$service\", http_target!=\"\"}[5m])))","legendFormat":"{{service_name}}  {{http_method}} {{http_target}}","refId":"p99","instant":true}
+      ],
+      "transformations":[{"id":"merge","options":{}},{"id":"organize","options":{"renameByName":{"Value #p50":"P50 (ms)","Value #p90":"P90 (ms)","Value #p95":"P95 (ms)","Value #p99":"P99 (ms)","Field":"Serviço — Rota"}}}]
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": ["latencia","percentis","sla"],
+  "templating": {"list": [
+    {"current":{"selected":true,"text":"All","value":"$__all"},"datasource":{"type":"prometheus","uid":"prometheus"},"definition":"label_values(app_http_server_duration_milliseconds_count, service_name)","hide":0,"includeAll":true,"allValue":".*","multi":true,"name":"service","options":[],"query":{"query":"label_values(app_http_server_duration_milliseconds_count, service_name)","refId":"StandardVariableQuery"},"refresh":2,"sort":1,"type":"query","label":"Serviço"}
+  ]},
+  "time": {"from":"now-1h","to":"now"}, "timepicker":{}, "timezone":"browser",
+  "title": "Latência — P90 / P95 / P99",
+  "uid": "latencia", "version": 1
+}
