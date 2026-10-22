@@ -4,13 +4,13 @@
 set -e
 KIBANA=http://kibana:5601
 
-echo "[kibana-setup] criando data view pizzaexpress-logs*"
+echo "[kibana-setup] criando data view barbearia-logs*"
 curl -s -X POST "$KIBANA/api/data_views/data_view" \
   -H 'kbn-xsrf: true' -H 'Content-Type: application/json' \
   -d '{
         "data_view": {
-          "id": "pizzaexpress-logs",
-          "title": "pizzaexpress-logs*",
+          "id": "barbearia-logs",
+          "title": "barbearia-logs*",
           "name": "PizzaExpress — logs (OTel)",
           "timeFieldName": "@timestamp"
         },
@@ -20,6 +20,6 @@ curl -s -X POST "$KIBANA/api/data_views/data_view" \
 echo "[kibana-setup] definindo como data view padrão"
 curl -s -X POST "$KIBANA/api/data_views/default" \
   -H 'kbn-xsrf: true' -H 'Content-Type: application/json' \
-  -d '{"data_view_id":"pizzaexpress-logs","force":true}' >/dev/null
+  -d '{"data_view_id":"barbearia-logs","force":true}' >/dev/null
 
 echo "[kibana-setup] ok"

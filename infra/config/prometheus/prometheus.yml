@@ -37,11 +37,3 @@ scrape_configs:
   - job_name: kafka-exporter
     static_configs:
       - targets: ['kafka-exporter:9308']
-
-  # kube-state-metrics do cluster minikube -- ponte manual via kubectl
-  # port-forward (k8s/observability/port-forward-metrics.sh), já que o
-  # minikube não está na mesma rede docker-compose. host.docker.internal
-  # resolve o host a partir de um container no Docker Desktop (Mac/Windows).
-  - job_name: kube-state-metrics
-    static_configs:
-      - targets: ['host.docker.internal:9210']

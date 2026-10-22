@@ -70,7 +70,7 @@
       "targets":[{
         "datasource":{"type":"tempo","uid":"tempo"},
         "queryType":"traceql",
-        "query":"{resource.service.name=~\"catalog-service|order-service\" && span.db.system=\"postgresql\"}",
+        "query":"{resource.service.name=~\"barbearia-service|agendamento-service\" && span.db.system=\"postgresql\"}",
         "tableType":"traces",
         "limit":30,
         "refId":"A"

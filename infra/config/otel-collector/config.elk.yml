@@ -55,7 +55,7 @@ exporters:
   # Logs → Elasticsearch (lado a lado com o Loki — mesmo log, dois destinos)
   elasticsearch:
     endpoints: [http://elasticsearch:9200]
-    logs_index: pizzaexpress-logs
+    logs_index: barbearia-logs
     mapping:
       mode: none        # documento = modelo de dados do OTel (Body, SeverityText, Attributes.*, Resource.*)
     flush:

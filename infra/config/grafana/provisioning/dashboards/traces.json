@@ -3,7 +3,7 @@
   "editable": true,
   "graphTooltip": 1,
   "panels": [
-    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":0},"id":5,"title":"CI/CD — Versão em Produção (catalog-service)","type":"row"},
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":0},"id":5,"title":"CI/CD — Versão em Produção (barbearia-service)","type":"row"},
     {
       "datasource":{"type":"tempo","uid":"tempo"},
       "gridPos":{"h":14,"w":24,"x":0,"y":1},"id":50,
@@ -14,7 +14,7 @@
       "targets":[{
         "datasource":{"type":"tempo","uid":"tempo"},
         "queryType":"traceql",
-        "query":"{resource.service.name=\"catalog-service\"} | select(resource.service.version, name, duration)",
+        "query":"{resource.service.name=\"barbearia-service\"} | select(resource.service.version, name, duration)",
         "tableType":"spans",
         "limit":50,
         "refId":"A"
@@ -106,16 +106,16 @@
       ]
     },
 
-    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":74},"id":4,"title":"Traces do Pipeline Kafka","type":"row"},
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":74},"id":4,"title":"Processamento de Eventos","type":"row"},
     {
       "datasource":{"type":"tempo","uid":"tempo"},
       "gridPos":{"h":16,"w":24,"x":0,"y":75},"id":40,
       "options":{"frameType":"traceList"},
-      "title":"Traces de order-service + delivery-service (fluxo Kafka)","type":"table",
+      "title":"Traces relacionados ao processamento de eventos","type":"table",
       "targets":[{
         "datasource":{"type":"tempo","uid":"tempo"},
         "queryType":"traceql",
-        "query":"{resource.service.name=~\"order-service|delivery-service|notification-service\"}",
+        "query":"{resource.service.name=~\"agendamento-service|disponibilidade-service|notificacao-service\"}",
         "tableType":"traces",
         "limit":50,
         "refId":"A"
@@ -134,11 +134,11 @@
     {"current":{"selected":true,"text":"All","value":"$__all"},"hide":0,"includeAll":true,"allValue":".*","multi":true,"name":"service","options":[
       {"selected":true,"text":"All","value":"$__all"},
       {"selected":false,"text":"bff-gateway","value":"bff-gateway"},
-      {"selected":false,"text":"catalog-service","value":"catalog-service"},
-      {"selected":false,"text":"order-service","value":"order-service"},
-      {"selected":false,"text":"delivery-service","value":"delivery-service"},
-      {"selected":false,"text":"notification-service","value":"notification-service"}
-    ],"query":"bff-gateway,catalog-service,order-service,delivery-service,notification-service","refresh":0,"sort":1,"type":"custom","label":"Serviço"}
+      {"selected":false,"text":"barbearia-service","value":"barbearia-service"},
+      {"selected":false,"text":"agendamento-service","value":"agendamento-service"},
+      {"selected":false,"text":"disponibilidade-service","value":"disponibilidade-service"},
+      {"selected":false,"text":"notificacao-service","value":"notificacao-service"}
+    ],"query":"bff-gateway,barbearia-service,agendamento-service,disponibilidade-service,notificacao-service","refresh":0,"sort":1,"type":"custom","label":"Serviço"}
   ]},
   "time": {"from":"now-1h","to":"now"}, "timepicker":{}, "timezone":"browser",
   "title": "Traces — Requests e Percurso Distribuído",

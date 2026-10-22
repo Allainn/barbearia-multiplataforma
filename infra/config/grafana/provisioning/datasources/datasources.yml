@@ -90,7 +90,7 @@ datasources:
     url: http://elasticsearch:9200
     access: proxy
     jsonData:
-      index: "pizzaexpress-logs*"
+      index: "barbearia-logs*"
       timeField: "@timestamp"
       logMessageField: Body
       logLevelField: SeverityText

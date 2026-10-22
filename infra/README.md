@@ -1,3 +1,5 @@
 # infra
 
-Ambiente local (docker-compose), seed do Keycloak, manifestos Kubernetes e observabilidade. Vazio até os ADRs [0011](../docs/adr/0011-dados-por-servico.md) e [0013](../docs/adr/0013-entrega-continua-e-observabilidade.md) serem aceitos. Base sugerida: `pizzaexpress-ambiente/infrastructure/` do professor.
+Ambiente local com Docker Compose, seed do Keycloak e observabilidade. A configuração reaproveita a base do `pizzaexpress-encontro-4/infrastructure/` do professor e é adaptada ao contrato da Barbearia.
+
+O ambiente usa PostgreSQL, Kafka, Keycloak, OpenTelemetry Collector, Prometheus, Loki, Tempo e Grafana. Kubernetes, Minikube e Argo CD estão fora do escopo desta entrega.
