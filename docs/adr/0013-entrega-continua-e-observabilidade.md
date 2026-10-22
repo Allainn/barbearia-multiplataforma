@@ -1,7 +1,7 @@
 # ADR-0013: Entrega contínua e observabilidade
 
-- **Status:** Proposto · **depende do conteúdo da Aula 4 (07/10)**
-- **Data:** 07/10/2026
+- **Status:** Aceito
+- **Data:** 22/10/2026
 - **Questão:** [Q19](../questoes-abertas.md#q19) · [Q20](../questoes-abertas.md#q20)
 - **Afeta no diagrama:** C4 nível 2 (stack de observabilidade, se o grupo decidir mostrá-la); diagrama de implantação, se fizermos um
 
@@ -14,12 +14,12 @@
 
 ## Opções consideradas (CI/CD)
 
-### A. GitHub Actions (CI) + GHCR (registry) + Argo CD no Minikube (CD por GitOps)
+### A. GitHub Actions (CI) + GHCR (registry) + Docker Compose (CD local)
 
-O Actions testa, constrói e publica a imagem no GHCR e atualiza a tag no manifesto em `infra/k8s/`. O Argo CD, rodando no Minikube, **puxa** a mudança do Git e aplica.
+O Actions constrói e publica a imagem do `barbearia-service` no GHCR. A máquina da apresentação executa `docker compose pull` e recria o serviço com a nova imagem.
 
-- **Prós:** o modelo pull do GitOps resolve o problema de alcance (o cluster local busca no GitHub); é o fluxo que o professor vai ensinar; tudo gratuito.
-- **Contras:** Argo CD consome RAM; o pipeline precisa de permissão para commitar a nova tag no repositório. Como o repositório é público, as imagens no GHCR também podem ser públicas, sem `imagePullSecret` no Minikube.
+- **Prós:** implementação simples, compatível com a infraestrutura já executada em Docker Compose e adequada ao limite de memória das máquinas.
+- **Contras:** não demonstra GitOps nem Kubernetes; o deploy depende da máquina local estar ligada e autenticada no GHCR.
 
 ### B. GitHub Actions com runner self-hosted na máquina de quem apresenta + `docker compose`
 
@@ -37,19 +37,17 @@ O Actions testa, constrói e publica a imagem no GHCR e atualiza a tag no manife
 
 ## Decisão
 
-**Proposta preliminar:** opção A para CI/CD e a stack do PizzaExpress para observabilidade. **Revisar depois da Aula 4**, com o exemplo que o professor trouxer.
+**Decisão:** opção A para CI/CD, com GitHub Actions publicando no GHCR e deploy local via Docker Compose. A stack de observabilidade do PizzaExpress foi mantida e adaptada para os nomes dos containers da Barbearia.
+
+O workflow [`barbearia-service.yml`](../../.github/workflows/barbearia-service.yml) dispara em `main`, em branches `demo/**` quando o serviço muda, e manualmente. Publica as tags `latest` e o SHA do commit. O deploy é feito por [`scripts/deploy.sh`](../../scripts/deploy.sh).
 
 ## Consequências
 
-- Um workflow por serviço com filtro de `paths:` ([ADR-0002](0002-monorepo-e-estrutura.md)).
-- Manifestos Kubernetes em `infra/k8s/` (Kustomize ou Helm, a decidir).
-- Dashboard do Grafana com latência por endpoint e o trace distribuído da reserva.
-
-## Perguntas para o grupo
-
-- O que a Aula 4 mostrou muda esta proposta (ferramenta de CI, Argo CD, registry)?
-- Minikube na apresentação, ou `docker compose` com o pipeline publicando as imagens?
-- Quem cuida da infraestrutura e do pipeline ([Q22](../questoes-abertas.md#q22))?
+- O workflow usa um filtro de `paths:` para evitar builds quando o `barbearia-service` não foi alterado.
+- O deploy local baixa a imagem publicada e recria somente o `barbearia-service`; os demais containers continuam sob o Docker Compose da infraestrutura.
+- O Grafana apresenta a latência por endpoint e as métricas, logs e traces coletados pela stack OpenTelemetry, Prometheus, Loki e Tempo.
+- Argo CD, Minikube, Kubernetes e runner self-hosted ficaram fora do escopo por prazo e por custo operacional.
+- A propagação de trace pelo Kafka não é requisito desta entrega; os eventos continuam observáveis nos serviços produtores e consumidores.
 
 ## Referências
 
