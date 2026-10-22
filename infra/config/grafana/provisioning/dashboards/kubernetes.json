@@ -1,0 +1,126 @@
+{
+  "description": "Kubernetes — réplicas de pé por Deployment, self-healing e saúde do Service (LB) via kube-state-metrics. Requer k8s/observability/deploy-metrics.sh + port-forward-metrics.sh rodando.",
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":0},"id":1,"title":"Containers de Pé — Réplicas Disponíveis por Deployment","type":"row"},
+
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"unit":"short"}},
+      "gridPos":{"h":5,"w":4,"x":0,"y":1},"id":10,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"catalog-service","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_deployment_status_replicas_available{namespace=\"pizzaexpress\",deployment=\"catalog-service\"}","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"unit":"short"}},
+      "gridPos":{"h":5,"w":4,"x":4,"y":1},"id":11,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"catalog-service-java","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_deployment_status_replicas_available{namespace=\"pizzaexpress\",deployment=\"catalog-service-java\"}","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"unit":"short"}},
+      "gridPos":{"h":5,"w":4,"x":8,"y":1},"id":12,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"bff-gateway","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_deployment_status_replicas_available{namespace=\"pizzaexpress\",deployment=\"bff-gateway\"}","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"unit":"short"}},
+      "gridPos":{"h":5,"w":4,"x":12,"y":1},"id":13,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"bff-gateway-java","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_deployment_status_replicas_available{namespace=\"pizzaexpress\",deployment=\"bff-gateway-java\"}","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"unit":"short"}},
+      "gridPos":{"h":5,"w":4,"x":16,"y":1},"id":14,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"postgres","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_deployment_status_replicas_available{namespace=\"pizzaexpress\",deployment=\"postgres\"}","legendFormat":"","refId":"A","instant":true}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":6},"id":20,"title":"Réplicas: Disponíveis vs Desejadas (ao longo do tempo)","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":5},"unit":"short"}},
+      "gridPos":{"h":8,"w":24,"x":0,"y":7},"id":21,
+      "options":{"legend":{"calcs":["mean","lastNotNull"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"kube_deployment_status_replicas_available vs kube_deployment_spec_replicas","type":"timeseries",
+      "targets":[
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_deployment_status_replicas_available{namespace=\"pizzaexpress\"}","legendFormat":"{{deployment}} — disponíveis","refId":"A"},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_deployment_spec_replicas{namespace=\"pizzaexpress\"}","legendFormat":"{{deployment}} — desejadas","refId":"B"}
+      ]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":15},"id":30,"title":"Restarts de Pod — evidência de self-healing","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":8},"unit":"short"}},
+      "gridPos":{"h":8,"w":24,"x":0,"y":16},"id":31,
+      "options":{"legend":{"calcs":["sum"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"Restarts por Pod (increase, janela do dashboard)","type":"timeseries",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"sum by (pod) (increase(kube_pod_container_status_restarts_total{namespace=\"pizzaexpress\"}[$__rate_interval]))","legendFormat":"{{pod}}","refId":"A"}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":24},"id":40,"title":"Saúde do Service (LB) — Endpoints Prontos","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"unit":"short"}},
+      "gridPos":{"h":5,"w":6,"x":0,"y":25},"id":41,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"bff-gateway — endpoints prontos","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_endpoint_address_available{namespace=\"pizzaexpress\",endpoint=\"bff-gateway\"}","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"unit":"short"}},
+      "gridPos":{"h":5,"w":6,"x":6,"y":25},"id":42,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"bff-gateway-java — endpoints prontos","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_endpoint_address_available{namespace=\"pizzaexpress\",endpoint=\"bff-gateway-java\"}","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"unit":"short"}},
+      "gridPos":{"h":5,"w":6,"x":12,"y":25},"id":43,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"catalog-service — endpoints prontos","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_endpoint_address_available{namespace=\"pizzaexpress\",endpoint=\"catalog-service\"}","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"unit":"short"}},
+      "gridPos":{"h":5,"w":6,"x":18,"y":25},"id":44,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"catalog-service-java — endpoints prontos","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_endpoint_address_available{namespace=\"pizzaexpress\",endpoint=\"catalog-service-java\"}","legendFormat":"","refId":"A","instant":true}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":30},"id":50,"title":"Endpoints Prontos vs Não-Prontos (série temporal)","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":5},"unit":"short"}},
+      "gridPos":{"h":8,"w":24,"x":0,"y":31},"id":51,
+      "options":{"legend":{"calcs":["mean","lastNotNull"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"kube_endpoint_address_available vs kube_endpoint_address_not_ready","type":"timeseries",
+      "targets":[
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_endpoint_address_available{namespace=\"pizzaexpress\"}","legendFormat":"{{endpoint}} — prontos","refId":"A"},
+        {"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kube_endpoint_address_not_ready{namespace=\"pizzaexpress\"}","legendFormat":"{{endpoint}} — não prontos","refId":"B"}
+      ]
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": ["kubernetes","k8s","healthcheck","sre"],
+  "templating": {"list":[]},
+  "time": {"from":"now-30m","to":"now"}, "timepicker":{}, "timezone":"browser",
+  "title": "Kubernetes — Containers e Saúde do LB",
+  "uid": "kubernetes-pizzaexpress", "version": 1
+}
