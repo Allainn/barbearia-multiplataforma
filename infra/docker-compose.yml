@@ -235,6 +235,26 @@ services:
       retries: 10
       start_period: 30s
 
+  # ─────────────────────────────────────────────
+  # Inicialização idempotente dos tópicos da aplicação
+  # ─────────────────────────────────────────────
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka-init
+    restart: "no"
+    entrypoint: ["/bin/bash", "-ec"]
+    command:
+      - |
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists \
+          --topic agendamento.criado --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists \
+          --topic agendamento.cancelado --partitions 3 --replication-factor 1
+    networks:
+      - observability
+    depends_on:
+      kafka:
+        condition: service_healthy
+
   kafka-exporter:
     image: danielqsj/kafka-exporter:latest
     container_name: kafka-exporter
@@ -250,8 +270,8 @@ services:
     networks:
       - observability
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
 
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.2
@@ -270,8 +290,8 @@ services:
     networks:
       - observability
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
 
   # ─────────────────────────────────────────────
   # PostgreSQL
