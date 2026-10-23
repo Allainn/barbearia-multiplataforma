@@ -11,7 +11,8 @@ public interface AgendamentoRepository {
     /** Grava um agendamento novo. */
     void insert(Agendamento agendamento) throws HorarioIndisponivelException;
 
-    void updateStatus(Agendamento agendamento);
+    /** Grava o status novo. Devolve false se outro pedido já tinha gravado esse status. */
+    boolean updateStatus(Agendamento agendamento);
 
     Optional<Agendamento> findById(UUID id);
 }
