@@ -1,81 +1,72 @@
-# Arquitetura: esboço do C4
+# Arquitetura: C4 do BarberHub
 
-> **Esboço para discussão.** Reflete os ADRs *Propostos* de 07/10/2026; nada está aceito. Onde houver **(Qnn)**, o elemento depende daquela [questão em aberto](../questoes-abertas.md).
+> **Versão do roadmap de 21/10/2026.** Só entra o que existe no código da demo; o contrato completo (portas, rotas, eventos, banco) está em [docs/tarefas.md](../tarefas.md#contrato).
 
-- **Board no Miro (fonte do esboço, para discutir e mexer junto):** <https://miro.com/app/board/uXjVEdd_Nsc=/>
-- **Esta página:** espelho em texto (Mermaid) para revisar no GitHub e versionar junto dos ADRs. Quem fechar uma questão atualiza os dois.
-- **Versão final para a apresentação:** a definir na [Q24](../questoes-abertas.md#q24) (sugestão: draw.io com a notação C4, como o professor usa).
+- **Board no Miro (fonte dos diagramas dos slides):** <https://miro.com/app/board/uXjVEdd_Nsc=/>
+- **Esta página:** espelho em Mermaid para revisar no GitHub e versionar junto do código. Quem mudar um container, tópico ou seta avisa o Allainn, que atualiza os dois.
 
-**Legenda:** azul = dentro do sistema · cinza = sistema externo · azul-escuro = pessoa · tracejado = em aberto ou fora do escopo.
+**Legenda:** azul-escuro = pessoa · azul = dentro do sistema · cinza = sistema externo.
 
 ## Nível 1 · Contexto
 
 ```mermaid
 flowchart TB
-    cliente["<b>Cliente</b><br/>[Pessoa]<br/>Busca horários, agenda e cancela"]
-    profissional["<b>Profissional</b><br/>[Pessoa]<br/>Consulta a própria agenda"]
-    gestor["<b>Gestor da barbearia</b><br/>[Pessoa]<br/>Cadastra serviços, profissionais e expediente"]
-    admin["<b>Administrador da plataforma</b><br/>[Pessoa]<br/>Aprova barbearias"]
+    cliente["<b>Cliente</b><br/>[Pessoa]<br/>Consulta horários livres, agenda e cancela"]
+    gestor["<b>Gestor da barbearia</b><br/>[Pessoa]<br/>Cadastra barbearias, profissionais e serviços"]
 
-    sistema["<b>Plataforma de agendamento</b> (nome: Q02)<br/>[Sistema de software]<br/>Marketplace multi-tenant: muitas barbearias,<br/>clientes agendam em qualquer uma (Q01)"]
+    sistema["<b>BarberHub</b><br/>[Sistema de software]<br/>Plataforma multi-tenant de agendamento:<br/>muitas barbearias na mesma plataforma;<br/>o cliente consulta horários livres e agenda"]
 
-    keycloak["<b>Keycloak</b><br/>[Sistema externo · IdP]<br/>Autentica usuários e emite JWT com roles"]
-    mensagens["<b>Provedor de mensagens</b><br/>[Sistema externo · simulado]<br/>WhatsApp, SMS ou e-mail (Q05)"]
-    pagamento["<b>Gateway de pagamento</b><br/>[Sistema externo]<br/>Sinal contra no-show (Q05: fora?)"]
+    keycloak["<b>Keycloak 26</b><br/>[Sistema externo · IdP]<br/>Autentica usuários e emite JWT<br/>com as roles cliente e gestor"]
+    mensagens["<b>Provedor de mensagens</b><br/>[Sistema externo · simulado]<br/>WhatsApp ou SMS; na demo,<br/>a mensagem vai para o log"]
 
-    cliente -->|"Busca horários, agenda e cancela [HTTPS]"| sistema
-    profissional -->|"Consulta a agenda [HTTPS]"| sistema
-    gestor -->|"Gerencia a barbearia [HTTPS]"| sistema
-    admin -->|"Administra a plataforma [HTTPS]"| sistema
-    sistema -->|"Autentica (OIDC) e valida tokens (JWKS)"| keycloak
-    sistema -->|"Envia confirmações e cancelamentos [HTTPS]"| mensagens
-    sistema -.->|"Cobra sinal (fora do escopo?)"| pagamento
+    cliente -->|"Consulta horários, agenda e cancela [HTTPS]"| sistema
+    gestor -->|"Cadastra barbearias, profissionais e serviços [HTTPS]"| sistema
+    sistema -->|"Autentica (OIDC) e valida o JWT"| keycloak
+    sistema -->|"Envia confirmação e cancelamento (simulado)"| mensagens
 
     classDef pessoa fill:#08427b,stroke:#052e56,color:#ffffff
     classDef interno fill:#1168bd,stroke:#0b4884,color:#ffffff
     classDef externo fill:#999999,stroke:#6b6b6b,color:#ffffff
-    classDef aberto fill:#ffffff,stroke:#999999,color:#666666,stroke-dasharray: 5 5
-    class cliente,profissional,gestor,admin pessoa
+    class cliente,gestor pessoa
     class sistema interno
     class keycloak,mensagens externo
-    class pagamento aberto
 ```
 
 ## Nível 2 · Containers
 
 ```mermaid
 flowchart TB
-    pessoas["<b>Cliente · Profissional · Gestor · Admin</b><br/>[Pessoas]<br/>via curl/Postman na demo; apps fora do escopo (Q06)"]
-    keycloak["<b>Keycloak 26</b><br/>[Sistema externo · IdP]"]
-    mensagens["<b>Provedor de mensagens</b><br/>[Sistema externo · simulado]"]
+    pessoas["<b>Cliente · Gestor da barbearia</b><br/>[Pessoas]<br/>Na demo, chamadas com curl (scripts/demo.sh)"]
+    keycloak["<b>Keycloak 26</b><br/>[Sistema externo · IdP]<br/>Realm barbearia; roles cliente e gestor"]
+    mensagens["<b>Provedor de mensagens</b><br/>[Sistema externo · simulado]<br/>Na demo, a mensagem vai para o log"]
 
-    subgraph plataforma["Plataforma de agendamento (nome: Q02)"]
-        bff["<b>bff-gateway</b><br/>[Java 21 · Spring Boot]<br/>Entrada única; valida JWT (401/403) (Q09, Q13)"]
-        barbearia["<b>barbearia-service</b><br/>[Python 3.12 · FastAPI]<br/>Barbearias, profissionais, serviços, expediente"]
-        agendamento["<b>agendamento-service</b><br/>[Java 21 · Spring Boot]<br/>Reserva e cancela; lock contra double booking (Q14)"]
-        disponibilidade["<b>disponibilidade-service</b><br/>[Python 3.12 · FastAPI]<br/>Horários livres: read model do CQRS (Q15)"]
-        notificacao["<b>notificacao-service</b><br/>[Python 3.12 · FastAPI · worker]<br/>Confirmações e cancelamentos (Q17)"]
-        kafka[("<b>Kafka</b><br/>[Apache Kafka · KRaft]<br/>agendamento.criado · agendamento.cancelado ·<br/>expediente.alterado (Q10)")]
-        postgres[("<b>PostgreSQL 16</b><br/>schemas: barbearia · agendamento ·<br/>disponibilidade · notificacao (Q12)")]
+    subgraph barberhub["BarberHub · um PostgreSQL 16 (banco barbearia) com um schema e um usuário por serviço"]
+        bff["<b>bff-gateway</b><br/>[Java 21 · Spring Boot 3 · :8010]<br/>Entrada única; valida o JWT (401/403)<br/>e repassa o X-User-ID"]
+        barbearia["<b>barbearia-service</b><br/>[Python 3.12 · FastAPI · :8001]<br/>Barbearias, profissionais e serviços"]
+        agendamento["<b>agendamento-service</b><br/>[Java 21 · Spring Boot 3 · :8012]<br/>Reserva e cancela; 409 se o horário<br/>já estiver ocupado"]
+        disponibilidade["<b>disponibilidade-service</b><br/>[Python 3.12 · FastAPI · :8003]<br/>Horários livres (leitura do CQRS),<br/>grade das 09h às 18h"]
+        notificacao["<b>notificacao-service</b><br/>[Python 3.12 · FastAPI · :8004]<br/>Consome os eventos e envia a mensagem;<br/>ignora evento repetido"]
+        kafka[("<b>Kafka</b><br/>[Apache Kafka · KRaft]<br/>agendamento.criado · agendamento.cancelado<br/>3 partições, chave profissional_id")]
+        pgB[("<b>PostgreSQL 16</b><br/>schema barbearia")]
+        pgA[("<b>PostgreSQL 16</b><br/>schema agendamento<br/>(constraint de exclusão)")]
+        pgD[("<b>PostgreSQL 16</b><br/>schema disponibilidade<br/>(read model)")]
+        pgN[("<b>PostgreSQL 16</b><br/>schema notificacao")]
     end
 
-    pessoas -->|"Chamadas com JWT [HTTPS/REST]"| bff
-    pessoas -.->|"Login (OIDC) para obter o token"| keycloak
-    bff -->|"Valida assinatura do JWT [JWKS]"| keycloak
-    bff -->|"Cadastros [REST]"| barbearia
-    bff -->|"Reservar, cancelar [REST]"| agendamento
-    bff -->|"Consultar horários livres [REST]"| disponibilidade
-    agendamento -->|"Valida serviço e expediente [REST] (Q11)"| barbearia
-    agendamento -->|"Revalida JWT e tenant [JWKS] (Q13)"| keycloak
-    agendamento -->|"Publica agendamento.* via Outbox (Q16)"| kafka
-    barbearia -->|"Publica expediente.alterado"| kafka
-    kafka -->|"Consome agendamento.* e expediente.alterado"| disponibilidade
-    kafka -->|"Consome agendamento.*"| notificacao
-    notificacao -->|"Envia mensagem [HTTPS]"| mensagens
-    barbearia -->|"SQL · schema barbearia"| postgres
-    agendamento -->|"SQL · schema agendamento (constraint de exclusão)"| postgres
-    disponibilidade -->|"SQL · schema disponibilidade"| postgres
-    notificacao -->|"SQL · schema notificacao"| postgres
+    pessoas -->|"HTTPS/REST com JWT"| bff
+    pessoas -->|"Login (OIDC) e obtém o token"| keycloak
+    bff -->|"Valida o JWT [JWKS]"| keycloak
+    bff -->|"Cadastros e consultas [REST]"| barbearia
+    bff -->|"Reserva e cancela [REST]"| agendamento
+    bff -->|"Horários livres [REST]"| disponibilidade
+    agendamento -->|"Publica agendamento.criado e .cancelado"| kafka
+    kafka -->|"Consome os dois tópicos"| disponibilidade
+    kafka -->|"Consome os dois tópicos"| notificacao
+    notificacao -->|"Envia a mensagem (simulado: grava no log)"| mensagens
+    barbearia -->|"SQL"| pgB
+    agendamento -->|"SQL"| pgA
+    disponibilidade -->|"SQL"| pgD
+    notificacao -->|"SQL"| pgN
 
     classDef pessoa fill:#08427b,stroke:#052e56,color:#ffffff
     classDef interno fill:#1168bd,stroke:#0b4884,color:#ffffff
@@ -83,18 +74,36 @@ flowchart TB
     classDef externo fill:#999999,stroke:#6b6b6b,color:#ffffff
     class pessoas pessoa
     class bff,barbearia,agendamento,disponibilidade,notificacao interno
-    class kafka,postgres infra
+    class kafka,pgB,pgA,pgD,pgN infra
     class keycloak,mensagens externo
 ```
 
-## Fluxo principal da demo (resumo)
+## Onde está cada decisão
 
-1. Cliente obtém o token no Keycloak e chama o BFF (sem token: **401**; role errada: **403**).
-2. Consulta horários livres → BFF → disponibilidade-service (read model).
-3. Reserva → BFF → agendamento-service → valida no barbearia-service → grava com a constraint de exclusão (disputa: **409**) → Outbox → Kafka.
-4. Kafka → disponibilidade-service atualiza o read model (o horário some da consulta) e notificacao-service envia a confirmação.
-5. Trace da reserva inteira no Grafana (Tempo) e a latência no dashboard.
+No Miro, cada elemento tem uma etiqueta verde com link para o ADR. Aqui, a mesma relação:
+
+| Elemento | ADR |
+|---|---|
+| BarberHub e o volume que justifica a arquitetura | [ADR-0003](../adr/0003-enquadramento-plataforma-multi-tenant.md) |
+| Os 5 containers e os 2 tópicos | [ADR-0004](../adr/0004-decomposicao-em-servicos.md) |
+| Java nos dois serviços com Spring Boot, Python nos três com FastAPI | [ADR-0005](../adr/0005-linguagens-por-servico.md) |
+| REST do BFF para os serviços; Kafka entre o agendamento e os consumers | [ADR-0006](../adr/0006-comunicacao-sincrona-e-kafka.md) |
+| Constraint de exclusão e 409 no agendamento | [ADR-0007](../adr/0007-concorrencia-na-reserva-de-horario.md) |
+| disponibilidade-service como lado de leitura do CQRS | [ADR-0008](../adr/0008-cqrs-na-consulta-de-disponibilidade.md) |
+| Keycloak e validação do JWT só no BFF | [ADR-0009](../adr/0009-seguranca-keycloak-e-validacao-jwt.md) |
+| Clean Architecture e DDD no agendamento | [ADR-0010](../adr/0010-arquitetura-interna-dos-servicos.md) |
+| Um PostgreSQL com um schema e um usuário por serviço | [ADR-0011](../adr/0011-dados-por-servico.md) |
+
+Fora dos diagramas: o CI/CD e a stack Grafana ([ADR-0013](../adr/0013-entrega-continua-e-observabilidade.md)) e a decisão de não usar Outbox ([ADR-0012](../adr/0012-garantia-de-publicacao-outbox.md)).
+
+## Fluxo da demo
+
+1. Sem token: **401**. Cliente cadastrando serviço: **403**.
+2. Cliente consulta os horários livres (BFF → disponibilidade-service).
+3. Duas reservas no mesmo horário ao mesmo tempo: **201** para uma, **409** para a outra (constraint de exclusão no agendamento-service).
+4. O evento aparece no Kafka UI, a notificação aparece no log e o horário some da consulta.
+5. Uma mudança no barbearia-service passa pelo pipeline, a nova versão sobe, `GET /barbearias` mostra a mudança e a latência aparece no Grafana.
 
 ## Nível 3
 
-A definir depois do [ADR-0010](../adr/0010-arquitetura-interna-dos-servicos.md). Proposta: componentes do agendamento-service (controller → use cases → aggregate `Agendamento` → repositório PostgreSQL e Outbox → publicador Kafka).
+Fora do escopo do roadmap (corte por prazo).

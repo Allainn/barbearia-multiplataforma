@@ -1,0 +1,107 @@
+{
+  "description": "Kafka — Consumer Lag e Throughput por tópico e consumer group",
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":0},"id":1,"title":"Visão Geral","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null}]},"mappings":[]}},
+      "gridPos":{"h":4,"w":4,"x":0,"y":1},"id":2,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"auto"},
+      "title":"Brokers Ativos","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"count(kafka_brokers)","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"blue","value":null}]}}},
+      "gridPos":{"h":4,"w":4,"x":4,"y":1},"id":3,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"auto"},
+      "title":"Tópicos","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"count(kafka_topic_partitions{topic!~\"__.*\"})","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":10},{"color":"red","value":100}]}}},
+      "gridPos":{"h":4,"w":4,"x":8,"y":1},"id":4,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"auto"},
+      "title":"Lag Total","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"sum(kafka_consumergroup_lag{topic=~\"$topic\",consumergroup=~\"$consumergroup\"})","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":100},{"color":"red","value":1000}]},"unit":"short"}},
+      "gridPos":{"h":4,"w":4,"x":12,"y":1},"id":5,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value_and_name"},
+      "title":"Lag por Consumer Group","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"sum by (consumergroup) (kafka_consumergroup_lag{topic=~\"$topic\",consumergroup=~\"$consumergroup\"})","legendFormat":"{{consumergroup}}","refId":"A","instant":true}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":5},"id":10,"title":"Consumer Lag por Tópico","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":10},"unit":"short"}},
+      "gridPos":{"h":9,"w":24,"x":0,"y":6},"id":11,
+      "options":{"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"Consumer Lag por Tópico ao Longo do Tempo","type":"timeseries",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"sum by (topic, consumergroup) (kafka_consumergroup_lag{topic=~\"$topic\",consumergroup=~\"$consumergroup\"})","legendFormat":"{{consumergroup}} / {{topic}}","refId":"A"}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":1,"fillOpacity":5},"unit":"short"}},
+      "gridPos":{"h":8,"w":24,"x":0,"y":15},"id":12,
+      "options":{"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"Lag por Partição","type":"timeseries",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kafka_consumergroup_lag{topic=~\"$topic\",consumergroup=~\"$consumergroup\"}","legendFormat":"{{consumergroup}} / {{topic}} [p{{partition}}]","refId":"A"}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":23},"id":20,"title":"Throughput — Mensagens por Segundo","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":5},"unit":"msg/s"}},
+      "gridPos":{"h":8,"w":12,"x":0,"y":24},"id":21,
+      "options":{"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"Taxa de Produção por Tópico (offset/s)","type":"timeseries",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"sum by (topic) (rate(kafka_topic_partition_current_offset{topic=~\"$topic\"}[$__rate_interval]))","legendFormat":"{{topic}}","refId":"A"}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":5},"unit":"msg/s"}},
+      "gridPos":{"h":8,"w":12,"x":12,"y":24},"id":22,
+      "options":{"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"Taxa de Consumo por Consumer Group / Tópico","type":"timeseries",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"sum by (consumergroup, topic) (rate(kafka_consumergroup_current_offset{topic=~\"$topic\",consumergroup=~\"$consumergroup\"}[$__rate_interval]))","legendFormat":"{{consumergroup}} / {{topic}}","refId":"A"}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":32},"id":30,"title":"Tópicos — Mensagens Acumuladas","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":1,"fillOpacity":3},"unit":"short"}},
+      "gridPos":{"h":8,"w":24,"x":0,"y":33},"id":31,
+      "options":{"legend":{"calcs":["lastNotNull"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"Offset Atual por Tópico / Partição","type":"timeseries",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"kafka_topic_partition_current_offset{topic=~\"$topic\"}","legendFormat":"{{topic}} [p{{partition}}]","refId":"A"}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":41},"id":40,"title":"Tabela — Lag por Consumer Group","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":10},{"color":"red","value":100}]},"custom":{"displayMode":"color-background"},"unit":"short"}},
+      "gridPos":{"h":8,"w":24,"x":0,"y":42},"id":41,
+      "options":{"sortBy":[{"displayName":"Lag","desc":true}]},
+      "title":"Lag por Consumer Group","type":"table",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"sum by (consumergroup, topic) (kafka_consumergroup_lag)","legendFormat":"","refId":"A","instant":true}],
+      "transformations":[{"id":"labelsToFields","options":{"valueLabel":"Lag"}},{"id":"organize","options":{"renameByName":{"consumergroup":"Consumer Group","topic":"Tópico","Value":"Lag"}}}]
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": ["kafka","mensageria","consumer-lag"],
+  "templating": {"list": [
+    {"current":{},"datasource":{"type":"prometheus","uid":"prometheus"},"definition":"label_values(kafka_consumergroup_lag{topic!~\"__.*\"}, topic)","hide":0,"includeAll":true,"allValue":".*","multi":true,"name":"topic","options":[],"query":{"query":"label_values(kafka_consumergroup_lag{topic!~\"__.*\"}, topic)","refId":"StandardVariableQuery"},"refresh":2,"sort":1,"type":"query","label":"Tópico"},
+    {"current":{},"datasource":{"type":"prometheus","uid":"prometheus"},"definition":"label_values(kafka_consumergroup_lag, consumergroup)","hide":0,"includeAll":true,"allValue":".*","multi":true,"name":"consumergroup","options":[],"query":{"query":"label_values(kafka_consumergroup_lag, consumergroup)","refId":"StandardVariableQuery"},"refresh":2,"sort":1,"type":"query","label":"Consumer Group"}
+  ]},
+  "time": {"from":"now-1h","to":"now"}, "timepicker":{}, "timezone":"browser",
+  "title": "Kafka — Consumer Lag e Throughput",
+  "uid": "kafka", "version": 1
+}

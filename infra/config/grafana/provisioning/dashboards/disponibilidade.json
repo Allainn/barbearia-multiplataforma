@@ -1,0 +1,105 @@
+{
+  "description": "Disponibilidade e healthcheck de cada microserviço — atualizado pelo demo.sh",
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":0},"id":1,"title":"Status Atual — Cada Microserviço","type":"row"},
+
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"mappings":[{"options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}},"type":"value"}],"unit":"short"}},
+      "gridPos":{"h":5,"w":4,"x":0,"y":1},"id":10,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"barbearia-service","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"clamp_max(sum(increase(app_http_server_duration_milliseconds_count{service_name=\"barbearia-service\",http_target=\"/health\",http_status_code=\"200\"}[2m])), 1)","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"mappings":[{"options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}},"type":"value"}],"unit":"short"}},
+      "gridPos":{"h":5,"w":4,"x":4,"y":1},"id":11,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"agendamento-service","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"clamp_max(sum(increase(app_http_server_duration_milliseconds_count{service_name=\"agendamento-service\",http_target=\"/health\",http_status_code=\"200\"}[2m])), 1)","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"mappings":[{"options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}},"type":"value"}],"unit":"short"}},
+      "gridPos":{"h":5,"w":4,"x":8,"y":1},"id":12,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"disponibilidade-service","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"clamp_max(sum(increase(app_http_server_duration_milliseconds_count{service_name=\"disponibilidade-service\",http_target=\"/health\",http_status_code=\"200\"}[2m])), 1)","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"mappings":[{"options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}},"type":"value"}],"unit":"short"}},
+      "gridPos":{"h":5,"w":4,"x":12,"y":1},"id":13,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"notificacao-service","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"clamp_max(sum(increase(app_http_server_duration_milliseconds_count{service_name=\"notificacao-service\",http_target=\"/health\",http_status_code=\"200\"}[2m])), 1)","legendFormat":"","refId":"A","instant":true}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"mode":"absolute","steps":[{"color":"red","value":null},{"color":"green","value":1}]},"mappings":[{"options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}},"type":"value"}],"unit":"short"}},
+      "gridPos":{"h":5,"w":4,"x":16,"y":1},"id":14,
+      "options":{"colorMode":"background","graphMode":"none","justifyMode":"center","reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},
+      "title":"bff-gateway","type":"stat",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"clamp_max(sum(increase(app_http_server_duration_milliseconds_count{service_name=\"bff-gateway\",http_target=\"/health\",http_status_code=\"200\"}[2m])), 1)","legendFormat":"","refId":"A","instant":true}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":6},"id":20,"title":"Taxa de Healthchecks bem-sucedidos","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":8},"unit":"reqps"}},
+      "gridPos":{"h":8,"w":24,"x":0,"y":7},"id":21,
+      "options":{"legend":{"calcs":["mean","lastNotNull"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"Healthchecks 200 OK por Serviço (req/s)","type":"timeseries",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"sum by (service_name) (rate(app_http_server_duration_milliseconds_count{http_target=\"/health\",http_status_code=\"200\"}[$__rate_interval]))","legendFormat":"{{service_name}}","refId":"A"}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":15},"id":30,"title":"Latência dos Healthchecks","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":5},"unit":"ms"}},
+      "gridPos":{"h":8,"w":24,"x":0,"y":16},"id":31,
+      "options":{"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"Latência P95 do /health por Serviço","type":"timeseries",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"histogram_quantile(0.95, sum by (le, service_name) (rate(app_http_server_duration_milliseconds_bucket{http_target=\"/health\"}[$__rate_interval])))","legendFormat":"{{service_name}}","refId":"A"}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":24},"id":40,"title":"Erros — Taxa de Falhas por Serviço","type":"row"},
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":15},"unit":"percentunit","min":0,"max":1}},
+      "gridPos":{"h":8,"w":12,"x":0,"y":25},"id":41,
+      "options":{"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"Taxa de Erros 5xx por Serviço","type":"timeseries",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"sum by (service_name) (rate(app_http_server_duration_milliseconds_count{http_status_code=~\"5..\"}[$__rate_interval])) / sum by (service_name) (rate(app_http_server_duration_milliseconds_count{}[$__rate_interval]))","legendFormat":"{{service_name}}","refId":"A"}]
+    },
+    {
+      "datasource":{"type":"prometheus","uid":"prometheus"},
+      "fieldConfig":{"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":1,"fillOpacity":10},"unit":"percentunit","min":0,"max":1}},
+      "gridPos":{"h":8,"w":12,"x":12,"y":25},"id":42,
+      "options":{"legend":{"calcs":["mean","max"],"displayMode":"table","placement":"bottom"},"tooltip":{"mode":"multi"}},
+      "title":"Taxa de Erros 4xx por Serviço","type":"timeseries",
+      "targets":[{"datasource":{"type":"prometheus","uid":"prometheus"},"expr":"sum by (service_name) (rate(app_http_server_duration_milliseconds_count{http_status_code=~\"4..\"}[$__rate_interval])) / sum by (service_name) (rate(app_http_server_duration_milliseconds_count{}[$__rate_interval]))","legendFormat":"{{service_name}}","refId":"A"}]
+    },
+
+    {"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":33},"id":50,"title":"Logs de Erro — Loki","type":"row"},
+    {
+      "datasource":{"type":"loki","uid":"loki"},
+      "gridPos":{"h":10,"w":24,"x":0,"y":34},"id":51,
+      "options":{"dedupStrategy":"none","enableLogDetails":true,"prettifyLogMessage":false,"showCommonLabels":false,"showLabels":false,"showTime":true,"sortOrder":"Descending","wrapLogMessage":false},
+      "title":"Logs de Erro recentes (ERROR / WARNING)","type":"logs",
+      "targets":[
+        {"datasource":{"type":"loki","uid":"loki"},"expr":"{service_name=~\".+\"} |~ \"(?i)(error|warning|warn|exception|critical|traceback)\" | line_format \"[{{.service_name}}] {{__line__}}\"","refId":"A","legendFormat":""}
+      ]
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": ["disponibilidade","healthcheck","sre"],
+  "templating": {"list":[]},
+  "time": {"from":"now-30m","to":"now"}, "timepicker":{}, "timezone":"browser",
+  "title": "Disponibilidade — Healthcheck",
+  "uid": "disponibilidade", "version": 1
+}

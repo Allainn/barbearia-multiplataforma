@@ -1,0 +1,49 @@
+server:
+  http_listen_port: 3200
+  log_level: warn
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+compactor:
+  compaction:
+    block_retention: 48h        # retenção de 48 horas em desenvolvimento
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/blocks
+    wal:
+      path: /var/tempo/wal
+
+# Gerador de métricas a partir dos traces
+# Envia para o Prometheus via remote_write
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+      env: development
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+  traces_storage:
+    path: /var/tempo/generator/traces
+  processor:
+    service_graphs:
+      dimensions: [service.namespace]
+    span_metrics:
+      dimensions: [service.namespace, http.method, http.status_code]
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics]  # ativa ambos os geradores

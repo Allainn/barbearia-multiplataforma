@@ -1,7 +1,7 @@
 # ADR-0011: Dados por serviço e isolamento por barbearia
 
-- **Status:** Proposto
-- **Data:** 07/10/2026
+- **Status:** Aceito
+- **Data:** 22/10/2026
 - **Questão:** [Q12](../questoes-abertas.md#q12)
 - **Afeta no diagrama:** C4 nível 2 (bancos de dados e as setas de cada serviço para eles)
 
@@ -38,19 +38,14 @@ Como no PizzaExpress (`catalog_svc` só acessa o schema `catalog`).
 
 ## Decisão
 
-**Proposta:** PostgreSQL 16, uma instância, **um schema e um usuário por serviço** (`barbearia`, `agendamento`, `disponibilidade`, `notificacao`); read model no próprio PostgreSQL; multi-tenancy no modelo **pool** com `barbearia_id`.
+PostgreSQL 16, uma instância, **um schema e um usuário por serviço** (`barbearia`, `agendamento`, `disponibilidade`, `notificacao`). O read model da disponibilidade fica no próprio PostgreSQL, e o multi-tenancy usa o modelo **pool**, com `barbearia_id` nas tabelas dos domínios aplicáveis.
 
 ## Consequências
 
 - Nenhum serviço lê o schema de outro; dados de outro domínio chegam por API ou por evento.
-- Toda consulta filtra por `barbearia_id`; o teste de 403 por tenant ([ADR-0009](0009-seguranca-keycloak-e-validacao-jwt.md)) prova o isolamento na demo.
+- As consultas dos domínios multi-tenant filtram por `barbearia_id`; a validação do acesso acontece na camada responsável pela chamada, sem criar um mecanismo adicional de isolamento entre barbearias nesta entrega.
 - Migrações versionadas por serviço (Flyway no Java, Alembic ou SQL puro no Python).
-- O diagrama mostra **um** container PostgreSQL com os schemas listados; vale explicar na apresentação que, em produção, cada schema iria para uma instância própria.
-
-## Perguntas para o grupo
-
-- Uma instância com schemas (A) é aceitável para a apresentação, ou o grupo prefere separar ao menos o read model?
-- Redis entra em algum lugar (read model, cache de catálogo) ou fica fora para não aumentar a infraestrutura?
+- O diagrama mostra **um** container PostgreSQL com os quatro schemas. O ambiente local economiza recursos, mantendo a separação lógica por permissões; em produção, cada schema pode ser movido para uma instância própria sem alterar a propriedade dos dados.
 
 ## Referências
 

@@ -1,0 +1,99 @@
+# ═══════════════════════════════════════════════════════════════════
+# Variante da config.yml usada SÓ pelo overlay docker-compose.elk.yml.
+# Única diferença: o pipeline de logs exporta pra Loki E Elasticsearch.
+# ═══════════════════════════════════════════════════════════════════
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+  # Garante que service.name esteja presente como label no Loki
+  resource:
+    attributes:
+      - action: insert
+        key: loki.resource.labels
+        value: service.name, service.version, service.namespace
+
+  # Adiciona o trace_id como campo nos logs para correlação no Grafana
+  transform/logs:
+    log_statements:
+      - context: log
+        statements:
+          - set(attributes["traceId"], trace_id.string) where trace_id != nil
+
+exporters:
+
+  # Traces → Tempo
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  # Métricas → Prometheus (scrape via porta 8889)
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: app
+    send_timestamps: true
+    enable_open_metrics: true
+    resource_to_telemetry_conversion:
+      enabled: true   # promove service.name, service.namespace etc. como labels Prometheus
+
+  # Logs → Loki
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+    tls:
+      insecure: true
+
+  # Logs → Elasticsearch (lado a lado com o Loki — mesmo log, dois destinos)
+  elasticsearch:
+    endpoints: [http://elasticsearch:9200]
+    logs_index: barbearia-logs
+    mapping:
+      mode: none        # documento = modelo de dados do OTel (Body, SeverityText, Attributes.*, Resource.*)
+    flush:
+      interval: 1s      # visível no Kibana ~1s depois (demo ao vivo)
+    retry:
+      enabled: true
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  pprof:
+    endpoint: 0.0.0.0:1777
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, pprof, zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+    # Fan-out: o MESMO receiver alimenta dois pipelines de logs.
+    # Cada backend recebe uma preparação própria:
+    #   logs/loki    → precisa da dica de labels (loki.resource.labels)
+    #   logs/elastic → não precisa: o Elasticsearch indexa TODOS os campos
+    logs/loki:
+      receivers: [otlp]
+      processors: [resource, transform/logs, batch]
+      exporters: [loki]
+    logs/elastic:
+      receivers: [otlp]
+      processors: [transform/logs, batch]
+      exporters: [elasticsearch]
+  telemetry:
+    logs:
+      level: warn
