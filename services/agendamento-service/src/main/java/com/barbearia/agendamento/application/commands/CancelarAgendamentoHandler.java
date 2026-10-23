@@ -1,0 +1,31 @@
+package com.barbearia.agendamento.application.commands;
+
+import com.barbearia.agendamento.domain.entities.Agendamento;
+import com.barbearia.agendamento.domain.repositories.AgendamentoRepository;
+import com.barbearia.agendamento.application.ports.EventPublisher;
+
+import java.time.Clock;
+import java.util.UUID;
+
+/** Cancela e publica agendamento.cancelado. Cancelar um já cancelado não publica de novo. */
+public class CancelarAgendamentoHandler {
+
+    private final AgendamentoRepository repository;
+    private final EventPublisher producer;
+    private final Clock clock;
+
+    public CancelarAgendamentoHandler(AgendamentoRepository repository, EventPublisher producer, Clock clock) {
+        this.repository = repository;
+        this.producer = producer;
+        this.clock = clock;
+    }
+
+    public void handle(UUID agendamentoId) {
+        Agendamento agendamento = repository.findById(agendamentoId)
+                .orElseThrow(() -> new AgendamentoNotFoundException(agendamentoId));
+        if (agendamento.cancelar(clock.instant())) {
+            repository.updateStatus(agendamento);
+            agendamento.pullDomainEvents().forEach(producer::publish);
+        }
+    }
+}
