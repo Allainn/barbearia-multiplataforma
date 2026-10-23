@@ -1,9 +1,10 @@
 # ADR-0012: Garantia de publicação de eventos (Outbox Pattern)
 
-- **Status:** Proposto
-- **Data:** 07/10/2026
+- **Status:** Rejeitado
+- **Data:** 21/10/2026
 - **Questão:** [Q16](../questoes-abertas.md#q16)
-- **Afeta no diagrama:** C4 nível 2 (seta agendamento-service → Kafka); C4 nível 3 do agendamento-service
+- **Afeta no diagrama:** C4 nível 2 (seta agendamento-service → Kafka)
+- **Aprovações:** no PR do agendamento-service
 
 ## Contexto
 
@@ -32,18 +33,22 @@ O use case grava a reserva **e** uma linha na tabela `outbox` na mesma transaç�
 
 ## Decisão
 
-**Proposta:** opção **B** no agendamento-service (e no barbearia-service para `expediente.alterado`, se sobrar tempo). Debezium (C) fica registrado como evolução.
+O Outbox foi **rejeitado** por prazo. Ele é desejável, não obrigatório, e o [roadmap](../roadmap.md) de 21/10 tirou do escopo tudo o que custava tempo. Ficou a opção **A**, dual write, com o risco documentado abaixo.
+
+Como foi implementado no agendamento-service:
+
+1. O handler grava primeiro no PostgreSQL e só depois publica (a ordem da Aula 3). Se a constraint recusar a reserva, nenhum evento sai.
+2. O `KafkaEventProducer` publica e espera a confirmação do broker, com limite de 5 s para obter os metadados e de 10 s para a entrega.
+3. Se a publicação falhar, o erro vai para o log e a reserva continua gravada. Ela não é desfeita.
+
+Polling (B) e Debezium (C) ficam registrados como evolução, nessa ordem.
 
 ## Consequências
 
-- Tabela `outbox(id, agregado_id, tipo, payload, criado_em, publicado_em)` no schema de cada serviço que publica.
-- Consumers deduplicam por `evento_id` ([ADR-0006](0006-comunicacao-sincrona-e-kafka.md)).
-- Demo opcional e marcante: reserva com o Kafka parado → evento sai quando o Kafka volta.
-
-## Perguntas para o grupo
-
-- Outbox entra no escopo (é desejável, não obrigatório)? Se o prazo apertar, aceitamos o dual write (A) com o risco documentado?
-- Polling (B) ou alguém quer encarar o Debezium (C)?
+- Risco aceito: se o serviço cair entre o INSERT e o envio, ou se o Kafka ficar fora por mais de alguns segundos, a reserva existe sem evento. A grade do disponibilidade-service continua mostrando o horário como livre, e o cliente não recebe a confirmação. A reserva continua protegida: uma nova tentativa no mesmo horário recebe 409, porque o agendamento decide pela fonte da verdade ([ADR-0007](0007-concorrencia-na-reserva-de-horario.md)).
+- Com o Kafka fora, a reserva demora até ~10 s para responder, porque espera o limite do producer.
+- A demo "reserva com o Kafka parado → evento sai quando o Kafka volta" não existe.
+- Os consumers continuam deduplicando por `evento_id` ([ADR-0006](0006-comunicacao-sincrona-e-kafka.md)), o que já prepara o terreno para o Outbox, que entrega "pelo menos uma vez".
 
 ## Referências
 
