@@ -18,7 +18,13 @@ async def lifespan(_: FastAPI):
     pool.close()
 
 
-app = FastAPI(title="barbearia-service", lifespan=lifespan)
+app = FastAPI(
+    title="barbearia-service",
+    lifespan=lifespan,
+    # FastAPI >= 0.142 tem telemetria OTel nativa que pendura mais um exportador
+    # OTLP nos providers do telemetry.py, duplicando spans e metricas.
+    telemetry={"auto_configure": False},
+)
 
 
 @app.middleware("http")
