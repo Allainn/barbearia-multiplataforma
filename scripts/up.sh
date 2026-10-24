@@ -11,7 +11,14 @@ docker compose -f "$COMPOSE_FILE" up --build -d
 
 if [[ -f "$ROOT_DIR/scripts/keycloak-seed.sh" ]]; then
   echo "==> Aguardando o Keycloak..."
-  until curl -sf http://localhost:8080/realms/master >/dev/null; do
+  for tentativa in $(seq 1 40); do
+    if curl -sf http://localhost:8080/realms/master >/dev/null; then
+      break
+    fi
+    if [[ "$tentativa" -eq 40 ]]; then
+      echo "Keycloak não respondeu em 2 minutos; veja: docker compose -f \"$COMPOSE_FILE\" logs keycloak" >&2
+      exit 1
+    fi
     sleep 3
   done
 
