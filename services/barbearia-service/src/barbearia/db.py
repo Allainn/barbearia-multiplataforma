@@ -28,7 +28,6 @@ def init_pool() -> ConnectionPool:
             if tentativa == 29:
                 raise
             time.sleep(2)
-    return pool
 
 
 def get_conn():

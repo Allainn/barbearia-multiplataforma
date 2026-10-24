@@ -43,7 +43,10 @@ def setup_telemetry(app) -> None:
         BatchLogRecordProcessor(OTLPLogExporter(endpoint=f"{endpoint}/v1/logs"))
     )
     set_logger_provider(logger_provider)
-    logging.getLogger().addHandler(LoggingHandler(logger_provider=logger_provider))
+    handler = LoggingHandler(logger_provider=logger_provider)
+    # Os loggers do uvicorn tem propagate=False e nunca chegam ao logger raiz.
+    for nome in ("", "uvicorn", "uvicorn.access"):
+        logging.getLogger(nome).addHandler(handler)
     logging.getLogger().setLevel(logging.INFO)
 
     PsycopgInstrumentor().instrument()

@@ -1,3 +1,4 @@
+from typing import Annotated, Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -14,6 +15,9 @@ from .schemas import (
 
 router = APIRouter()
 
+# Escopo de funcao: a conexao fecha (e faz o commit) antes de a resposta sair.
+Conn = Annotated[Any, Depends(get_conn, scope="function")]
+
 
 def _exige_barbearia(conn, barbearia_id: UUID) -> None:
     row = conn.execute(
@@ -24,25 +28,24 @@ def _exige_barbearia(conn, barbearia_id: UUID) -> None:
 
 
 @router.get("/barbearias", response_model=list[Barbearia])
-def listar_barbearias(conn=Depends(get_conn)):
+def listar_barbearias(conn: Conn):
     return conn.execute(
         "SELECT id, nome, endereco FROM barbearia.barbearia ORDER BY nome"
     ).fetchall()
 
 
 @router.post("/barbearias", response_model=Barbearia, status_code=201)
-def criar_barbearia(corpo: BarbeariaIn, conn=Depends(get_conn)):
+def criar_barbearia(corpo: BarbeariaIn, conn: Conn):
     row = conn.execute(
         "INSERT INTO barbearia.barbearia (id, nome, endereco) VALUES (%s, %s, %s) "
         "RETURNING id, nome, endereco",
         (uuid4(), corpo.nome, corpo.endereco),
     ).fetchone()
-    conn.commit()
     return row
 
 
 @router.get("/barbearias/{barbearia_id}/profissionais", response_model=list[Profissional])
-def listar_profissionais(barbearia_id: UUID, conn=Depends(get_conn)):
+def listar_profissionais(barbearia_id: UUID, conn: Conn):
     _exige_barbearia(conn, barbearia_id)
     return conn.execute(
         "SELECT id, barbearia_id, nome FROM barbearia.profissional "
@@ -56,19 +59,18 @@ def listar_profissionais(barbearia_id: UUID, conn=Depends(get_conn)):
     response_model=Profissional,
     status_code=201,
 )
-def criar_profissional(barbearia_id: UUID, corpo: ProfissionalIn, conn=Depends(get_conn)):
+def criar_profissional(barbearia_id: UUID, corpo: ProfissionalIn, conn: Conn):
     _exige_barbearia(conn, barbearia_id)
     row = conn.execute(
         "INSERT INTO barbearia.profissional (id, barbearia_id, nome) VALUES (%s, %s, %s) "
         "RETURNING id, barbearia_id, nome",
         (uuid4(), barbearia_id, corpo.nome),
     ).fetchone()
-    conn.commit()
     return row
 
 
 @router.get("/barbearias/{barbearia_id}/servicos", response_model=list[Servico])
-def listar_servicos(barbearia_id: UUID, conn=Depends(get_conn)):
+def listar_servicos(barbearia_id: UUID, conn: Conn):
     _exige_barbearia(conn, barbearia_id)
     return conn.execute(
         "SELECT id, barbearia_id, nome, duracao_min, preco FROM barbearia.servico "
@@ -80,7 +82,7 @@ def listar_servicos(barbearia_id: UUID, conn=Depends(get_conn)):
 @router.post(
     "/barbearias/{barbearia_id}/servicos", response_model=Servico, status_code=201
 )
-def criar_servico(barbearia_id: UUID, corpo: ServicoIn, conn=Depends(get_conn)):
+def criar_servico(barbearia_id: UUID, corpo: ServicoIn, conn: Conn):
     _exige_barbearia(conn, barbearia_id)
     row = conn.execute(
         "INSERT INTO barbearia.servico (id, barbearia_id, nome, duracao_min, preco) "
@@ -88,5 +90,4 @@ def criar_servico(barbearia_id: UUID, corpo: ServicoIn, conn=Depends(get_conn)):
         "RETURNING id, barbearia_id, nome, duracao_min, preco",
         (uuid4(), barbearia_id, corpo.nome, corpo.duracao_min, corpo.preco),
     ).fetchone()
-    conn.commit()
     return row
