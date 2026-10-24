@@ -39,7 +39,7 @@ Como foi implementado no agendamento-service:
 
 1. O handler grava primeiro no PostgreSQL e só depois publica (a ordem da Aula 3). Se a constraint recusar a reserva, nenhum evento sai.
 2. O `KafkaEventProducer` publica e espera a confirmação do broker, com limite de 5 s para obter os metadados e de 10 s para a entrega.
-3. Se a publicação falhar, o erro vai para o log e a reserva continua gravada. Ela não é desfeita.
+3. Se a publicação falhar, o erro vai para o log e para o span `kafka publish` do trace, que fica com status de erro e com a causa, como o `TimeoutException` do Kafka. A reserva continua gravada. Ela não é desfeita.
 
 Polling (B) e Debezium (C) ficam registrados como evolução, nessa ordem.
 
