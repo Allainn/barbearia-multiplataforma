@@ -11,7 +11,7 @@ docker compose -f "$COMPOSE_FILE" up --build -d
 
 if [[ -f "$ROOT_DIR/scripts/keycloak-seed.sh" ]]; then
   echo "==> Executando o seed do Keycloak..."
-  "$ROOT_DIR/scripts/keycloak-seed.sh"
+  bash "$ROOT_DIR/scripts/keycloak-seed.sh"
 else
   echo "==> Seed do Keycloak não encontrado; seguindo sem seed."
 fi
