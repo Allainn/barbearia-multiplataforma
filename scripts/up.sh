@@ -6,6 +6,12 @@ COMPOSE_FILE="$ROOT_DIR/infra/docker-compose.yml"
 
 cd "$ROOT_DIR"
 
+echo "==> Preparando diretórios de dados locais..."
+mkdir -p "$ROOT_DIR"/infra/data/{grafana,kafka,keycloak,loki,postgres,prometheus,tempo}
+if ! chmod -R a+rwX "$ROOT_DIR/infra/data" 2>/dev/null; then
+  echo "==> Aviso: não foi possível ajustar todas as permissões de infra/data neste filesystem; seguindo." >&2
+fi
+
 PERFIS=()
 if [[ -d "$ROOT_DIR/services/bff-gateway" ]]; then
   PERFIS=(--profile bff)

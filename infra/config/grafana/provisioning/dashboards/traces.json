@@ -9,7 +9,7 @@
       "gridPos":{"h":14,"w":24,"x":0,"y":1},"id":50,
       "options":{"frameType":"traceList"},
       "title":"Requests por versão — confirma qual deploy está ativo",
-      "description":"A coluna 'Versão' mostra o hash do commit (service.version) do container que processou cada request. Após ./demo-ci-verde.sh, a versão muda.",
+      "description":"A coluna 'Versão' mostra o hash do commit (service.version) do container que processou cada request. Após um push em demo/** e a execução de scripts/deploy.sh, a versão muda.",
       "type":"table",
       "targets":[{
         "datasource":{"type":"tempo","uid":"tempo"},

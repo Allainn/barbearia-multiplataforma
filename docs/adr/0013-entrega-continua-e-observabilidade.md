@@ -41,7 +41,7 @@ Também foi considerada uma stack baseada em Elasticsearch e Kibana. O Loki foi 
 
 **Decisão:** opção A para CI/CD, com GitHub Actions publicando no GHCR e deploy local via Docker Compose. A stack de observabilidade do PizzaExpress foi mantida e adaptada para os nomes dos containers da Barbearia.
 
-O workflow [`barbearia-service.yml`](../../.github/workflows/barbearia-service.yml) dispara em `main`, em branches `demo/**` quando o serviço muda, e manualmente. Antes da publicação, executa um smoke test de importação do pacote Python. Publica as tags `latest` e o SHA do commit. O deploy é feito por [`scripts/deploy.sh`](../../scripts/deploy.sh).
+O workflow [`barbearia-service.yml`](../../.github/workflows/barbearia-service.yml) dispara em pull requests que alteram o serviço, em `main`, em branches `demo/**` quando o serviço muda, e manualmente. Em pull requests, executa apenas o smoke test. Antes da publicação, o fluxo de push executa o smoke test do pacote e da imagem Docker, passando o SHA como versão de build. Publica as tags `latest` e o SHA do commit. O deploy é feito por [`scripts/deploy.sh`](../../scripts/deploy.sh).
 
 ## Consequências
 
