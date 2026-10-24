@@ -97,7 +97,7 @@ O passo a passo de cada parte, com as variáveis de ambiente, as tabelas e os te
 - Slides: problema e volume de uso, C4, um slide por decisão com o porquê, trade-offs.
 - Revisar e aprovar os PRs no mesmo dia. A `main` exige a aprovação dele.
 
-Cada ADR fica com quem implementa a parte correspondente e é decidido no desenvolvimento. Os ADRs gerais (0001 a 0005) não pertencem a nenhuma parte e ainda não têm dono.
+Cada ADR fica com quem implementa a parte correspondente e é decidido no desenvolvimento. Os ADRs gerais (0001 a 0005) não pertencem a nenhuma parte e ficaram com o Allainn em 24/10.
 
 ### João: infra, CI/CD e Grafana
 

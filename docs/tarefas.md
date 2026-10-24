@@ -27,7 +27,7 @@ Código-base: pacote `pizzaexpress-ambiente.zip` do Canvas, o sistema de exemplo
 - Branch `feat/<sua-parte>` criada a partir da `main`. PR para a `main`. O merge exige 1 aprovação e a aprovação do Allainn.
 - Commits no padrão Conventional Commits, em português, citando o ADR. Exemplo: `feat(agendamento): reserva com constraint de exclusão (ADR-0007)`.
 - Sem issues.
-- O ADR da sua parte é preenchido no mesmo PR do código. Mude o status para *Aceito*, a data para o dia do PR, reescreva a seção "Decisão" com o que foi implementado de fato e apague a seção "Perguntas para o grupo". Mantenha as opções consideradas. Não edite `docs/adr/README.md`, quem atualiza o índice é o Allainn. Os ADRs gerais (0001 a 0005) não pertencem a nenhuma parte e ainda não têm dono: não mexa neles.
+- O ADR da sua parte é preenchido no mesmo PR do código. Mude o status para *Aceito*, a data para o dia do PR, reescreva a seção "Decisão" com o que foi implementado de fato e apague a seção "Perguntas para o grupo". Mantenha as opções consideradas. Não edite `docs/adr/README.md`, quem atualiza o índice é o Allainn. Os ADRs gerais (0001 a 0005) não pertencem a nenhuma parte e ficaram com o Allainn em 24/10: não mexa neles.
 - Ao copiar um serviço do PizzaExpress, apague `target/`, `.ruff_cache/`, `*.egg-info/`, `__pycache__/` e a pasta de testes. Troque todo nome e texto de pizza pelo nosso domínio. O código fica com o domínio em português (`Agendamento`, `agendamento.criado`) e os termos técnicos em inglês (`Repository`, `UseCase`, `Controller`).
 - Mantenha o OpenTelemetry que vem no serviço copiado. Troque o nome do serviço para o nome do container (tabela abaixo) e, onde aparecer no código, o `service.namespace` de `pizzaexpress` para `barbearia`. O dashboard do Grafana filtra pelo nome do serviço.
 - Mantenha o filtro de latência artificial (`DemoLatencyFilter` no Java, `demo_latency_middleware` no Python). O header `X-Demo-Delay-Ms` serve para mostrar latência no Grafana.
@@ -247,7 +247,7 @@ Ninguém precisa esperar a infra do João. A infra do PizzaExpress tem os mesmos
 
 ## Allainn: C4, slides e revisão
 
-**Arquivos que você pode mexer:** `docs/arquitetura/`, `docs/adr/README.md`, `docs/questoes-abertas.md`, `README.md`, slides (fora do repositório).
+**Arquivos que você pode mexer:** `docs/arquitetura/`, `docs/adr/README.md`, `docs/adr/0001` a `docs/adr/0005`, `docs/questoes-abertas.md`, `contracts/README.md`, `README.md`, slides (fora do repositório).
 
 1. **C4 nível 1.** Pessoas: Cliente e Gestor da barbearia. Sistemas externos: Keycloak e provedor de mensagens (simulado). Tirar Profissional, Administrador e gateway de pagamento, que não existem no código.
 2. **C4 nível 2.** Os 5 containers do contrato, Kafka, PostgreSQL e Keycloak. Setas: pessoas → BFF (REST com JWT); BFF → Keycloak (JWKS); BFF → barbearia, agendamento e disponibilidade (REST); agendamento → Kafka (publica `agendamento.criado` e `agendamento.cancelado`); Kafka → notificação e disponibilidade (consomem os dois tópicos); cada serviço → seu schema no PostgreSQL; notificação → provedor de mensagens (simulado, grava no log). Tirar `agendamento.solicitado`, `expediente.alterado`, agendamento → barbearia e agendamento → Keycloak. Anotar a tecnologia em cada container e um texto em cada seta.

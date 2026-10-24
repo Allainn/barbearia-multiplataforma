@@ -4,17 +4,17 @@ Cada decisão arquitetural fica num arquivo numerado. Formato em [0000-template.
 
 **Status:** *Proposto* (em discussão) → *Aceito* ou *Rejeitado*. Um ADR aceito não é reescrito; outro ADR o substitui.
 
-Os ADRs foram escritos como rascunho em 07/10/2026 e votados nas issues #1 a #24, de 07 a 09/10. O [roadmap](../roadmap.md) de 21/10 cortou o escopo para caber no prazo. Desde então, quem implementa uma parte passa o ADR dela para *Aceito* no PR do código, com o que foi feito de fato. O dono de cada ADR vem do [tarefas.md](../tarefas.md); o C4 nível 3 ficou fora do escopo.
+Os ADRs foram escritos como rascunho em 07/10/2026 e votados nas issues #1 a #24, de 07 a 09/10. O [roadmap](../roadmap.md) de 21/10 cortou o escopo para caber no prazo. Desde então, quem implementa uma parte passa o ADR dela para *Aceito* no PR do código, com o que foi feito de fato. O dono de cada ADR vem do [tarefas.md](../tarefas.md); os gerais (0001 a 0005), que não pertencem a nenhuma parte, ficaram com o Allainn em 24/10. O C4 nível 3 ficou fora do escopo.
 
 **Situação em 24/10/2026:**
 
 | ADR | Decisão | Status | Dono | Nível do C4 |
 |---|---|---|---|---|
-| [0001](0001-registrar-decisoes-com-adr.md) | Registrar as decisões com ADRs | Proposto | sem dono | — |
-| [0002](0002-monorepo-e-estrutura.md) | Monorepo e estrutura de pastas | Proposto | sem dono | — |
-| [0003](0003-enquadramento-plataforma-multi-tenant.md) | Plataforma multi-tenant de agendamento (escala e volumetria) | Proposto | sem dono | 1 |
-| [0004](0004-decomposicao-em-servicos.md) | Decomposição em 5 containers | Proposto | sem dono | 2 |
-| [0005](0005-linguagens-por-servico.md) | Java no BFF e no agendamento; Python nos outros três | Proposto | sem dono | 2 |
+| [0001](0001-registrar-decisoes-com-adr.md) | Registrar as decisões com ADRs; o aceite é o merge do PR da parte | Aceito (24/10) | Allainn | — |
+| [0002](0002-monorepo-e-estrutura.md) | Monorepo público no GitHub; estrutura, branches e convenções | Aceito (24/10) | Allainn | — |
+| [0003](0003-enquadramento-plataforma-multi-tenant.md) | Marketplace multi-tenant (BarberHub): volumetria e escopo da demo | Aceito (24/10) | Allainn | 1 |
+| [0004](0004-decomposicao-em-servicos.md) | 5 containers e um BFF; sem chamada síncrona entre os serviços | Aceito (24/10) | Allainn | 2 |
+| [0005](0005-linguagens-por-servico.md) | Java no BFF e no agendamento; Python nos outros três | Aceito (24/10) | Allainn | 2 |
 | [0006](0006-comunicacao-sincrona-e-kafka.md) | REST do BFF para os serviços; Kafka com 2 tópicos do agendamento para os consumers | Aceito (22/10) | Daniel | 2 |
 | [0007](0007-concorrencia-na-reserva-de-horario.md) | Lock na reserva: constraint de exclusão no PostgreSQL e 409 | Aceito (21/10) | Pedro | 2 |
 | [0008](0008-cqrs-na-consulta-de-disponibilidade.md) | CQRS: read model da disponibilidade em serviço próprio, atualizado pelo Kafka | Aceito (23/10) | Gabriel | 2 |
