@@ -13,6 +13,7 @@ target/
 __pycache__/
 *.py[cod]
 .venv/
+.venv-smoke/
 venv/
 .ruff_cache/
 .pytest_cache/

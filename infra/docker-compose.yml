@@ -326,6 +326,8 @@ services:
   # Serviços da plataforma de agendamento
   # ─────────────────────────────────────────────
   bff-gateway:
+    # Temporário: remover quando o PR do bff-gateway for integrado.
+    profiles: ["bff"]
     build: ../services/bff-gateway
     container_name: bff-gateway
     restart: unless-stopped

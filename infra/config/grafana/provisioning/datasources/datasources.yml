@@ -1,5 +1,9 @@
 apiVersion: 1
 
+deleteDatasources:
+  - name: Elasticsearch
+    orgId: 1
+
 datasources:
 
   # ── Prometheus ───────────────────────────────

@@ -8,6 +8,10 @@ on:
     paths:
       - 'services/barbearia-service/**'
       - '.github/workflows/barbearia-service.yml'
+  pull_request:
+    paths:
+      - 'services/barbearia-service/**'
+      - '.github/workflows/barbearia-service.yml'
   workflow_dispatch:
 
 permissions:
@@ -18,8 +22,9 @@ env:
   IMAGE_NAME: ghcr.io/allainn/barbearia-multiplataforma/barbearia-service
 
 jobs:
-  build-and-push:
-    name: Build e push da imagem
+  test:
+    name: Smoke test
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
@@ -30,10 +35,32 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: pip
+          cache-dependency-path: services/barbearia-service/pyproject.toml
+
+      - name: Instalar e importar o serviço
+        run: |
+          python -m pip install ./services/barbearia-service
+          python -c "import barbearia.main"
+
+  build-and-push:
+    name: Build e push da imagem
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: services/barbearia-service/pyproject.toml
 
       - name: Executar smoke test
         run: |
-          python -m pip install --upgrade pip
           python -m pip install ./services/barbearia-service
           python -c "import barbearia.main"
 
@@ -44,11 +71,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build e publicar imagem
+      - name: Construir imagem para smoke test
         uses: docker/build-push-action@v6
         with:
           context: ./services/barbearia-service
-          push: true
+          load: true
+          build-args: |
+            SERVICE_VERSION=${{ github.sha }}
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Testar imagem Docker
+        run: docker run --rm "${{ env.IMAGE_NAME }}:${{ github.sha }}" python -c "import barbearia.main"
+
+      - name: Publicar imagem no GHCR
+        run: |
+          docker push "${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker tag "${{ env.IMAGE_NAME }}:${{ github.sha }}" "${{ env.IMAGE_NAME }}:latest"
+          docker push "${{ env.IMAGE_NAME }}:latest"
