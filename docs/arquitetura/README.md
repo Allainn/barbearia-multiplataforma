@@ -1,6 +1,6 @@
 # Arquitetura: C4 do BarberHub
 
-> **Versão do roadmap de 21/10/2026.** Só entra o que existe no código da demo; o contrato completo (portas, rotas, eventos, banco) está em [docs/tarefas.md](../tarefas.md#contrato).
+> **Versão do roadmap de 21/10/2026, conferida com o código em 24/10/2026.** Só entra o que existe no código da demo; o contrato completo (portas, rotas, eventos, banco) está em [docs/tarefas.md](../tarefas.md#contrato).
 
 - **Board no Miro (fonte dos diagramas dos slides):** <https://miro.com/app/board/uXjVEdd_Nsc=/>
 - **Esta página:** espelho em Mermaid para revisar no GitHub e versionar junto do código. Quem mudar um container, tópico ou seta avisa o Allainn, que atualiza os dois.
@@ -21,7 +21,9 @@ flowchart TB
 
     cliente -->|"Consulta horários, agenda e cancela [HTTPS]"| sistema
     gestor -->|"Cadastra barbearias, profissionais e serviços [HTTPS]"| sistema
-    sistema -->|"Autentica (OIDC) e valida o JWT"| keycloak
+    cliente -->|"Faz login e obtém o token [OAuth2/OIDC]"| keycloak
+    gestor -->|"Faz login e obtém o token [OAuth2/OIDC]"| keycloak
+    sistema -->|"Valida o JWT [JWKS]"| keycloak
     sistema -->|"Envia confirmação e cancelamento (simulado)"| mensagens
 
     classDef pessoa fill:#08427b,stroke:#052e56,color:#ffffff
@@ -54,14 +56,14 @@ flowchart TB
     end
 
     pessoas -->|"HTTPS/REST com JWT"| bff
-    pessoas -->|"Login (OIDC) e obtém o token"| keycloak
+    pessoas -->|"Obtém o token [OAuth2 · password grant na demo]"| keycloak
     bff -->|"Valida o JWT [JWKS]"| keycloak
     bff -->|"Cadastros e consultas [REST]"| barbearia
     bff -->|"Reserva e cancela [REST]"| agendamento
     bff -->|"Horários livres [REST]"| disponibilidade
-    agendamento -->|"Publica agendamento.criado e .cancelado"| kafka
-    kafka -->|"Consome os dois tópicos"| disponibilidade
-    kafka -->|"Consome os dois tópicos"| notificacao
+    agendamento -->|"Publica agendamento.criado e .cancelado [Kafka Producer]"| kafka
+    kafka -->|"Consome os dois tópicos [Kafka Consumer]"| disponibilidade
+    kafka -->|"Consome os dois tópicos [Kafka Consumer]"| notificacao
     notificacao -->|"Envia a mensagem (simulado: grava no log)"| mensagens
     barbearia -->|"SQL"| pgB
     agendamento -->|"SQL"| pgA

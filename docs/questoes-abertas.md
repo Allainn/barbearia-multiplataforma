@@ -1,5 +1,7 @@
 # Questões em aberto
 
+> **Encerradas em 21/10/2026.** Estas questões foram votadas nas issues #1 a #24, de 07 a 09/10, e encerradas pelo [roadmap](roadmap.md), que fechou o escopo e o contrato. Algumas decisões votadas mudaram ou saíram por prazo. A decisão final de cada tema está no ADR correspondente ([índice](adr/README.md)). Este arquivo fica como histórico.
+
 As questões seguem a ordem em que o diagrama C4 é construído: primeiro o que o sistema é, depois o nível 1 (contexto), o nível 2 (containers) e o nível 3 (componentes). Respondê-las em ordem desenha o diagrama aos poucos; o esboço no Miro marca com uma etiqueta amarela onde cada questão pesa.
 
 Cada questão tem uma **issue** com a label `questao`, onde acontece a discussão. Quando o grupo decide, o ADR ligado vai para *Aceito* (por PR) e a issue é fechada. Fluxo completo em [CONTRIBUTING.md](../CONTRIBUTING.md).
