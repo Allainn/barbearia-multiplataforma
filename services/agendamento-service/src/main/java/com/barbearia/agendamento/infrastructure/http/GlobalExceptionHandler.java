@@ -1,6 +1,7 @@
 package com.barbearia.agendamento.infrastructure.http;
 
 import com.barbearia.agendamento.application.commands.AgendamentoNotFoundException;
+import com.barbearia.agendamento.domain.exceptions.AgendamentoDeOutroClienteException;
 import com.barbearia.agendamento.domain.exceptions.AgendamentoInvalidoException;
 import com.barbearia.agendamento.domain.exceptions.HorarioIndisponivelException;
 import io.opentelemetry.api.trace.Span;
@@ -37,6 +38,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AgendamentoNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(AgendamentoNotFoundException ex) {
         return erro(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    /**
+     * Agendamento de outro cliente recebe a mesma resposta de um inexistente, para o cliente não
+     * descobrir ids de reservas alheias. O contrato do DELETE já prevê 204 ou 404. Para responder
+     * 403, basta trocar o retorno deste tratador. Só o log diferencia os dois casos.
+     */
+    @ExceptionHandler(AgendamentoDeOutroClienteException.class)
+    public ResponseEntity<Map<String, String>> handleDeOutroCliente(AgendamentoDeOutroClienteException ex) {
+        log.warn("Cancelamento recusado com 404. {}", ex.getMessage());
+        return handleNotFound(new AgendamentoNotFoundException(ex.getAgendamentoId()));
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)

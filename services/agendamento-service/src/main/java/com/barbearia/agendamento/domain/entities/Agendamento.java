@@ -3,6 +3,7 @@ package com.barbearia.agendamento.domain.entities;
 import com.barbearia.agendamento.domain.events.AgendamentoCancelado;
 import com.barbearia.agendamento.domain.events.AgendamentoCriado;
 import com.barbearia.agendamento.domain.events.DomainEvent;
+import com.barbearia.agendamento.domain.exceptions.AgendamentoDeOutroClienteException;
 import com.barbearia.agendamento.domain.exceptions.AgendamentoInvalidoException;
 import com.barbearia.agendamento.domain.valueobjects.StatusAgendamento;
 
@@ -70,12 +71,16 @@ public class Agendamento {
     }
 
     /**
-     * Cancela e emite AgendamentoCancelado. Cancelar de novo não faz nada e não emite
-     * outro evento, para o DELETE poder ser repetido.
+     * Cancela e emite AgendamentoCancelado. Só o cliente que fez o agendamento pode cancelar, e
+     * essa checagem vem primeiro, então outro cliente é recusado até num agendamento já cancelado.
+     * Cancelar de novo não faz nada e não emite outro evento, para o DELETE poder ser repetido.
      *
      * @return true se o status mudou
      */
-    public boolean cancelar(Instant agora) {
+    public boolean cancelar(String clienteId, Instant agora) {
+        if (!this.clienteId.equals(clienteId)) {
+            throw new AgendamentoDeOutroClienteException(id, clienteId);
+        }
         if (status == StatusAgendamento.CANCELADO) {
             return false;
         }

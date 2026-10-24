@@ -5,10 +5,10 @@ import com.barbearia.agendamento.domain.repositories.AgendamentoRepository;
 import com.barbearia.agendamento.application.ports.EventPublisher;
 
 import java.time.Clock;
-import java.util.UUID;
 
 /**
- * Cancela e publica agendamento.cancelado. Cancelar um já cancelado não publica de novo,
+ * Cancela e publica agendamento.cancelado. Só o cliente que fez o agendamento cancela, e essa
+ * regra fica no aggregate. Cancelar um já cancelado não publica de novo,
  * nem quando dois DELETEs chegam ao mesmo tempo: só publica quem mudou a linha no banco.
  */
 public class CancelarAgendamentoHandler {
@@ -23,10 +23,10 @@ public class CancelarAgendamentoHandler {
         this.clock = clock;
     }
 
-    public void handle(UUID agendamentoId) {
-        Agendamento agendamento = repository.findById(agendamentoId)
-                .orElseThrow(() -> new AgendamentoNotFoundException(agendamentoId));
-        if (agendamento.cancelar(clock.instant()) && repository.updateStatus(agendamento)) {
+    public void handle(CancelarAgendamentoCommand command) {
+        Agendamento agendamento = repository.findById(command.agendamentoId())
+                .orElseThrow(() -> new AgendamentoNotFoundException(command.agendamentoId()));
+        if (agendamento.cancelar(command.clienteId(), clock.instant()) && repository.updateStatus(agendamento)) {
             agendamento.pullDomainEvents().forEach(producer::publish);
         }
     }
