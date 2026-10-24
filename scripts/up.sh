@@ -6,8 +6,16 @@ COMPOSE_FILE="$ROOT_DIR/infra/docker-compose.yml"
 
 cd "$ROOT_DIR"
 
+PERFIS=()
+if [[ -d "$ROOT_DIR/services/bff-gateway" ]]; then
+  PERFIS=(--profile bff)
+  echo "==> BFF encontrado; ativando o profile bff."
+else
+  echo "==> BFF não encontrado; subindo a infraestrutura sem o profile bff."
+fi
+
 echo "==> Subindo a plataforma com build das imagens..."
-docker compose -f "$COMPOSE_FILE" up --build -d
+docker compose -f "$COMPOSE_FILE" "${PERFIS[@]}" up --build -d
 
 if [[ -f "$ROOT_DIR/scripts/keycloak-seed.sh" ]]; then
   echo "==> Aguardando o Keycloak..."
