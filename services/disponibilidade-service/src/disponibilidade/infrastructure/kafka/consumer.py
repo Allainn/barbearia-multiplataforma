@@ -27,15 +27,15 @@ def _aplicar_com_retry(handler, evento: dict) -> None:
     Retry só em OperationalError (conexão Postgres morta/indisponível) -- o
     pool_pre_ping do engine já resolve a maioria dos casos sozinho, isso cobre
     o Postgres ainda estar de pé subindo no exato momento em que a mensagem
-    chega (ex: docker compose recém recriou o container). Sem isso, a exceção
-    cai no except mais abaixo, a mensagem é só logada e perdida -- o commit
-    de offset do kafka-python é automático (a cada 5s), não espera sucesso.
+    chega (ex: docker compose recém recriou o container). Se mesmo assim
+    falhar, o laço em _consume não commita e volta o offset para reler a
+    mensagem -- o commit é manual, só depois de aplicar o evento.
     """
     handler(evento)
 
 
 def _consume(bootstrap_servers: str, handlers: dict) -> None:
-    from kafka import KafkaConsumer  # type: ignore[import-untyped]
+    from kafka import KafkaConsumer, TopicPartition  # type: ignore[import-untyped]
     from kafka.errors import KafkaError  # type: ignore[import-untyped]
 
     # Sem value_deserializer: um JSON inválido lançaria a exceção dentro do
@@ -51,6 +51,9 @@ def _consume(bootstrap_servers: str, handlers: dict) -> None:
                 bootstrap_servers=bootstrap_servers,
                 group_id=GROUP_ID,
                 auto_offset_reset="earliest",
+                # O auto-commit grava o offset a cada 5 s sem esperar o
+                # processamento; o commit fica no fim do laço abaixo.
+                enable_auto_commit=False,
             )
             break
         except KafkaError:
@@ -89,12 +92,38 @@ def _consume(bootstrap_servers: str, handlers: dict) -> None:
                     evento.get("evento_id"),
                     message.topic,
                 )
+            except OperationalError:
+                # Postgres fora mesmo depois dos retries: não commita e volta
+                # o offset para ler esta mensagem de novo. O laço continua
+                # chamando o poll, então o consumer não sai do grupo.
+                logger.exception(
+                    "Postgres indisponível; %s[%d]@%d será reprocessada em 5 s",
+                    message.topic,
+                    message.partition,
+                    message.offset,
+                )
+                try:
+                    consumer.seek(TopicPartition(message.topic, message.partition), message.offset)
+                except ValueError:
+                    # A partição saiu deste consumer num rebalance; quem a
+                    # recebeu relê a partir do último commit.
+                    logger.warning("Partição %s[%d] não é mais deste consumer", message.topic, message.partition)
+                time.sleep(5)
+                continue
             except Exception:
+                # JSON inválido ou campo faltando: tentar de novo não resolve.
+                # Sem DLQ (ADR-0006), a mensagem é logada e descartada.
                 logger.exception(
                     "Error processing Kafka message from topic %s: %s",
                     message.topic,
                     message.value,
                 )
+            try:
+                consumer.commit()
+            except KafkaError:
+                # Rebalance no meio do caminho: o offset não commitado volta a
+                # ser lido, e aplicar o mesmo evento de novo não muda nada.
+                logger.warning("Commit do offset falhou; a mensagem pode ser relida", exc_info=True)
 
 
 def start_event_consumer(handlers: dict) -> None:
