@@ -8,6 +8,7 @@ import com.barbearia.agendamento.application.dtos.CriarAgendamentoDTO;
 import com.barbearia.agendamento.domain.entities.Agendamento;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
@@ -37,11 +39,19 @@ public class AgendamentoController {
         this.cancelarAgendamentoHandler = cancelarAgendamentoHandler;
     }
 
-    @PostMapping
+    /**
+     * Com o produces, o Spring recusa com 406 um Accept que não aceita JSON antes de chamar o
+     * handler. Sem ele, a reserva era gravada e publicada, e só a escrita da resposta falhava.
+     */
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public AgendamentoResponseDTO criar(
             @Valid @RequestBody CriarAgendamentoDTO body,
             @RequestHeader("X-User-ID") String clienteId) {
+        // O Spring só recusa o header ausente. Vazio chegaria aqui e seria gravado como cliente "".
+        if (clienteId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Header X-User-ID ausente.");
+        }
         Agendamento agendamento = criarAgendamentoHandler.handle(new CriarAgendamentoCommand(
                 body.barbeariaId(), body.profissionalId(), body.servicoId(), clienteId, body.inicio(), body.fim()));
         return AgendamentoResponseDTO.from(agendamento);

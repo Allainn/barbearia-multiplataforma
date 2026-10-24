@@ -42,12 +42,13 @@ Cada serviço foi copiado de um serviço do PizzaExpress que já segue Clean (`d
 
 | Camada | Pacote em `com.barbearia.agendamento` | O que tem |
 |---|---|---|
-| Domínio | `domain` | Aggregate root `Agendamento` (`criar`, `cancelar`, `reconstruir`); value object `StatusAgendamento`; domain events `AgendamentoCriado` e `AgendamentoCancelado`; interface `AgendamentoRepository`; `HorarioIndisponivelException` |
+| Domínio | `domain` | Aggregate root `Agendamento` (`criar`, `cancelar`, `reconstruir`); value object `StatusAgendamento`; domain events `AgendamentoCriado` e `AgendamentoCancelado`; interface `AgendamentoRepository`; `HorarioIndisponivelException` e `AgendamentoInvalidoException` |
 | Aplicação | `application` | Command Handlers `CriarAgendamentoHandler` e `CancelarAgendamentoHandler`; DTOs de entrada e saída; porta `EventPublisher` |
 | Infraestrutura | `infrastructure` | `AgendamentoController` e `GlobalExceptionHandler` (HTTP); `PostgresAgendamentoRepository` e `MigrationRunner` (JdbcTemplate); `KafkaEventProducer`; montagem dos beans em `config` |
 
 - Regra de dependência: `domain` não importa nada de fora dele; `application` conhece o domínio e a porta `EventPublisher`; `infrastructure` implementa o repositório e a porta. No `order-service-java` a interface do publicador ficava em `infrastructure/kafka`; aqui ela foi para `application/ports`.
 - Uma exceção consciente: os DTOs em `application/dtos` usam anotações do Jackson (`@JsonProperty`, para os nomes `barbearia_id`, `profissional_id`... do contrato) e do Bean Validation (`@NotNull`). São só anotações, sem lógica, e evitam uma segunda classe de DTO em `infrastructure/http` só para mapear nomes. Os handlers não usam os DTOs: recebem um `CriarAgendamentoCommand` e devolvem o aggregate.
+- Erro do pedido e erro do servidor têm tipos separados. As regras do aggregate lançam `AgendamentoInvalidoException`, e o repositório lança a mesma exceção quando um valor do pedido não cabe na tabela. Só ela vira 422 com a mensagem da exceção. Qualquer outra exceção é erro do servidor, vira 500, vai para o log e fica registrada no span do trace. É o caso da `IllegalArgumentException` que um status desconhecido lido do banco provoca.
 - O aggregate é o único ponto de mudança de estado e empilha os domain events, que o handler publica depois de gravar. No cancelamento, só publica se o UPDATE mudou a linha no banco ([ADR-0007](0007-concorrencia-na-reserva-de-horario.md), item 5).
 - A regra de não sobreposição fica na constraint do PostgreSQL, não no aggregate, porque só o banco enxerga as transações concorrentes ([ADR-0007](0007-concorrencia-na-reserva-de-horario.md)).
 

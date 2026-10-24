@@ -3,6 +3,7 @@ package com.barbearia.agendamento.domain.entities;
 import com.barbearia.agendamento.domain.events.AgendamentoCancelado;
 import com.barbearia.agendamento.domain.events.AgendamentoCriado;
 import com.barbearia.agendamento.domain.events.DomainEvent;
+import com.barbearia.agendamento.domain.exceptions.AgendamentoInvalidoException;
 import com.barbearia.agendamento.domain.valueobjects.StatusAgendamento;
 
 import java.time.Instant;
@@ -49,10 +50,10 @@ public class Agendamento {
     public static Agendamento criar(UUID barbeariaId, UUID profissionalId, UUID servicoId, String clienteId,
                                     OffsetDateTime inicio, OffsetDateTime fim, Instant agora) {
         if (!fim.isAfter(inicio)) {
-            throw new IllegalArgumentException("O fim do agendamento precisa ser depois do início.");
+            throw new AgendamentoInvalidoException("O fim do agendamento precisa ser depois do início.");
         }
         if (!inicio.toInstant().isAfter(agora)) {
-            throw new IllegalArgumentException("O agendamento precisa ser num horário futuro.");
+            throw new AgendamentoInvalidoException("O agendamento precisa ser num horário futuro.");
         }
         Agendamento agendamento = new Agendamento(UUID.randomUUID(), barbeariaId, profissionalId, servicoId,
                 clienteId, inicio, fim, StatusAgendamento.CONFIRMADO);
