@@ -1,9 +1,10 @@
 # ADR-0008: CQRS na consulta de disponibilidade
 
-- **Status:** Proposto
-- **Data:** 07/10/2026
+- **Status:** Aceito
+- **Data:** 23/10/2026
 - **Questão:** [Q15](../questoes-abertas.md#q15)
 - **Afeta no diagrama:** C4 nível 2 (disponibilidade-service, seu banco e as setas vindas do Kafka)
+- **Aprovações:** no PR do disponibilidade-service
 
 ## Contexto
 
@@ -39,24 +40,31 @@ Como os scaffolds `cqrs-command` e `cqrs-query` da Aula 3.
 
 ## Decisão
 
-**Proposta:** opção **C**.
+Opção **C**: CQRS completo, com o read model num serviço separado, atualizado pelos eventos do Kafka.
 
-- **Write side:** agendamento-service (fonte da verdade, schema `agendamento`).
-- **Read side:** disponibilidade-service, schema `disponibilidade`, com uma tabela por profissional e dia já com os intervalos livres (ex.: `horario_livre(barbearia_id, profissional_id, data, inicio, fim)`).
-- **Sincronização:** consome `agendamento.criado`, `agendamento.cancelado` e `expediente.alterado` ([ADR-0006](0006-comunicacao-sincrona-e-kafka.md)).
-- **Regra de ouro (Aula 3):** o command **nunca** decide com base na view. Se a grade estiver desatualizada e o cliente escolher um horário já ocupado, o agendamento responde 409 ([ADR-0007](0007-concorrencia-na-reserva-de-horario.md)) e o cliente escolhe outro.
+Como foi implementado, em `services/disponibilidade-service` (Python, FastAPI, porta 8003):
+
+1. **Write side:** agendamento-service, fonte da verdade (schema `agendamento`). **Read side:** disponibilidade-service, com schema e usuário próprios (`disponibilidade`, `disponibilidade_svc`) no mesmo PostgreSQL ([ADR-0011](0011-dados-por-servico.md)). O serviço não publica nada e não chama nenhum outro.
+2. **Read model:** a tabela `disponibilidade.horario_ocupado (agendamento_id, barbearia_id, profissional_id, inicio, fim)`, com índice em `(profissional_id, inicio)`. Ela guarda só o que está **ocupado**, não a grade pronta. Não é uma cópia da tabela `agendamento`: não tem status nem cliente, só o que a consulta precisa.
+3. **Sincronização:** um consumer (`group_id = disponibilidade-service`) lê `agendamento.criado` e `agendamento.cancelado` (chave `profissional_id`, 3 partições, [ADR-0006](0006-comunicacao-sincrona-e-kafka.md)). `criado` faz `INSERT ... ON CONFLICT (agendamento_id) DO NOTHING`; `cancelado` faz `DELETE ... WHERE agendamento_id = ?`. Como a entrega é "pelo menos uma vez", receber a mesma mensagem duas vezes não muda o resultado. A chave por profissional mantém a ordem dos eventos de cada profissional, então um `cancelado` não chega antes do `criado` correspondente.
+4. **Consulta:** `GET /disponibilidade?profissional_id=...&data=AAAA-MM-DD` monta, a cada chamada, a grade fixa das 09:00 às 18:00 em `America/Sao_Paulo` (18 blocos de 30 min) e remove os blocos que se sobrepõem a algum horário ocupado (`inicio < fim_do_bloco` e `fim > inicio_do_bloco`). É um único SELECT indexado por profissional. Os blocos saem em ordem e com offset `-03:00`; parâmetro ausente ou inválido devolve 422.
+5. **Regra de ouro (Aula 3):** o command **nunca** decide com base na view. Se a grade estiver desatualizada e o cliente escolher um horário já ocupado, o agendamento responde 409 ([ADR-0007](0007-concorrencia-na-reserva-de-horario.md)) e o cliente escolhe outro.
+6. **Consistência eventual:** entre o commit da reserva e o consumer aplicar o evento, a grade pode mostrar por alguns milissegundos um horário que acabou de ser reservado. Se o consumer ficar parado, a grade fica desatualizada, mas o agendamento continua correto.
+
+Ficou fora, por prazo:
+
+- **Expediente configurável.** A grade é fixa no código, então não há tabela de horários livres por profissional e dia (como a proposta inicial previa) nem o evento `expediente.alterado`. Guardar só os horários ocupados já resolve o que a demo mostra e evita ter de recalcular a tabela inteira quando o expediente mudar.
+- **Folgas, bloqueios e duração do serviço.** A consulta devolve blocos de 30 min, não ajusta à duração do serviço escolhido.
+- **Rebuild do read model.** Como o consumer lê com `auto_offset_reset = earliest` e o grupo é novo, subir o serviço com o banco vazio reprocessa os tópicos desde o início, o que reconstrói a tabela. Não há endpoint de rebuild.
 
 ## Consequências
 
 - Na apresentação: "lock na escrita, CQRS na leitura", cada um justificado por um número diferente da volumetria.
-- A demo mostra a reserva → evento no Kafka → horário some da consulta de disponibilidade.
-- Precisamos de um jeito de popular o read model do zero (reprocessar os tópicos desde o início ou um endpoint de rebuild).
-- Se o tempo apertar, o recuo planejado é a opção B (CQRS lite dentro do agendamento), registrado num ADR novo.
-
-## Perguntas para o grupo
-
-- CQRS completo (C) cabe no prazo, ou começamos com B?
-- O read model fica no PostgreSQL (proposta, menos infraestrutura) ou no Redis ([Q12](../questoes-abertas.md#q12))?
+- A demo mostra a reserva → evento no Kafka → horário some da consulta de disponibilidade → cancelamento → horário volta.
+- A leitura (~50 consultas por reserva) escala sozinha: dá para subir mais réplicas do disponibilidade-service sem tocar no banco do agendamento, que tem a constraint de exclusão.
+- Mais um serviço, um consumer e uma tabela para manter, em troca de tirar a leitura pesada do banco com lock.
+- O consumer registra no log e descarta uma mensagem que não consegue processar (JSON inválido, campo ausente); não há DLQ ([ADR-0006](0006-comunicacao-sincrona-e-kafka.md)). Uma mensagem perdida deixa um horário errado na grade até o próximo evento do mesmo agendamento.
+- O recuo planejado, se o tempo apertasse, era a opção B (CQRS lite dentro do agendamento). Não foi preciso.
 
 ## Referências
 

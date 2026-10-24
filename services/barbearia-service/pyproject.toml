@@ -1,0 +1,22 @@
+[project]
+name = "barbearia-service"
+version = "0.1.0"
+description = "Cadastro de barbearias, profissionais e servicos"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "psycopg[binary,pool]>=3.2",
+    "pydantic>=2.8",
+    "opentelemetry-sdk>=1.27",
+    "opentelemetry-exporter-otlp-proto-http>=1.27",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "opentelemetry-instrumentation-psycopg>=0.48b0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

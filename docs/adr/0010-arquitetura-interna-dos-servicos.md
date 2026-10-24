@@ -1,9 +1,10 @@
 # ADR-0010: Arquitetura interna dos serviços
 
-- **Status:** Proposto
-- **Data:** 07/10/2026
+- **Status:** Aceito
+- **Data:** 21/10/2026
 - **Questão:** [Q18](../questoes-abertas.md#q18)
-- **Afeta no diagrama:** C4 nível 3 (componentes dentro de cada serviço)
+- **Afeta no diagrama:** C4 nível 3 (componentes dentro de cada serviço; fora do escopo da apresentação)
+- **Aprovações:** no PR do agendamento-service
 
 ## Contexto
 
@@ -35,25 +36,29 @@
 
 ## Decisão
 
-**Proposta:** opção **A**, Clean Architecture em todos, com **DDD tático no agendamento-service**:
+Opção **A**: Clean Architecture em todos os serviços, com **DDD tático no agendamento-service**.
 
-- Aggregate root `Agendamento` (único ponto de mudança de estado: `reservar`, `cancelar`, `concluir`).
-- Value objects `Periodo` (início e fim, valida sobreposição), `StatusAgendamento`, `ProfissionalId`, `BarbeariaId`.
-- Domain events no passado: `AgendamentoCriado`, `AgendamentoCancelado`.
-- Interface do repositório no domínio; implementação no adapter (PostgreSQL); producer Kafka (via Outbox) também no adapter.
+Cada serviço foi copiado de um serviço do PizzaExpress que já segue Clean (`domain`, `application`, `infrastructure`) e mantém essa estrutura ([roadmap](../roadmap.md)). No agendamento-service, adaptado do `order-service-java`, ficou assim:
 
-O **C4 nível 3** do trabalho será o do agendamento-service, por concentrar DDD, lock e Outbox.
+| Camada | Pacote em `com.barbearia.agendamento` | O que tem |
+|---|---|---|
+| Domínio | `domain` | Aggregate root `Agendamento` (`criar`, `cancelar`, `reconstruir`); value object `StatusAgendamento`; domain events `AgendamentoCriado` e `AgendamentoCancelado`; interface `AgendamentoRepository`; `HorarioIndisponivelException` |
+| Aplicação | `application` | Command Handlers `CriarAgendamentoHandler` e `CancelarAgendamentoHandler`; DTOs de entrada e saída; porta `EventPublisher` |
+| Infraestrutura | `infrastructure` | `AgendamentoController` e `GlobalExceptionHandler` (HTTP); `PostgresAgendamentoRepository` e `MigrationRunner` (JdbcTemplate); `KafkaEventProducer`; montagem dos beans em `config` |
+
+- Regra de dependência: `domain` não importa nada de fora dele; `application` conhece o domínio e a porta `EventPublisher`; `infrastructure` implementa o repositório e a porta. No `order-service-java` a interface do publicador ficava em `infrastructure/kafka`; aqui ela foi para `application/ports`.
+- Uma exceção consciente: os DTOs em `application/dtos` usam anotações do Jackson (`@JsonProperty`, para os nomes `barbearia_id`, `profissional_id`... do contrato) e do Bean Validation (`@NotNull`). São só anotações, sem lógica, e evitam uma segunda classe de DTO em `infrastructure/http` só para mapear nomes. Os handlers não usam os DTOs: recebem um `CriarAgendamentoCommand` e devolvem o aggregate.
+- O aggregate é o único ponto de mudança de estado e empilha os domain events, que o handler publica depois de gravar. No cancelamento, só publica se o UPDATE mudou a linha no banco ([ADR-0007](0007-concorrencia-na-reserva-de-horario.md), item 5).
+- A regra de não sobreposição fica na constraint do PostgreSQL, não no aggregate, porque só o banco enxerga as transações concorrentes ([ADR-0007](0007-concorrencia-na-reserva-de-horario.md)).
+
+Simplificações em relação à proposta, por prazo: sem a operação `concluir`; sem os value objects `Periodo`, `ProfissionalId` e `BarbeariaId` (os campos são `UUID` e `OffsetDateTime`); sem Outbox ([ADR-0012](0012-garantia-de-publicacao-outbox.md)). O C4 nível 3 ficou fora do escopo da apresentação.
 
 ## Consequências
 
-- Estrutura de pastas igual nos serviços da mesma linguagem (template a partir do `catalog-service` em Python e do `scaffold-clean-architecture-java`).
-- Revisão de PR checa a regra de dependência (nada de SQL em presenter nem regra de negócio no controller). O professor faz isso com um agente de IA; podemos fazer o mesmo no CI.
+- Estrutura de pastas igual nos serviços da mesma linguagem, porque todos vieram do mesmo código-base.
+- Revisão de PR checa a regra de dependência (nada de SQL no controller nem regra de negócio no repositório).
+- Trocar o Kafka ou o PostgreSQL mexe só em `infrastructure`; os handlers e o aggregate não mudam.
 - O notificacao-service segue Clean de forma enxuta: o consumer é um adapter de entrada e o provedor de mensagens é um adapter de saída.
-
-## Perguntas para o grupo
-
-- Clean em todos (A) ou alguém quer defender Hexagonal (B)?
-- O C4 nível 3 fica com o agendamento-service?
 
 ## Referências
 

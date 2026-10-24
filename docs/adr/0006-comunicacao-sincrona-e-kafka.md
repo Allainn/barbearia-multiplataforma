@@ -1,7 +1,7 @@
 # ADR-0006: Comunicação síncrona, assíncrona e o broker de eventos (Kafka)
 
-- **Status:** Proposto
-- **Data:** 07/10/2026
+- **Status:** Aceito
+- **Data:** 22/10/2026
 - **Questão:** [Q10](../questoes-abertas.md#q10) · [Q11](../questoes-abertas.md#q11)
 - **Afeta no diagrama:** C4 nível 2 (todas as setas e seus protocolos; o container do broker)
 
@@ -35,40 +35,43 @@
 
 ## Decisão
 
-**Proposta:** opção A (Kafka) para eventos e REST para o que precisa de resposta imediata.
+**Kafka (opção A) para os eventos e REST síncrono para o que precisa de resposta imediata.**
 
 ### O que é síncrono (REST/HTTP)
 
 | De → Para | Para quê | Por que síncrono |
 |---|---|---|
-| Cliente/apps → bff-gateway | Todas as operações (HTTPS + JWT) | Entrada única |
-| bff-gateway → serviços | Encaminhar comandos e consultas | O usuário espera a resposta |
-| agendamento → barbearia-service | Validar serviço (duração) e expediente do profissional na hora de reservar | A reserva não pode usar um dado desatualizado de expediente; com timeout e circuit breaker |
+| Cliente → bff-gateway | Todas as operações (HTTP + JWT) | Entrada única; o BFF valida o token ([ADR-0009](0009-seguranca-keycloak-e-validacao-jwt.md)) |
+| bff-gateway → barbearia, agendamento e disponibilidade | Encaminhar comandos e consultas, com o `sub` do token no header `X-User-ID` | O usuário espera a resposta (201, 409, lista de horários) |
+
+Não há chamada síncrona entre os serviços. O agendamento usa os IDs fixos de barbearia, profissional e serviço sem consultar o barbearia-service.
 
 ### O que é assíncrono (Kafka)
 
-| Tópico | Producer | Consumers | Chave da partição |
-|---|---|---|---|
-| `agendamento.criado` | agendamento-service | disponibilidade-service, notificacao-service | `profissional_id` |
-| `agendamento.cancelado` | agendamento-service | disponibilidade-service, notificacao-service | `profissional_id` |
-| `expediente.alterado` | barbearia-service | disponibilidade-service | `profissional_id` |
+| Tópico | Partições | Chave | Producer | Consumers (group id) |
+|---|---|---|---|---|
+| `agendamento.criado` | 3 | `profissional_id` | agendamento-service | `notificacao-service`, `disponibilidade-service` |
+| `agendamento.cancelado` | 3 | `profissional_id` | agendamento-service | `notificacao-service`, `disponibilidade-service` |
 
-- **Chave por profissional:** todos os eventos de um profissional caem na mesma partição, então o read model os aplica em ordem (um cancelamento nunca chega antes da criação).
-- **Envelope dos eventos:** `evento_id`, `tipo`, `versao`, `ocorrido_em`, `barbearia_id` e `payload`. Contratos versionados em `contracts/` (AsyncAPI é o desejável da Aula 5).
-- **Entrega "pelo menos uma vez":** consumers idempotentes (guardam o `evento_id` já processado). Mensagem que falha N vezes vai para `<tópico>.dlq`.
-- **Remarcar** é cancelar + criar, sem tópico próprio, nesta versão.
+- **Criação dos tópicos:** o serviço `kafka-init` do `infra/docker-compose.yml` cria os dois tópicos com 3 partições antes de qualquer consumer subir.
+- **Chave por profissional:** todos os eventos de um profissional caem na mesma partição, então são consumidos em ordem (um cancelamento não passa na frente da criação).
+- **Consumer groups:** cada serviço consumidor tem o próprio group id e recebe a sua cópia de cada evento.
+- **Envelope:** JSON em UTF-8 com `evento_id`, `tipo`, `versao`, `ocorrido_em`, `barbearia_id` e `payload` (`agendamento_id`, `profissional_id`, `cliente_id`, `inicio`, `fim`). O cancelado muda só o `tipo`.
+- **Entrega "pelo menos uma vez" com consumers idempotentes.** O offset é confirmado automaticamente, então a mesma mensagem pode chegar duas vezes. Cada consumer aguenta isso no próprio banco:
+  - **notificacao-service:** a tabela `notificacao.envio` tem `evento_id UNIQUE`, e a gravação usa `INSERT ... ON CONFLICT (evento_id) DO NOTHING`. Se nenhuma linha entrou, o evento é repetido: o serviço registra `evento <evento_id> repetido, ignorado` e não envia a mensagem de novo. O envio só acontece depois da gravação.
+  - **disponibilidade-service:** `INSERT ... ON CONFLICT (agendamento_id) DO NOTHING` no criado e `DELETE` no cancelado ([ADR-0008](0008-cqrs-na-consulta-de-disponibilidade.md)).
+- **Provedor de mensagens simulado:** o notificacao-service escreve `mensagem enviada para <cliente_id>: <texto>` no log, no lugar da chamada ao provedor externo.
+- **Mensagem inválida não para o consumer:** o notificacao-service faz o parse do JSON dentro do tratamento de erro do loop. Uma mensagem mal formada gera log de erro, e o consumo segue. Falha de conexão com o Postgres é tentada de novo até 3 vezes.
+
+**Ficaram fora por prazo:** a DLQ (`<tópico>.dlq`) para mensagens que falham várias vezes, o tópico `expediente.alterado` (o expediente é fixo, das 09:00 às 18:00) e o contrato em AsyncAPI. O contrato dos eventos está em `docs/tarefas.md`.
 
 ## Consequências
 
-- A reserva responde ao cliente sem esperar a notificação nem o read model (consistência eventual: a grade de horários pode demorar alguns milissegundos para refletir a reserva).
-- Precisamos garantir que o evento seja publicado depois do commit: [ADR-0012](0012-garantia-de-publicacao-outbox.md) (Outbox).
-- A demo mostra a mensagem no Kafka UI e o consumer processando.
-
-## Perguntas para o grupo
-
-- Kafka mesmo, ou alguém quer defender RabbitMQ?
-- O agendamento consulta o barbearia-service de forma síncrona (proposta) ou mantém uma cópia local do expediente alimentada por eventos (mais autônomo, mais trabalho)?
-- Nomes dos tópicos em português (`agendamento.criado`) ou inglês (`appointment.created`) ([Q23](../questoes-abertas.md#q23))?
+- A reserva responde ao cliente sem esperar a notificação nem o read model. A consistência é eventual: a grade de horários e a notificação podem demorar alguns milissegundos para refletir a reserva.
+- Se o provedor de mensagens cair ou ficar lento, só o consumer atrasa; a reserva não é afetada.
+- Sem DLQ, uma mensagem que falha em todas as tentativas fica só no log de erro e não é reprocessada automaticamente. A retenção do Kafka permite reprocessar à mão, voltando o offset do group.
+- O evento é publicado logo depois do commit, sem Outbox ([ADR-0012](0012-garantia-de-publicacao-outbox.md), rejeitado por prazo). Se o agendamento cair entre o commit e o envio, o evento se perde.
+- A demo mostra a mensagem no Kafka UI, o log do `notificacao-service` e o horário sumindo da consulta de disponibilidade.
 
 ## Referências
 
