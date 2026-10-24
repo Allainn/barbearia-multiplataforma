@@ -79,18 +79,3 @@ datasources:
       # TraceQL editor habilitado
       search:
         hide: false
-
-  # ── Elasticsearch (opcional — só responde com o overlay ELK no ar) ──
-  # Mesmo índice que o Kibana lê. Mostra que o Grafana é agnóstico de
-  # backend: dá pra comparar Loki e Elasticsearch lado a lado no Explore.
-  # Sem o overlay (docker-compose.elk.yml), este datasource só fica vermelho.
-  - name: Elasticsearch
-    type: elasticsearch
-    uid: elasticsearch
-    url: http://elasticsearch:9200
-    access: proxy
-    jsonData:
-      index: "barbearia-logs*"
-      timeField: "@timestamp"
-      logMessageField: Body
-      logLevelField: SeverityText
