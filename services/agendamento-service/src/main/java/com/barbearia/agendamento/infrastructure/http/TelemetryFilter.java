@@ -11,6 +11,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -22,8 +24,13 @@ import java.io.IOException;
  * (telemetry.py). Nomes de métrica/atributos seguem a mesma convenção semântica
  * OTel usada lá, pra alimentar os MESMOS dashboards Grafana (ex.: disponibilidade.json)
  * com dados dos dois lados, Python e Java.
+ *
+ * Roda antes do DemoLatencyFilter, para o atraso do X-Demo-Delay-Ms ficar dentro do span e do
+ * http.server.duration e aparecer no Grafana. Sem o @Order, os dois filtros tinham a mesma
+ * prioridade e o DemoLatencyFilter rodava primeiro, fora da medição.
  */
 @Component
+@Order(Ordered.LOWEST_PRECEDENCE - 1)
 public class TelemetryFilter extends OncePerRequestFilter {
 
     private final Tracer tracer;

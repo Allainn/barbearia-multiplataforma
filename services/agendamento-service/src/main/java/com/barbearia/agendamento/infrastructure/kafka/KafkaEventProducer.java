@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -23,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Publica os eventos do agendamento no Kafka (ADR-0006). O tópico é o nome do evento
@@ -71,8 +73,8 @@ public class KafkaEventProducer implements EventPublisher {
     }
 
     /**
-     * Falha ao publicar só vai para o log: a reserva já está gravada e não é desfeita.
-     * Sem Outbox (ADR-0012), esse evento fica perdido.
+     * Falha ao publicar vai para o log e para o span, com status de erro e a exceção. A reserva
+     * já está gravada e não é desfeita. Sem Outbox (ADR-0012), esse evento fica perdido.
      */
     @Override
     public void publish(DomainEvent event) {
@@ -103,7 +105,14 @@ public class KafkaEventProducer implements EventPublisher {
             producer.send(record).get();
             log.info("Published event '{}' (agendamento {}) to topic '{}'", topic, event.agendamentoId(), topic);
         } catch (Exception e) {
-            log.error("Failed to publish event '{}' (agendamento {}): {}", topic, event.agendamentoId(), e.getMessage());
+            // O get() embrulha a falha do Kafka numa ExecutionException. O trace mostra a causa real.
+            Throwable causa = e instanceof ExecutionException && e.getCause() != null ? e.getCause() : e;
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            span.recordException(causa);
+            span.setStatus(StatusCode.ERROR, "evento não publicado");
+            log.error("Failed to publish event '{}' (agendamento {}): {}", topic, event.agendamentoId(), causa.toString());
         } finally {
             span.end();
         }
