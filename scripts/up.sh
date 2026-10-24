@@ -10,6 +10,11 @@ echo "==> Subindo a plataforma com build das imagens..."
 docker compose -f "$COMPOSE_FILE" up --build -d
 
 if [[ -f "$ROOT_DIR/scripts/keycloak-seed.sh" ]]; then
+  echo "==> Aguardando o Keycloak..."
+  until curl -sf http://localhost:8080/realms/master >/dev/null; do
+    sleep 3
+  done
+
   echo "==> Executando o seed do Keycloak..."
   bash "$ROOT_DIR/scripts/keycloak-seed.sh"
 else
