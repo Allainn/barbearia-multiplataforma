@@ -35,12 +35,7 @@ O Actions constrói e publica a imagem do `barbearia-service` no GHCR. A máquin
 
 **Reaproveitar a stack do PizzaExpress** (proposta): SDK OpenTelemetry em cada serviço → OTel Collector → Tempo (traces), Prometheus (métricas), Loki (logs) → Grafana. O desafio extra é **propagar o trace pelo Kafka** (header `traceparent`), para um único trace mostrar BFF → agendamento → Kafka → notificação.
 
-Também foi considerada uma stack baseada em Elasticsearch e Kibana. O Loki foi
-escolhido porque indexa apenas labels, consome menos memória e se integra
-diretamente ao Grafana já utilizado. O Elasticsearch oferece busca e indexação
-mais completas, mas seu consumo estimado de 10 a 16 GB de memória não é
-compatível com as máquinas do grupo e com a restrição de manter a infraestrutura
-local leve.
+Também foi considerada uma stack baseada em Elasticsearch e Kibana. O Loki foi escolhido porque indexa apenas labels, consome menos memória e se integra diretamente ao Grafana já utilizado. O Elasticsearch oferece busca e indexação mais completas, mas seu consumo estimado de 10 a 16 GB de memória não é compatível com as máquinas do grupo e com a restrição de manter a infraestrutura local leve.
 
 ## Decisão
 
