@@ -13,6 +13,18 @@ FECHAMENTO = time(18, 0)
 BLOCO = timedelta(minutes=30)
 
 
+def _horario_do_evento(evento: dict) -> HorarioOcupado:
+    """Criado e cancelado têm o mesmo payload; o barbearia_id vem do envelope."""
+    payload = evento["payload"]
+    return HorarioOcupado(
+        agendamento_id=UUID(payload["agendamento_id"]),
+        barbearia_id=UUID(evento["barbearia_id"]),
+        profissional_id=UUID(payload["profissional_id"]),
+        inicio=datetime.fromisoformat(payload["inicio"]),
+        fim=datetime.fromisoformat(payload["fim"]),
+    )
+
+
 class RegistrarAgendamentoUseCase:
     """agendamento.criado: marca o intervalo como ocupado."""
 
@@ -20,16 +32,7 @@ class RegistrarAgendamentoUseCase:
         self._repository = repository
 
     def execute(self, evento: dict) -> None:
-        payload = evento["payload"]
-        self._repository.registrar(
-            HorarioOcupado(
-                agendamento_id=UUID(payload["agendamento_id"]),
-                barbearia_id=UUID(evento["barbearia_id"]),
-                profissional_id=UUID(payload["profissional_id"]),
-                inicio=datetime.fromisoformat(payload["inicio"]),
-                fim=datetime.fromisoformat(payload["fim"]),
-            )
-        )
+        self._repository.registrar(_horario_do_evento(evento))
 
 
 class LiberarAgendamentoUseCase:
@@ -39,7 +42,7 @@ class LiberarAgendamentoUseCase:
         self._repository = repository
 
     def execute(self, evento: dict) -> None:
-        self._repository.remover(UUID(evento["payload"]["agendamento_id"]))
+        self._repository.liberar(_horario_do_evento(evento))
 
 
 class ConsultarDisponibilidadeUseCase:

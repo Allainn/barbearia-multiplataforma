@@ -11,12 +11,24 @@ from disponibilidade.domain.repositories.horario_ocupado_repository import (
 )
 
 
+def _parametros(horario: HorarioOcupado) -> dict:
+    return {
+        "agendamento_id": horario.agendamento_id,
+        "barbearia_id": horario.barbearia_id,
+        "profissional_id": horario.profissional_id,
+        "inicio": horario.inicio,
+        "fim": horario.fim,
+    }
+
+
 class PostgresHorarioOcupadoRepository(HorarioOcupadoRepository):
 
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
 
     def registrar(self, horario: HorarioOcupado) -> None:
+        # DO NOTHING também preserva o tombstone: se o cancelado chegou antes,
+        # a linha já existe com cancelado = true e continua assim.
         with self._engine.begin() as conn:
             conn.execute(
                 text("""
@@ -26,20 +38,22 @@ class PostgresHorarioOcupadoRepository(HorarioOcupadoRepository):
                         (:agendamento_id, :barbearia_id, :profissional_id, :inicio, :fim)
                     ON CONFLICT (agendamento_id) DO NOTHING
                 """),
-                {
-                    "agendamento_id": horario.agendamento_id,
-                    "barbearia_id": horario.barbearia_id,
-                    "profissional_id": horario.profissional_id,
-                    "inicio": horario.inicio,
-                    "fim": horario.fim,
-                },
+                _parametros(horario),
             )
 
-    def remover(self, agendamento_id: UUID) -> None:
+    def liberar(self, horario: HorarioOcupado) -> None:
+        # Grava a linha já cancelada em vez de apagar: se o criado chegar
+        # depois, o ON CONFLICT do registrar não a reativa.
         with self._engine.begin() as conn:
             conn.execute(
-                text("DELETE FROM disponibilidade.horario_ocupado WHERE agendamento_id = :id"),
-                {"id": agendamento_id},
+                text("""
+                    INSERT INTO disponibilidade.horario_ocupado
+                        (agendamento_id, barbearia_id, profissional_id, inicio, fim, cancelado)
+                    VALUES
+                        (:agendamento_id, :barbearia_id, :profissional_id, :inicio, :fim, true)
+                    ON CONFLICT (agendamento_id) DO UPDATE SET cancelado = true
+                """),
+                _parametros(horario),
             )
 
     def listar_sobrepostos(
@@ -51,6 +65,7 @@ class PostgresHorarioOcupadoRepository(HorarioOcupadoRepository):
                     SELECT agendamento_id, barbearia_id, profissional_id, inicio, fim
                     FROM disponibilidade.horario_ocupado
                     WHERE profissional_id = :profissional_id
+                      AND NOT cancelado
                       AND inicio < :fim AND fim > :inicio
                     ORDER BY inicio
                 """),
