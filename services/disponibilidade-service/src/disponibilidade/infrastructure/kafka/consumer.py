@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import threading
+import time
 
 from opentelemetry import trace
 from opentelemetry.propagate import extract
@@ -35,15 +36,26 @@ def _aplicar_com_retry(handler, evento: dict) -> None:
 
 def _consume(bootstrap_servers: str, handlers: dict) -> None:
     from kafka import KafkaConsumer  # type: ignore[import-untyped]
+    from kafka.errors import KafkaError  # type: ignore[import-untyped]
 
     # Sem value_deserializer: um JSON inválido lançaria a exceção dentro do
     # iterador e derrubaria a thread. O parse fica dentro do try abaixo.
-    consumer = KafkaConsumer(
-        *TOPICS,
-        bootstrap_servers=bootstrap_servers,
-        group_id=GROUP_ID,
-        auto_offset_reset="earliest",
-    )
+    # O compose só sobe o serviço depois do kafka-init, mas num restart com o
+    # Kafka fora o construtor falha e a thread morreria calada, com o /health
+    # ainda ok. Por isso o laço. KafkaError cobre o NoBrokersAvailable do
+    # kafka-python 2.x e o KafkaTimeoutError (depois de 30 s) do 3.x.
+    while True:
+        try:
+            consumer = KafkaConsumer(
+                *TOPICS,
+                bootstrap_servers=bootstrap_servers,
+                group_id=GROUP_ID,
+                auto_offset_reset="earliest",
+            )
+            break
+        except KafkaError:
+            logger.warning("Kafka indisponível em %s; nova tentativa em 5 s", bootstrap_servers)
+            time.sleep(5)
     logger.info(
         "Kafka consumer started. Listening on topics %s at %s",
         TOPICS,
