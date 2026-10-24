@@ -54,14 +54,14 @@ Não há chamada síncrona entre os serviços. O agendamento usa os IDs fixos de
 | `agendamento.cancelado` | 3 | `profissional_id` | agendamento-service | `notificacao-service`, `disponibilidade-service` |
 
 - **Criação dos tópicos:** o serviço `kafka-init` do `infra/docker-compose.yml` cria os dois tópicos com 3 partições antes de qualquer consumer subir.
-- **Chave por profissional:** todos os eventos de um profissional caem na mesma partição, então são consumidos em ordem (um cancelamento não passa na frente da criação).
+- **Chave por profissional:** dentro de cada tópico, todos os eventos de um profissional caem na mesma partição e são consumidos na ordem em que foram publicados. O Kafka não garante ordem entre tópicos diferentes: se o consumer atrasar, um `agendamento.cancelado` pode ser processado antes do `agendamento.criado` do mesmo agendamento. Para a notificação isso é inofensivo (o cliente recebe as duas mensagens, só que fora de ordem).
 - **Consumer groups:** cada serviço consumidor tem o próprio group id e recebe a sua cópia de cada evento.
 - **Envelope:** JSON em UTF-8 com `evento_id`, `tipo`, `versao`, `ocorrido_em`, `barbearia_id` e `payload` (`agendamento_id`, `profissional_id`, `cliente_id`, `inicio`, `fim`). O cancelado muda só o `tipo`.
-- **Entrega "pelo menos uma vez" com consumers idempotentes.** O offset é confirmado automaticamente, então a mesma mensagem pode chegar duas vezes. Cada consumer aguenta isso no próprio banco:
+- **Entrega "pelo menos uma vez" com consumers idempotentes.** O auto-commit está desligado: o consumer confirma o offset só depois de processar cada mensagem. Se o serviço cair no meio, a mensagem em andamento é lida de novo ao voltar, então a mesma mensagem pode chegar duas vezes. Cada consumer aguenta isso no próprio banco:
   - **notificacao-service:** a tabela `notificacao.envio` tem `evento_id UNIQUE`, e a gravação usa `INSERT ... ON CONFLICT (evento_id) DO NOTHING`. Se nenhuma linha entrou, o evento é repetido: o serviço registra `evento <evento_id> repetido, ignorado` e não envia a mensagem de novo. O envio só acontece depois da gravação.
   - **disponibilidade-service:** `INSERT ... ON CONFLICT (agendamento_id) DO NOTHING` no criado e `DELETE` no cancelado ([ADR-0008](0008-cqrs-na-consulta-de-disponibilidade.md)).
-- **Provedor de mensagens simulado:** o notificacao-service escreve `mensagem enviada para <cliente_id>: <texto>` no log, no lugar da chamada ao provedor externo.
-- **Mensagem inválida não para o consumer:** o notificacao-service faz o parse do JSON dentro do tratamento de erro do loop. Uma mensagem mal formada gera log de erro, e o consumo segue. Falha de conexão com o Postgres é tentada de novo até 3 vezes.
+- **Provedor de mensagens simulado:** o notificacao-service escreve `mensagem enviada para <cliente_id>: <texto>` no log, no lugar da chamada ao provedor externo. O envio fica dentro de um span `CLIENT` (`provedor-mensagens enviar`, com `peer.service=provedor-mensagens`), então a integração externa aparece no fim do trace da reserva no Tempo e como nó no service graph.
+- **Falhas no consumer:** se o Kafka não responder quando o serviço sobe, o consumer tenta conectar de novo a cada 5 s, em vez de parar. O parse do JSON fica dentro do tratamento de erro do loop: uma mensagem mal formada gera log de erro, e o consumo segue. Falha de conexão com o Postgres é tentada de novo até 3 vezes; se persistir, o offset volta e a mensagem é relida 5 s depois.
 
 **Ficaram fora por prazo:** a DLQ (`<tópico>.dlq`) para mensagens que falham várias vezes, o tópico `expediente.alterado` (o expediente é fixo, das 09:00 às 18:00) e o contrato em AsyncAPI. O contrato dos eventos está em `docs/tarefas.md`.
 
@@ -69,7 +69,7 @@ Não há chamada síncrona entre os serviços. O agendamento usa os IDs fixos de
 
 - A reserva responde ao cliente sem esperar a notificação nem o read model. A consistência é eventual: a grade de horários e a notificação podem demorar alguns milissegundos para refletir a reserva.
 - Se o provedor de mensagens cair ou ficar lento, só o consumer atrasa; a reserva não é afetada.
-- Sem DLQ, uma mensagem que falha em todas as tentativas fica só no log de erro e não é reprocessada automaticamente. A retenção do Kafka permite reprocessar à mão, voltando o offset do group.
+- Sem DLQ, uma mensagem com conteúdo inválido fica só no log de erro e é descartada. A retenção do Kafka permite reprocessar à mão, voltando o offset do group.
 - O evento é publicado logo depois do commit, sem Outbox ([ADR-0012](0012-garantia-de-publicacao-outbox.md), rejeitado por prazo). Se o agendamento cair entre o commit e o envio, o evento se perde.
 - A demo mostra a mensagem no Kafka UI, o log do `notificacao-service` e o horário sumindo da consulta de disponibilidade.
 

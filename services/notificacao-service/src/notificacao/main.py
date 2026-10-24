@@ -20,6 +20,11 @@ app = FastAPI(
         "Consome os eventos de agendamento do Kafka e envia a notificacao "
         "ao cliente (provedor simulado, grava no log)."
     ),
+    # FastAPI >= 0.142 tem telemetria OTel nativa que, no startup, pendura
+    # MAIS um exportador OTLP (lido de OTEL_EXPORTER_OTLP_ENDPOINT) nos providers
+    # que telemetry.py já configurou -- sem deduplicar. Resultado: logs, spans e
+    # métricas saindo em dobro.
+    telemetry={"auto_configure": False},
 )
 
 
