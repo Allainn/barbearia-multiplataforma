@@ -32,11 +32,13 @@ def listar_barbearias(conn=Depends(get_conn)):
 
 @router.post("/barbearias", response_model=Barbearia, status_code=201)
 def criar_barbearia(corpo: BarbeariaIn, conn=Depends(get_conn)):
-    return conn.execute(
+    row = conn.execute(
         "INSERT INTO barbearia.barbearia (id, nome, endereco) VALUES (%s, %s, %s) "
         "RETURNING id, nome, endereco",
         (uuid4(), corpo.nome, corpo.endereco),
     ).fetchone()
+    conn.commit()
+    return row
 
 
 @router.get("/barbearias/{barbearia_id}/profissionais", response_model=list[Profissional])
@@ -56,11 +58,13 @@ def listar_profissionais(barbearia_id: UUID, conn=Depends(get_conn)):
 )
 def criar_profissional(barbearia_id: UUID, corpo: ProfissionalIn, conn=Depends(get_conn)):
     _exige_barbearia(conn, barbearia_id)
-    return conn.execute(
+    row = conn.execute(
         "INSERT INTO barbearia.profissional (id, barbearia_id, nome) VALUES (%s, %s, %s) "
         "RETURNING id, barbearia_id, nome",
         (uuid4(), barbearia_id, corpo.nome),
     ).fetchone()
+    conn.commit()
+    return row
 
 
 @router.get("/barbearias/{barbearia_id}/servicos", response_model=list[Servico])
@@ -78,9 +82,11 @@ def listar_servicos(barbearia_id: UUID, conn=Depends(get_conn)):
 )
 def criar_servico(barbearia_id: UUID, corpo: ServicoIn, conn=Depends(get_conn)):
     _exige_barbearia(conn, barbearia_id)
-    return conn.execute(
+    row = conn.execute(
         "INSERT INTO barbearia.servico (id, barbearia_id, nome, duracao_min, preco) "
         "VALUES (%s, %s, %s, %s, %s) "
         "RETURNING id, barbearia_id, nome, duracao_min, preco",
         (uuid4(), barbearia_id, corpo.nome, corpo.duracao_min, corpo.preco),
     ).fetchone()
+    conn.commit()
+    return row
