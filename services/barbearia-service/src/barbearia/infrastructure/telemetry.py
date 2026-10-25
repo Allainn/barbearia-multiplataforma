@@ -24,7 +24,11 @@ def setup_telemetry(app) -> None:
     if not endpoint:
         return
     resource = Resource.create(
-        {"service.name": SERVICE_NAME, "service.namespace": "barbearia"}
+        {
+            "service.name": SERVICE_NAME,
+            "service.namespace": "barbearia",
+            "service.version": os.getenv("SERVICE_VERSION", "dev"),
+        }
     )
 
     tracer_provider = TracerProvider(resource=resource)
