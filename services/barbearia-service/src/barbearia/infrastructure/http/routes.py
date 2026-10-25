@@ -1,9 +1,20 @@
 from typing import Annotated, Any
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
-from .db import get_conn
+from barbearia.application.use_cases import (
+    CriarBarbearia,
+    CriarProfissional,
+    CriarServico,
+    ListarBarbearias,
+    ListarProfissionais,
+    ListarServicos,
+)
+from barbearia.domain.repositories import BarbeariaRepository
+from barbearia.infrastructure.db import get_conn
+from barbearia.infrastructure.postgres_repository import PostgresBarbeariaRepository
+
 from .schemas import (
     Barbearia,
     BarbeariaIn,
@@ -15,42 +26,30 @@ from .schemas import (
 
 router = APIRouter()
 
+
+def get_repository(
+    conn: Annotated[Any, Depends(get_conn, scope="function")],
+) -> BarbeariaRepository:
+    return PostgresBarbeariaRepository(conn)
+
+
 # Escopo de funcao: a conexao fecha (e faz o commit) antes de a resposta sair.
-Conn = Annotated[Any, Depends(get_conn, scope="function")]
-
-
-def _exige_barbearia(conn, barbearia_id: UUID) -> None:
-    row = conn.execute(
-        "SELECT 1 FROM barbearia.barbearia WHERE id = %s", (barbearia_id,)
-    ).fetchone()
-    if row is None:
-        raise HTTPException(status_code=404, detail="Barbearia nao encontrada")
+Repository = Annotated[BarbeariaRepository, Depends(get_repository, scope="function")]
 
 
 @router.get("/barbearias", response_model=list[Barbearia])
-def listar_barbearias(conn: Conn):
-    return conn.execute(
-        "SELECT id, nome, endereco FROM barbearia.barbearia ORDER BY nome"
-    ).fetchall()
+def listar_barbearias(repository: Repository):
+    return ListarBarbearias(repository).executar()
 
 
 @router.post("/barbearias", response_model=Barbearia, status_code=201)
-def criar_barbearia(corpo: BarbeariaIn, conn: Conn):
-    return conn.execute(
-        "INSERT INTO barbearia.barbearia (id, nome, endereco) VALUES (%s, %s, %s) "
-        "RETURNING id, nome, endereco",
-        (uuid4(), corpo.nome, corpo.endereco),
-    ).fetchone()
+def criar_barbearia(corpo: BarbeariaIn, repository: Repository):
+    return CriarBarbearia(repository).executar(corpo.nome, corpo.endereco)
 
 
 @router.get("/barbearias/{barbearia_id}/profissionais", response_model=list[Profissional])
-def listar_profissionais(barbearia_id: UUID, conn: Conn):
-    _exige_barbearia(conn, barbearia_id)
-    return conn.execute(
-        "SELECT id, barbearia_id, nome FROM barbearia.profissional "
-        "WHERE barbearia_id = %s ORDER BY nome",
-        (barbearia_id,),
-    ).fetchall()
+def listar_profissionais(barbearia_id: UUID, repository: Repository):
+    return ListarProfissionais(repository).executar(barbearia_id)
 
 
 @router.post(
@@ -58,33 +57,21 @@ def listar_profissionais(barbearia_id: UUID, conn: Conn):
     response_model=Profissional,
     status_code=201,
 )
-def criar_profissional(barbearia_id: UUID, corpo: ProfissionalIn, conn: Conn):
-    _exige_barbearia(conn, barbearia_id)
-    return conn.execute(
-        "INSERT INTO barbearia.profissional (id, barbearia_id, nome) VALUES (%s, %s, %s) "
-        "RETURNING id, barbearia_id, nome",
-        (uuid4(), barbearia_id, corpo.nome),
-    ).fetchone()
+def criar_profissional(
+    barbearia_id: UUID, corpo: ProfissionalIn, repository: Repository
+):
+    return CriarProfissional(repository).executar(barbearia_id, corpo.nome)
 
 
 @router.get("/barbearias/{barbearia_id}/servicos", response_model=list[Servico])
-def listar_servicos(barbearia_id: UUID, conn: Conn):
-    _exige_barbearia(conn, barbearia_id)
-    return conn.execute(
-        "SELECT id, barbearia_id, nome, duracao_min, preco FROM barbearia.servico "
-        "WHERE barbearia_id = %s ORDER BY nome",
-        (barbearia_id,),
-    ).fetchall()
+def listar_servicos(barbearia_id: UUID, repository: Repository):
+    return ListarServicos(repository).executar(barbearia_id)
 
 
 @router.post(
     "/barbearias/{barbearia_id}/servicos", response_model=Servico, status_code=201
 )
-def criar_servico(barbearia_id: UUID, corpo: ServicoIn, conn: Conn):
-    _exige_barbearia(conn, barbearia_id)
-    return conn.execute(
-        "INSERT INTO barbearia.servico (id, barbearia_id, nome, duracao_min, preco) "
-        "VALUES (%s, %s, %s, %s, %s) "
-        "RETURNING id, barbearia_id, nome, duracao_min, preco",
-        (uuid4(), barbearia_id, corpo.nome, corpo.duracao_min, corpo.preco),
-    ).fetchone()
+def criar_servico(barbearia_id: UUID, corpo: ServicoIn, repository: Repository):
+    return CriarServico(repository).executar(
+        barbearia_id, corpo.nome, corpo.duracao_min, corpo.preco
+    )
