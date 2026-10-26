@@ -1,6 +1,6 @@
 # ADR-0009: Provedor de identidade: Keycloak com OAuth 2.0 / OpenID Connect
 
-- **Status:** Proposto (vira *Aceito* no PR do BFF)
+- **Status:** Aceito
 - **Data:** 26/10/2026
 - **Questão:** [Q13](../questoes-abertas.md#q13) · issue #13
 - **Afeta no diagrama:** C4 nível 1 (Keycloak como sistema externo); C4 nível 2 (seta BFF → Keycloak para o JWKS)

@@ -1,7 +1,7 @@
 # ADR-0014: Modelo de autorização: RBAC com duas realm roles
 
-- **Status:** Proposto (vira *Aceito* no PR do BFF)
-- **Data:** 25/10/2026
+- **Status:** Aceito
+- **Data:** 26/10/2026
 - **Questão:** [Q13](../questoes-abertas.md#q13) · issue #13
 - **Afeta no diagrama:** C4 nível 2 (texto da seta pessoas → BFF: "REST com JWT; checa a role")
 - **Relacionado:** [ADR-0009](0009-seguranca-keycloak-e-validacao-jwt.md) (quem emite o token) · [ADR-0015](0015-onde-autenticar-e-autorizar.md) (onde a autorização é decidida e aplicada)

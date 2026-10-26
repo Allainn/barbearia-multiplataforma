@@ -1,7 +1,7 @@
 # ADR-0015: Onde autenticar e autorizar: ponto de aplicação e ponto de decisão
 
-- **Status:** Proposto (vira *Aceito* no PR do BFF)
-- **Data:** 25/10/2026
+- **Status:** Aceito
+- **Data:** 26/10/2026
 - **Questão:** [Q13](../questoes-abertas.md#q13) · issue #13
 - **Afeta no diagrama:** C4 nível 2 (seta pessoas → BFF: "REST com JWT"; seta BFF → Keycloak: "JWKS"; setas BFF → serviços: "REST com `X-User-ID`")
 - **Relacionado:** [ADR-0009](0009-seguranca-keycloak-e-validacao-jwt.md) (quem emite o token) · [ADR-0014](0014-modelo-de-autorizacao-rbac.md) (modelo de autorização)
@@ -42,7 +42,7 @@ O BFF corta cedo as requisições inválidas; agendamento-service e barbearia-se
 
 ### 1. PDP embutido na aplicação, com as claims do token
 
-A aplicação lê `realm_access.roles` (e, no futuro, `barbearia_id`) do token e decide em código: `requireRole("gestor")` no BFF, `cliente_id == X-User-ID` no agendamento-service. Keycloak só emite; não é consultado por requisição.
+A aplicação lê `realm_access.roles` (e, no futuro, `barbearia_id`) do token e decide localmente: regra por rota na configuração de segurança do BFF, `cliente_id == X-User-ID` no agendamento-service. Keycloak só emite; não é consultado por requisição.
 
 - **Prós:** zero latência adicional e nenhuma dependência de rede na decisão; funciona igual em Java e Python; a regra fica ao lado da rota, fácil de ler e testar.
 - **Contras:** as regras ficam espalhadas pelo código de cada serviço; mudar uma política é deploy; com muitas regras por recurso vira duplicação.
@@ -79,7 +79,7 @@ Modo bypass: se `KEYCLOAK_URL` estiver vazio, o BFF não verifica e usa um usuá
 
 O PDP é o código da aplicação; o PEP é o ponto do fluxo onde a decisão bloqueia a requisição. A entrada da decisão são só as claims do token (no BFF) ou o `X-User-ID` e o dado do recurso (no serviço). Não há chamada de rede para decidir.
 
-- **Regra por papel, no BFF.** Cada controller declara a role que a rota exige e chama `authService.requireRole(user, "<role>")` antes de encaminhar. A role vem de `realm_access.roles`, já no token ([ADR-0014](0014-modelo-de-autorizacao-rbac.md), matriz de autorização). Falha → 403, sem tocar o serviço. Rota sem role declarada exige só autenticação ("logado"). Negar por padrão: uma rota nova sem `requireRole` passa só a autenticação, e é o revisor do PR que confere a matriz.
+- **Regra por papel, no BFF.** A matriz do [ADR-0014](0014-modelo-de-autorizacao-rbac.md) é declarada num só lugar, na configuração do Spring Security (`RegrasDeAutorizacao`: método + caminho → `authenticated()` ou `hasRole(...)`), e avaliada pelo filtro de segurança **antes** de qualquer controller. A role vem de `realm_access.roles`, já no token. Falha → 403, sem tocar o serviço. Negar por padrão é estrutural: a matriz termina em `anyRequest().denyAll()`, então uma rota nova que não esteja listada é recusada mesmo com token válido; adicionar uma rota ao BFF é acrescentar a linha dela na matriz. Os controllers só encaminham.
 - **Regra por recurso, no serviço dono do dado.** O BFF não conhece os recursos, então não consegue decidir "este agendamento é deste usuário". Essa decisão fica no caso de uso do serviço, comparando o `X-User-ID` com o `cliente_id` gravado. Resposta 404 para não revelar a existência do recurso. É a única regra por recurso da primeira versão; a de tenant (gestor × barbearia) não existe ainda.
 - **O que o BFF faz com a identidade além de decidir:** no `POST /agendamentos`, o `cliente_id` gravado é sempre o `X-User-ID`, nunca o do corpo. Isso não é uma checagem, é a eliminação de uma: o cliente não escolhe em nome de quem reserva.
 
@@ -87,8 +87,8 @@ O PDP é o código da aplicação; o PEP é o ponto do fluxo onde a decisão blo
 
 | Checagem | Natureza | PDP / PEP | Resposta |
 |---|---|---|---|
-| O token existe, a assinatura bate com o JWKS, `exp`, `iss` e `aud` estão certos | autenticação da requisição | BFF, `KeycloakJwtValidator` | 401 com `WWW-Authenticate: Bearer` |
-| O usuário tem a role da rota | autorização por papel | BFF, `authService.requireRole(user, "...")` em cada controller | 403 |
+| O token existe, a assinatura bate com o JWKS, `exp`, `iss` e `aud` estão certos | autenticação da requisição | BFF, Spring Security OAuth2 Resource Server (`KeycloakSecurityConfig`) | 401 com `WWW-Authenticate: Bearer` |
+| O usuário tem a role da rota | autorização por papel | BFF, matriz declarativa em `RegrasDeAutorizacao`, no filtro de segurança | 403 |
 | O agendamento é do usuário | autorização por recurso (dono) | agendamento-service, no caso de uso de cancelar, com `X-User-ID` | 404 |
 | A barbearia é do gestor | autorização por recurso (tenant) | **não implementado** | — |
 
@@ -100,6 +100,8 @@ O PDP é o código da aplicação; o PEP é o ponto do fluxo onde a decisão blo
   - Isolamento por barbearia entra ([ADR-0014](0014-modelo-de-autorizacao-rbac.md), opção B) → a regra por recurso no barbearia-service precisa de identidade verificada → opção **C** deste ADR, com o BFF repassando o `Authorization`.
   - Regras passam a variar por plano, por barbearia ou por hierarquia → o PDP embutido vira duplicação → opção **3** (OpenFGA para relações; OPA se as regras forem por atributo). A opção 2 (Keycloak) continua descartada mesmo nesse cenário, pelo acoplamento do IdP aos recursos do domínio e pela falta de *policy enforcer* para Python.
 - O BFF guarda o JWKS em cache: se o Keycloak cair, tokens já emitidos continuam aceitos até `exp`; só login novo falha.
+- **O `iss` é a URL pela qual o Keycloak foi chamado.** Sem hostname fixo, um token obtido por `http://localhost:8080` sai com esse `iss`, e o BFF, que conhece o Keycloak como `http://keycloak:8080`, o recusa com 401 (`The iss claim is not valid`). Isso é a verificação funcionando, não um defeito: aceitar vários issuers afrouxaria a checagem. Em produção o Keycloak tem hostname fixo (`KC_HOSTNAME`), e o problema não existe. No ambiente local, quem obtém o token precisa usar o mesmo nome que o BFF usa (`keycloak`, via `/etc/hosts`) ou fixar `KC_HOSTNAME` no Keycloak.
+- A verificação da assinatura é do token inteiro, bit a bit. Para demonstrar um token adulterado, altera-se um caractere do **meio** da assinatura ou do payload; o último caractere do base64url carrega só 2 bits úteis e, dependendo do valor, a troca não muda a assinatura decodificada.
 - Se a opção C entrar, um ADR novo substitui este. O [ADR-0009](0009-seguranca-keycloak-e-validacao-jwt.md) e o [ADR-0014](0014-modelo-de-autorizacao-rbac.md) não mudam por isso.
 
 ## Referências
@@ -111,4 +113,5 @@ O PDP é o código da aplicação; o PEP é o ponto do fluxo onde a decisão blo
 - Keycloak, [Deprecation of Keycloak adapters](https://www.keycloak.org/2022/02/adapter-deprecation) (fev/2022) e [Update on deprecation](https://www.keycloak.org/2023/03/adapter-deprecation-update) (mar/2023): adaptadores Java e Node.js depreciados; frameworks substitutos sem suporte a Authorization Services.
 - [Open Policy Agent](https://www.openpolicyagent.org/docs/latest/), [OpenFGA](https://openfga.dev/docs), [Cerbos](https://docs.cerbos.dev/).
 - NIST SP 800-207, [Zero Trust Architecture](https://csrc.nist.gov/publications/detail/sp/800-207/final): por que não confiar na rede interna.
-- Código de referência: `pizzaexpress-ambiente/services/bff-gateway-java` (`KeycloakJwtValidator`, `AuthService`, `GlobalExceptionHandler`); `services/agendamento-service/.../infrastructure/http/AgendamentoController.java` (dono no cancelamento).
+- [Spring Security: OAuth 2.0 Resource Server (JWT)](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html) e [Authorize HttpServletRequests](https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html).
+- Código: `services/bff-gateway/src/main/java/com/barbearia/bff/infrastructure/auth/` (`KeycloakSecurityConfig`, `RegrasDeAutorizacao`, `RealmRolesConverter`, `RespostasDeSeguranca`, `BypassSecurityConfig`); `services/bff-gateway/.../infrastructure/clients/ServicoClient.java` (`X-User-ID`, sem `Authorization`); `services/agendamento-service/.../infrastructure/http/AgendamentoController.java` (dono no cancelamento).
