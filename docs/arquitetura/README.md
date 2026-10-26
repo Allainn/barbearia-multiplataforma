@@ -58,9 +58,9 @@ flowchart TB
     pessoas -->|"HTTPS/REST com JWT"| bff
     pessoas -->|"Obtém o token [OAuth2 · password grant na demo]"| keycloak
     bff -->|"Valida o JWT [JWKS]"| keycloak
-    bff -->|"Cadastros e consultas [REST]"| barbearia
-    bff -->|"Reserva e cancela [REST]"| agendamento
-    bff -->|"Horários livres [REST]"| disponibilidade
+    bff -->|"Cadastros e consultas [REST · X-User-ID]"| barbearia
+    bff -->|"Reserva e cancela [REST · X-User-ID]"| agendamento
+    bff -->|"Horários livres [REST · X-User-ID]"| disponibilidade
     agendamento -->|"Publica agendamento.criado e .cancelado [Kafka Producer]"| kafka
     kafka -->|"Consome os dois tópicos [Kafka Consumer]"| disponibilidade
     kafka -->|"Consome os dois tópicos [Kafka Consumer]"| notificacao
@@ -92,7 +92,8 @@ No Miro, cada elemento tem uma etiqueta verde com link para o ADR. Aqui, a mesma
 | REST do BFF para os serviços; Kafka entre o agendamento e os consumers | [ADR-0006](../adr/0006-comunicacao-sincrona-e-kafka.md) |
 | Constraint de exclusão e 409 no agendamento | [ADR-0007](../adr/0007-concorrencia-na-reserva-de-horario.md) |
 | disponibilidade-service como lado de leitura do CQRS | [ADR-0008](../adr/0008-cqrs-na-consulta-de-disponibilidade.md) |
-| Keycloak e validação do JWT só no BFF | [ADR-0009](../adr/0009-seguranca-keycloak-e-validacao-jwt.md) |
+| Keycloak como provedor de identidade | [ADR-0009](../adr/0009-seguranca-keycloak-e-validacao-jwt.md) |
+| Roles cliente e gestor; JWT conferido só no BFF, que repassa o X-User-ID | [ADR-0014](../adr/0014-modelo-de-autorizacao-rbac.md), [ADR-0015](../adr/0015-onde-autenticar-e-autorizar.md) |
 | Clean Architecture e DDD no agendamento | [ADR-0010](../adr/0010-arquitetura-interna-dos-servicos.md) |
 | Um PostgreSQL com um schema e um usuário por serviço | [ADR-0011](../adr/0011-dados-por-servico.md) |
 
