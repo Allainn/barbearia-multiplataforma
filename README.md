@@ -42,13 +42,9 @@ Para derrubar, `bash scripts/down.sh`. Os dados ficam em `infra/data/`; para com
 | Keycloak | <http://localhost:8080> | `admin` / `admin` |
 | Grafana | <http://localhost:3333> | sem login |
 | Kafka UI | <http://localhost:8090> | sem login |
-| Swagger do barbearia-service | <http://localhost:8001/docs> | direto no serviço, sem token |
-| Swagger do disponibilidade-service | <http://localhost:8003/docs> | direto no serviço, sem token |
-| Swagger do notificacao-service | <http://localhost:8004/docs> | direto no serviço, sem token |
-| agendamento-service | <http://localhost:8012> | direto no serviço, com o header `X-User-ID` |
 | PostgreSQL | `localhost:5432`, banco `barbearia` | `barbearia` / `barbearia` |
 
-Os serviços também ficam expostos no host para depuração e para o `scripts/disputa.sh`. Quem usa o sistema chama só o BFF, que valida o token ([ADR-0009](docs/adr/0009-seguranca-keycloak-e-validacao-jwt.md)).
+Os serviços de domínio não publicam porta no host: só o BFF é alcançável de fora, e os serviços confiam no `X-User-ID` que ele envia ([ADR-0015](docs/adr/0015-onde-autenticar-e-autorizar.md)). Para depurar um serviço direto, use `docker exec` ou publique a porta só na sua máquina com um override do Compose.
 
 ### Usuários de teste e token
 

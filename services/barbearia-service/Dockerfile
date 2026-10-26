@@ -10,6 +10,10 @@ RUN mkdir -p src/barbearia && touch src/barbearia/__init__.py \
 COPY src ./src
 RUN pip install --no-cache-dir --no-deps --force-reinstall .
 
+# Depois das camadas de instalacao, para o SHA do commit nao invalidar o cache.
+ARG SERVICE_VERSION=dev
+ENV SERVICE_VERSION=$SERVICE_VERSION
+
 USER app
 
 EXPOSE 8001

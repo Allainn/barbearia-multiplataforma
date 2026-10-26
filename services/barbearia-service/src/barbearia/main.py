@@ -2,11 +2,13 @@ import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
-from . import db
-from .migrations import run_migrations
-from .routes import router
-from .telemetry import setup_telemetry
+from .domain.exceptions import BarbeariaNaoEncontrada
+from .infrastructure import db
+from .infrastructure.http.routes import router
+from .infrastructure.migrations import run_migrations
+from .infrastructure.telemetry import setup_telemetry
 
 
 @asynccontextmanager
@@ -25,6 +27,11 @@ app = FastAPI(
     # OTLP nos providers do telemetry.py, duplicando spans e metricas.
     telemetry={"auto_configure": False},
 )
+
+
+@app.exception_handler(BarbeariaNaoEncontrada)
+async def barbearia_nao_encontrada_handler(_: Request, __: BarbeariaNaoEncontrada):
+    return JSONResponse(status_code=404, content={"detail": "Barbearia nao encontrada"})
 
 
 @app.middleware("http")

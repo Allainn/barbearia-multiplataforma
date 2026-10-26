@@ -4,22 +4,34 @@
 # PostgreSQL recusa o segundo agendamento sobreposto do mesmo profissional.
 #
 # Uso:
-#   scripts/disputa.sh                      # direto no agendamento-service (porta 8012)
-#   TOKEN=... scripts/disputa.sh            # pelo BFF (porta 8010), mesmo token nas duas
-#   TOKEN=... TOKEN2=... scripts/disputa.sh # pelo BFF, um cliente em cada reserva
+#   scripts/disputa.sh                      # pelo BFF (porta 8010), com os tokens de cliente1 e cliente2 obtidos no Keycloak
+#   TOKEN=... [TOKEN2=...] scripts/disputa.sh          # pelo BFF, com tokens já obtidos
+#   BASE_URL=http://localhost:8012 scripts/disputa.sh   # direto no agendamento-service, quando ele estiver
+#                                                       # com a porta publicada (teste sozinho, docker run -p)
 #
-# Variáveis: BASE_URL, TOKEN, TOKEN2, PROFISSIONAL_ID, DIA (AAAA-MM-DD, padrão amanhã).
+# Variáveis: BASE_URL, KEYCLOAK, TOKEN, TOKEN2, PROFISSIONAL_ID, DIA (AAAA-MM-DD, padrão amanhã).
 set -euo pipefail
 
 BARBEARIA_ID="11111111-1111-1111-1111-111111111111"
 PROFISSIONAL_ID="${PROFISSIONAL_ID:-22222222-2222-2222-2222-222222222222}"
 SERVICO_ID="33333333-3333-3333-3333-333333333333"
 
-if [[ -n "${TOKEN:-}" ]]; then
-  BASE_URL="${BASE_URL:-http://localhost:8010}"
-else
-  BASE_URL="${BASE_URL:-http://localhost:8012}"
+KEYCLOAK="${KEYCLOAK:-http://localhost:8080}"
+if [[ -z "${BASE_URL:-}" && -z "${TOKEN:-}" ]]; then
+  # Sem BASE_URL nem TOKEN: vai pelo BFF, um cliente em cada reserva.
+  token() {
+    curl -s -X POST "$KEYCLOAK/realms/barbearia/protocol/openid-connect/token" \
+      -d grant_type=password -d client_id=bff-gateway -d client_secret=bff-secret \
+      -d "username=$1" -d "password=$2" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p'
+  }
+  TOKEN="$(token cliente1 cliente123)"
+  TOKEN2="$(token cliente2 cliente123)"
+  if [[ -z "$TOKEN" || -z "$TOKEN2" ]]; then
+    echo "Não consegui obter os tokens em $KEYCLOAK. O Keycloak está no ar e com o seed aplicado?" >&2
+    exit 1
+  fi
 fi
+BASE_URL="${BASE_URL:-http://localhost:8010}"
 
 DIA="${DIA:-$(date -d tomorrow +%F)}"
 hora() { printf '%02d:%02d' $(($1 / 60)) $(($1 % 60)); }

@@ -117,8 +117,8 @@ Todo objeto devolvido tem `id` (UUID). Erro sempre no formato `{"detail": "mensa
   "barbearia_id": "11111111-1111-1111-1111-111111111111",
   "profissional_id": "22222222-2222-2222-2222-222222222222",
   "servico_id": "33333333-3333-3333-3333-333333333333",
-  "inicio": "2026-10-28T18:00:00-03:00",
-  "fim": "2026-10-28T18:30:00-03:00"
+  "inicio": "2026-10-28T10:00:00-03:00",
+  "fim": "2026-10-28T10:30:00-03:00"
 }
 ```
 
@@ -131,8 +131,8 @@ Todo objeto devolvido tem `id` (UUID). Erro sempre no formato `{"detail": "mensa
   "profissional_id": "22222222-2222-2222-2222-222222222222",
   "servico_id": "33333333-3333-3333-3333-333333333333",
   "cliente_id": "valor do X-User-ID",
-  "inicio": "2026-10-28T18:00:00-03:00",
-  "fim": "2026-10-28T18:30:00-03:00",
+  "inicio": "2026-10-28T10:00:00-03:00",
+  "fim": "2026-10-28T10:30:00-03:00",
   "status": "CONFIRMADO"
 }
 ```
@@ -164,14 +164,14 @@ Valor da mensagem, JSON em UTF-8 (no cancelado, só muda o `tipo`):
   "evento_id": "b6f1c0de-0000-4000-8000-000000000001",
   "tipo": "agendamento.criado",
   "versao": 1,
-  "ocorrido_em": "2026-10-28T20:59:12Z",
+  "ocorrido_em": "2026-10-27T20:59:12Z",
   "barbearia_id": "11111111-1111-1111-1111-111111111111",
   "payload": {
     "agendamento_id": "44444444-4444-4444-4444-444444444444",
     "profissional_id": "22222222-2222-2222-2222-222222222222",
     "cliente_id": "id-do-usuario-no-keycloak",
-    "inicio": "2026-10-28T18:00:00-03:00",
-    "fim": "2026-10-28T18:30:00-03:00"
+    "inicio": "2026-10-28T10:00:00-03:00",
+    "fim": "2026-10-28T10:30:00-03:00"
   }
 }
 ```
@@ -428,7 +428,7 @@ Para testar sem os outros serviços: o 401 e o 403 acontecem antes da chamada ao
 **Pronto quando:**
 
 - Sem nenhum evento, a consulta de 28/10 devolve 18 horários livres.
-- Uma mensagem em `agendamento.criado` das 18:00 às 18:30 (publicada à mão no Kafka UI) tira o bloco das 18:00 da resposta.
+- Uma mensagem em `agendamento.criado` das 10:00 às 10:30 (publicada à mão no Kafka UI) tira o bloco das 10:00 da resposta.
 - A mesma mensagem duas vezes não quebra nada, e o `agendamento.cancelado` do mesmo `agendamento_id` devolve o bloco.
 - Falta de parâmetro devolve 422.
 

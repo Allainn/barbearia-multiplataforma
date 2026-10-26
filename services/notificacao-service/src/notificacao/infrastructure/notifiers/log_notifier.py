@@ -8,10 +8,13 @@ envio (idempotente por evento_id) e "envia" escrevendo no log.
 import logging
 from datetime import datetime, timedelta, timezone
 
+from opentelemetry import trace
+
 from notificacao.domain.entities.envio import Envio
 from notificacao.domain.repositories.envio_repository import EnvioRepository
 
 logger = logging.getLogger(__name__)
+_tracer = trace.get_tracer("notificacao-service.provedor")
 
 # Horários sempre em America/Sao_Paulo, offset -03:00 (contrato).
 _SAO_PAULO = timezone(timedelta(hours=-3))
@@ -49,5 +52,12 @@ class LogNotifier:
             logger.info("evento %s repetido, ignorado", envio.evento_id)
             return None
 
-        logger.info("mensagem enviada para %s: %s", envio.cliente_id, envio.mensagem)
+        # Span CLIENT com peer.service: o provedor (simulado) aparece no trace
+        # da reserva e como nó no service graph do Tempo.
+        with _tracer.start_as_current_span(
+            "provedor-mensagens enviar",
+            kind=trace.SpanKind.CLIENT,
+            attributes={"peer.service": "provedor-mensagens", "notificacao.tipo": tipo},
+        ):
+            logger.info("mensagem enviada para %s: %s", envio.cliente_id, envio.mensagem)
         return envio
