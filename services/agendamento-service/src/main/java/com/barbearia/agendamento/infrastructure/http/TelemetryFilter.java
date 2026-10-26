@@ -18,6 +18,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -75,7 +76,6 @@ public class TelemetryFilter extends OncePerRequestFilter {
                 .setParent(pai)
                 .setSpanKind(SpanKind.SERVER)
                 .setAttribute("http.method", request.getMethod())
-                .setAttribute("http.target", request.getRequestURI())
                 .setAttribute("http.scheme", request.getScheme())
                 .startSpan();
         try (Scope scope = span.makeCurrent()) {
@@ -83,6 +83,9 @@ public class TelemetryFilter extends OncePerRequestFilter {
         } finally {
             long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000;
             int status = response.getStatus();
+            String rota = rota(request);
+            span.updateName(request.getMethod() + " " + rota);
+            span.setAttribute("http.target", rota);
             span.setAttribute("http.status_code", status);
             if (status >= 500) {
                 span.setStatus(StatusCode.ERROR);
@@ -91,9 +94,20 @@ public class TelemetryFilter extends OncePerRequestFilter {
 
             httpServerDuration.record(elapsedMs, Attributes.builder()
                     .put("http.method", request.getMethod())
-                    .put("http.target", request.getRequestURI())
+                    .put("http.target", rota)
                     .put("http.status_code", String.valueOf(status))
                     .build());
         }
+    }
+
+    /**
+     * Padrão da rota que o Spring MVC escolheu (/agendamentos/{agendamentoId}), em vez da URI. Com
+     * a URI, cada DELETE virava uma rota nova na métrica, e o painel "Latência por Rota HTTP" do
+     * Grafana mostrava uma linha por cancelamento. O Spring só preenche o atributo durante o
+     * chain.doFilter; uma requisição que não chega a ele fica com a URI.
+     */
+    private static String rota(HttpServletRequest request) {
+        Object padrao = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        return padrao != null ? padrao.toString() : request.getRequestURI();
     }
 }
