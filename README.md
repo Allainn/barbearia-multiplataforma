@@ -78,7 +78,7 @@ Como a demo é feita com curl, o token vem do *password grant*. Com um front-end
 | `POST /agendamentos` | `cliente` | 201, ou **409** se o horário já estiver ocupado |
 | `DELETE /agendamentos/{id}` | `cliente` | 204 ou 404 |
 
-Sem token, ou com token inválido, o BFF responde **401**; com a role errada, **403**; com o serviço fora do ar, 503. Os corpos de entrada e saída estão no [contrato](docs/tarefas.md#rotas). O barbearia-service cria ao subir a barbearia `11111111-1111-1111-1111-111111111111`, o profissional `22222222-2222-2222-2222-222222222222` e o serviço `33333333-3333-3333-3333-333333333333`, que os exemplos usam.
+Sem token, ou com token inválido, o BFF responde **401**; com a role errada, **403**; com o serviço fora do ar, 503. Os corpos de entrada e saída estão no [contrato](docs/tarefas.md#rotas); a especificação OpenAPI completa, com exemplos, está em [`services/bff-gateway/openapi.yaml`](services/bff-gateway/openapi.yaml). O barbearia-service cria ao subir a barbearia `11111111-1111-1111-1111-111111111111`, o profissional `22222222-2222-2222-2222-222222222222` e o serviço `33333333-3333-3333-3333-333333333333`, que os exemplos usam.
 
 Exemplo de reserva:
 
@@ -131,7 +131,7 @@ Os serviços mandam logs, métricas e traces por OpenTelemetry para o Collector,
 
 - **Algum container reiniciando:** `docker compose -f infra/docker-compose.yml logs <container>`.
 - **`permission denied` nos logs do Grafana, Loki, Kafka ou Keycloak:** as pastas de `infra/data/` foram criadas sem permissão de escrita. Rode `sudo chmod -R 777 infra/data` e `bash scripts/up.sh` de novo.
-- **Porta em uso:** o Compose publica as portas 3100, 3200, 3333, 4317 a 4320, 5432, 8001, 8003, 8004, 8010, 8012, 8080, 8090, 8889, 9000, 9090, 9092, 9308 e 29092. Pare o que estiver usando a porta, por exemplo um PostgreSQL local na 5432.
+- **Porta em uso:** o Compose publica as portas 3100, 3200, 3333, 4317 a 4320, 5432, 8010, 8080, 8090, 8889, 9000, 9090, 9092, 9308 e 29092. Pare o que estiver usando a porta, por exemplo um PostgreSQL local na 5432.
 - **`demo.sh` não obtém os tokens:** o seed do Keycloak não rodou. Rode `bash scripts/up.sh` de novo; o seed pode ser repetido sem problema.
 
 ## Onde está cada coisa

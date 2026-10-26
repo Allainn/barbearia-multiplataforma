@@ -15,6 +15,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.IOException;
 
@@ -24,7 +25,11 @@ import java.io.IOException;
  *
  * Roda ANTES do filtro do Spring Security (ordem -100): assim os 401 e 403 também entram no
  * trace e na métrica, o que é parte do que a plataforma precisa mostrar. O DemoLatencyFilter
- * vem logo depois, para o atraso ficar dentro da medição.
+ * vem depois da segurança, ainda dentro desta medição.
+ *
+ * A métrica usa o padrão da rota ("/agendamentos/{agendamentoId}"), não a URI com o id, para
+ * não abrir uma série por reserva. O padrão só existe quando a requisição chegou ao
+ * DispatcherServlet; nos 401 e 403 ela para antes, e aí fica a URI mesmo.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -53,6 +58,9 @@ public class TelemetryFilter extends OncePerRequestFilter {
         } finally {
             long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000;
             int status = response.getStatus();
+            String rota = rotaDe(request);
+            span.updateName(request.getMethod() + " " + rota);
+            span.setAttribute("http.route", rota);
             span.setAttribute("http.status_code", status);
             if (status >= 500) {
                 span.setStatus(StatusCode.ERROR);
@@ -61,9 +69,14 @@ public class TelemetryFilter extends OncePerRequestFilter {
 
             httpServerDuration.record(elapsedMs, Attributes.builder()
                     .put("http.method", request.getMethod())
-                    .put("http.target", request.getRequestURI())
+                    .put("http.target", rota)
                     .put("http.status_code", String.valueOf(status))
                     .build());
         }
+    }
+
+    private static String rotaDe(HttpServletRequest request) {
+        Object padrao = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        return padrao != null ? padrao.toString() : request.getRequestURI();
     }
 }

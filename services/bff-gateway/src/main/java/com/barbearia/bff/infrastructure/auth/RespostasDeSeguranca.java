@@ -21,9 +21,10 @@ import java.io.IOException;
  * Respostas de 401 e 403 no formato {"detail": "..."} do contrato, em vez do corpo vazio
  * padrão do Spring Security.
  *
- * 401: token ausente, expirado, com assinatura, issuer ou audience errados. Vai com o header
- * WWW-Authenticate: Bearer (RFC 6750 §3); o motivo exato fica no header e no log, não no
- * corpo, para não dar pista a quem está tentando forjar um token.
+ * 401: token ausente, expirado, com assinatura, issuer ou audience errados. O motivo vai no
+ * header WWW-Authenticate: Bearer, com error e error_description, como a RFC 6750 §3 prevê:
+ * é o que permite a um cliente diagnosticar iss ou aud errados. O corpo fica fixo só para
+ * seguir o formato {"detail"} do contrato.
  *
  * 403: token válido, mas sem a role que a rota exige (ADR-0014).
  */

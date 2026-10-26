@@ -22,6 +22,7 @@ import org.springframework.util.StreamUtils;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
@@ -89,8 +90,10 @@ public abstract class ServicoClient {
                 .setAttribute("peer.service", nome)
                 .startSpan();
         try (Scope scope = span.makeCurrent()) {
+            // URI.create: a string já vem codificada do request; uri(String) a trataria como
+            // template e codificaria de novo (%20 viraria %2520).
             RestClient.RequestBodySpec spec = restClient.method(metodo)
-                    .uri(uri)
+                    .uri(URI.create(uri))
                     .accept(MediaType.APPLICATION_JSON)
                     .header(HEADER_USUARIO, usuarioId);
             openTelemetry.getPropagators().getTextMapPropagator()

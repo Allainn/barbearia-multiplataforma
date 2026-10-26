@@ -146,6 +146,10 @@ def garantir_realm(kc: KeycloakAdmin) -> None:
         "displayName": "Barbearia",
         # Ambiente local roda em HTTP puro (ADR-0009). Em produção, "external" ou "all".
         "sslRequired": "none",
+        # Access token de 30 min (padrão: 5) para o demo.sh, que pega os tokens uma vez e
+        # pausa entre os passos. Configuração do ambiente local; em produção o token fica
+        # curto e o cliente renova com o refresh token.
+        "accessTokenLifespan": 1800,
     }
     if kc.get(f"/{REALM}") is None:
         kc.post("", desejado)
