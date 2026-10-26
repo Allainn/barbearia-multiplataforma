@@ -1,8 +1,8 @@
 # ADR-0003: Enquadrar o sistema como plataforma multi-tenant de agendamento
 
-- **Status:** Proposto
-- **Data:** 07/10/2026
-- **Questão:** [Q01](../questoes-abertas.md#q01) · [Q03](../questoes-abertas.md#q03)
+- **Status:** Aceito
+- **Data:** 24/10/2026
+- **Questão:** [Q01](../questoes-abertas.md#q01) · [Q02](../questoes-abertas.md#q02) · [Q03](../questoes-abertas.md#q03) · [Q04](../questoes-abertas.md#q04)
 - **Afeta no diagrama:** C4 nível 1 inteiro (quem usa, o que o sistema faz, sistemas externos)
 
 ## Contexto
@@ -25,14 +25,16 @@
 
 ### C. Marketplace multi-tenant: B + o cliente busca horários em qualquer barbearia da plataforma
 
-- **Prós:** além do volume somado, a **busca de horários livres** em muitas barbearias vira a operação mais frequente do sistema, muito mais do que reservar. Isso justifica CQRS no lado de leitura. Os lembretes e confirmações em massa justificam mensageria (limite de taxa da API externa de mensagens, o caso do erro 429 da Aula 3).
+- **Prós:** além do volume somado, a **busca de horários livres** em muitas barbearias vira a operação mais frequente do sistema, muito mais do que reservar. Isso justifica CQRS no lado de leitura. As confirmações em massa justificam mensageria (limite de taxa da API externa de mensagens, o caso do erro 429 da Aula 3).
 - **Contras:** escopo maior. Precisa cortar funcionalidades (ver "Fora do escopo").
 
 ## Decisão
 
-**Proposta:** opção C, plataforma marketplace multi-tenant, inspirada em produtos como Booksy e Trinks.
+Opção **C**, votada na Q01: plataforma marketplace multi-tenant, inspirada em produtos como Booksy e Trinks. Nome votado na Q02: **BarberHub**.
 
-### Volumetria assumida (hipóteses para o pitch; validar com o grupo)
+### Volumetria assumida
+
+São hipóteses de mercado para o pitch, não medições. Entram no slide de abertura e não foram provadas com teste de carga.
 
 | Métrica | Valor assumido | Como chegamos |
 |---|---|---|
@@ -41,42 +43,43 @@
 | Clientes cadastrados | 2 milhões | — |
 | Agendamentos por dia | 150.000 | 6 por profissional por dia |
 | Consultas de disponibilidade por dia | 7,5 milhões | 50 consultas para cada agendamento (o cliente compara horários, profissionais e barbearias) |
-| Notificações por dia | 450.000 | 3 por agendamento: confirmação, lembrete de véspera e lembrete 1 h antes |
+| Notificações por dia | 150.000 ou mais | uma confirmação por agendamento, mais uma para cada cancelamento; com os lembretes de véspera e de 1 h antes, que ficaram fora, seriam 450.000 |
 | Pico de leitura | ~130 req/s, com rajadas de ~1.300 req/s | 25% das consultas em 4 h de pico (sexta à tarde, sábado de manhã); rajada ×10 quando um profissional abre a agenda da semana |
 | Pico de escrita | ~3 reservas/s | 25% dos agendamentos nas mesmas 4 h |
 
 **Leitura dos números:** a escrita é pequena em quantidade, mas tem **disputa pelo mesmo horário** (vários clientes tentando o mesmo profissional às 18h de sexta). A leitura é de 50 a 500 vezes maior que a escrita. Isso orienta duas decisões separadas:
 
-- Concorrência na escrita: [ADR-0007](0007-concorrencia-na-reserva-de-horario.md) (lock).
+- Concorrência na escrita: [ADR-0007](0007-concorrencia-na-reserva-de-horario.md) (lock com constraint de exclusão).
 - Escala da leitura: [ADR-0008](0008-cqrs-na-consulta-de-disponibilidade.md) (CQRS).
 
-### Escopo mínimo da demo (proposta)
+### Escopo da demo
 
-1. Gestor cadastra barbearia, profissionais, serviços (duração e preço) e expediente.
-2. Cliente consulta horários livres de uma barbearia, serviço e data.
-3. Cliente agenda um horário; a disputa pelo mesmo horário devolve 409 para quem chegou depois.
-4. Cliente cancela.
-5. O sistema envia a confirmação e o cancelamento por um provedor de mensagens (simulado).
+Na Q03, o grupo aprovou os cinco itens da proposta. O [roadmap](../roadmap.md) de 21/10 manteve os cinco e tirou o expediente do primeiro:
 
-### Fora do escopo (proposta)
+1. O gestor cadastra barbearias, profissionais e serviços (duração e preço).
+2. O cliente consulta os horários livres de um profissional num dia: grade fixa das 09:00 às 18:00, em blocos de 30 min ([ADR-0008](0008-cqrs-na-consulta-de-disponibilidade.md)).
+3. O cliente reserva um horário; na disputa pelo mesmo horário, quem chega depois recebe 409 ([ADR-0007](0007-concorrencia-na-reserva-de-horario.md)).
+4. O cliente cancela a própria reserva.
+5. O sistema manda a confirmação e o cancelamento por um provedor de mensagens simulado, que grava no log ([ADR-0006](0006-comunicacao-sincrona-e-kafka.md)).
 
-Pagamento e sinal antecipado, avaliações, fidelidade, busca por geolocalização, front-ends (a demo usa curl/Postman). Cada item pode voltar se o grupo quiser, mas tudo o que entrar no diagrama precisa ser implementado.
+Na demo, o marketplace aparece como navegação: o cliente lista todas as barbearias da plataforma, escolhe um profissional e consulta os horários dele. Uma busca agregada (por região, serviço ou horário em várias barbearias de uma vez) fica como evolução.
+
+**Atores (Q04):** o grupo votou Cliente, Profissional, Gestor e Administrador da plataforma. O roadmap manteve só **Cliente** e **Gestor da barbearia**, os dois que têm rotas e roles no Keycloak.
+
+### Fora do escopo
+
+Cortado pelo roadmap: expediente configurável e folgas, remarcação, lembretes, front-end (a demo usa curl), busca agregada e por geolocalização, pagamento e sinal antecipado, avaliações e fidelidade. Tudo o que está no C4 está implementado.
 
 ## Consequências
 
-- O C4 nível 1 ganha os atores **Cliente**, **Profissional**, **Gestor da barbearia** e **Administrador da plataforma**.
-- Todo dado do domínio carrega `barbearia_id` (tenant). O isolamento entre barbearias entra no modelo de segurança ([ADR-0009](0009-seguranca-keycloak-e-validacao-jwt.md)).
-- Os números acima entram no slide de abertura como justificativa; não precisam ser provados com teste de carga.
-
-## Perguntas para o grupo
-
-- Marketplace (C) ou só SaaS (B)?
-- Os números de volumetria estão razoáveis? Alguém tem dado real de mercado para trocar as hipóteses?
-- O escopo mínimo está bom? Falta ou sobra algo?
-- Nome do produto ([Q02](../questoes-abertas.md#q02)).
+- O C4 nível 1 tem os atores Cliente e Gestor da barbearia e os sistemas externos Keycloak e provedor de mensagens.
+- Todo dado do domínio carrega `barbearia_id`, no modelo pool ([ADR-0011](0011-dados-por-servico.md)).
+- **Trade-off aceito:** o isolamento entre barbearias não é garantido na segurança. O 403 entre barbearias ficou fora por prazo ([ADR-0014](0014-modelo-de-autorizacao-rbac.md)), então um gestor autenticado consegue cadastrar profissional ou serviço em outra barbearia. A evolução é o token do gestor carregar a barbearia dele e o serviço comparar com a da rota.
+- A volumetria justifica as duas decisões de dados: lock na escrita e CQRS na leitura.
 
 ## Referências
 
 - Aula 3 · P3 [00:56:42]: sistema grande, não uma "padaria de bairro".
 - Aula 3 · P2 [00:20:40]: lock resolve sistemas pequenos; volumetria alta trava o banco.
 - Aula 3 · P2 [00:40:55]: Kafka só com volumetria alta; desacoplar de API externa com rate limit.
+- Votações: [Q01 (#1)](https://github.com/Allainn/barbearia-multiplataforma/issues/1), [Q02 (#2)](https://github.com/Allainn/barbearia-multiplataforma/issues/2), [Q03 (#3)](https://github.com/Allainn/barbearia-multiplataforma/issues/3), [Q04 (#4)](https://github.com/Allainn/barbearia-multiplataforma/issues/4).

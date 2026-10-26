@@ -15,7 +15,7 @@ O escopo, o contrato e a parte de cada pessoa estão em dois documentos, que **v
 - [docs/roadmap.md](docs/roadmap.md): resumo, contrato e datas.
 - [docs/tarefas.md](docs/tarefas.md): passo a passo de cada pessoa, com variáveis de ambiente, tabelas e testes de aceite. **Comece pela seção "Para a IA que está lendo este arquivo".**
 
-Os ADRs em [docs/adr](docs/adr/README.md) ainda estão como *Proposto* e descrevem as opções discutidas antes do roadmap. **Isso não bloqueia a implementação:** a decisão em vigor é a do roadmap, e cada pessoa passa o ADR da sua parte para *Aceito* no mesmo PR do código.
+Os ADRs em [docs/adr](docs/adr/README.md) registram cada decisão com as alternativas consideradas. Cada pessoa passa o ADR da sua parte para *Aceito* no mesmo PR do código, com o que foi implementado; os gerais (0001 a 0005) são do Allainn. A situação de cada um está no [índice](docs/adr/README.md).
 
 ## Regras de trabalho para o agente
 
