@@ -36,7 +36,7 @@ Na Q08, o grupo votou a opção C, com o Dart (Flutter) para um front-end mínim
 
 | Container | Linguagem | Por quê | Base no PizzaExpress |
 |---|---|---|---|
-| bff-gateway | Java 21 · Spring Boot 3 | A base já valida o JWT do Keycloak pelo JWKS (assinatura, audience e roles) e traz Resilience4j (circuit breaker e retry) para as chamadas aos serviços | `bff-gateway-java` |
+| bff-gateway | Java 21 · Spring Boot 3 | O Spring Security valida o JWT do Keycloak pelo JWKS (assinatura, validade, emissor e audience) e aplica a matriz de roles; o Resilience4j dá circuit breaker e retry nas chamadas aos serviços ([ADR-0015](0015-onde-autenticar-e-autorizar.md)) | `bff-gateway-java` |
 | agendamento-service | Java 21 · Spring Boot 3.3 | É o serviço transacional, onde está a disputa pelo horário. A tipagem forte ajuda no modelo DDD (aggregate, value object e domain events, [ADR-0010](0010-arquitetura-interna-dos-servicos.md)), e o tratamento de exceções do Spring devolve 409 e 422 no formato do contrato | `order-service-java` |
 | barbearia-service | Python 3.12 · FastAPI | CRUD de cadastro, rápido de escrever; o Swagger sai em `/docs` sem código extra | `catalog-service` |
 | disponibilidade-service | Python 3.12 · FastAPI | Leitura e consumo de eventos; o cálculo da grade de horários fica curto em Python | `delivery-service` |

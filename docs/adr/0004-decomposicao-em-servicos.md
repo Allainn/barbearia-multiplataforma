@@ -50,7 +50,7 @@ Infraestrutura no mesmo diagrama: **Keycloak** (IdP, externo), **Kafka**, **Post
 
 ### Por que cada fronteira
 
-- **BFF separado dos serviços:** a segurança e o roteamento ficam na borda, num lugar só. Os serviços não conhecem o Keycloak e não repetem a validação do token ([ADR-0009](0009-seguranca-keycloak-e-validacao-jwt.md)). Como o professor alertou sobre regra de negócio no BFF (Aula 1 [01:12:15]), ele só valida e encaminha.
+- **BFF separado dos serviços:** a segurança e o roteamento ficam na borda, num lugar só. Os serviços não conhecem o Keycloak e não repetem a validação do token ([ADR-0015](0015-onde-autenticar-e-autorizar.md)). Como o professor alertou sobre regra de negócio no BFF (Aula 1 [01:12:15]), ele só valida e encaminha.
 - **barbearia × agendamento:** os dados mudam em ritmos diferentes. O cadastro muda pouco e não tem disputa. A agenda recebe a escrita concorrente, com a constraint de exclusão e o 409 ([ADR-0007](0007-concorrencia-na-reserva-de-horario.md)). Separados, a disputa por horário não pesa no cadastro, e o cadastro pode mudar sem tocar na regra de reserva.
 - **agendamento × disponibilidade:** é o CQRS ([ADR-0008](0008-cqrs-na-consulta-de-disponibilidade.md)). A leitura é cerca de 50 vezes a escrita. Num serviço próprio, a consulta ganha réplicas sem carregar o banco que segura o lock, e o modelo de leitura (só os horários ocupados) é diferente do de escrita.
 - **notificação separada:** depende de um provedor externo lento e com limite de taxa (o erro 429 da Aula 3). Pelo Kafka, o worker puxa as mensagens no ritmo que o provedor aguenta, e a falha ou a lentidão do provedor não afeta a reserva ([ADR-0006](0006-comunicacao-sincrona-e-kafka.md)).

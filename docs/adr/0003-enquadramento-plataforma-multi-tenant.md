@@ -74,7 +74,7 @@ Cortado pelo roadmap: expediente configurável e folgas, remarcação, lembretes
 
 - O C4 nível 1 tem os atores Cliente e Gestor da barbearia e os sistemas externos Keycloak e provedor de mensagens.
 - Todo dado do domínio carrega `barbearia_id`, no modelo pool ([ADR-0011](0011-dados-por-servico.md)).
-- **Trade-off aceito:** o isolamento entre barbearias não é garantido na segurança. O 403 entre barbearias ficou fora por prazo ([ADR-0009](0009-seguranca-keycloak-e-validacao-jwt.md)), então um gestor autenticado consegue cadastrar profissional ou serviço em outra barbearia. A evolução é o token do gestor carregar a barbearia dele e o serviço comparar com a da rota.
+- **Trade-off aceito:** o isolamento entre barbearias não é garantido na segurança. O 403 entre barbearias ficou fora por prazo ([ADR-0014](0014-modelo-de-autorizacao-rbac.md)), então um gestor autenticado consegue cadastrar profissional ou serviço em outra barbearia. A evolução é o token do gestor carregar a barbearia dele e o serviço comparar com a da rota.
 - A volumetria justifica as duas decisões de dados: lock na escrita e CQRS na leitura.
 
 ## Referências
