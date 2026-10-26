@@ -1,0 +1,17 @@
+server:
+  port: 8010
+
+spring:
+  application:
+    name: bff-gateway
+
+bff:
+  keycloak:
+    # URL do realm, que é também o issuer esperado no token (ADR-0015). Vazio liga o modo
+    # bypass, só para desenvolvimento local; o compose sempre define esta variável.
+    url: ${KEYCLOAK_URL:}
+    client-id: ${KEYCLOAK_CLIENT_ID:bff-gateway}
+  servicos:
+    barbearia: ${BARBEARIA_URL:http://barbearia-service:8001}
+    agendamento: ${AGENDAMENTO_URL:http://agendamento-service:8012}
+    disponibilidade: ${DISPONIBILIDADE_URL:http://disponibilidade-service:8003}
