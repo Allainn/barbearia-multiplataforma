@@ -81,11 +81,11 @@ Serviço fora ou breaker aberto: **503** `{"detail": "<serviço> indisponível"}
 Pelo compose, a partir da raiz do repositório:
 
 ```bash
-scripts/up.sh            # ativa o profile bff automaticamente
-scripts/keycloak-seed.sh # realm, client, roles e usuários locais
+scripts/up.sh            # sobe a plataforma inteira, BFF incluído, e roda o seed do Keycloak
+scripts/keycloak-seed.sh # só para refazer o realm, o client, as roles e os usuários locais
 ```
 
-Só o BFF, fora do compose (modo bypass, precisa dos serviços acessíveis nas URLs configuradas):
+Só o BFF, fora do compose (modo bypass; os serviços não publicam porta no host, então é preciso publicá-las num override do Compose):
 
 ```bash
 cd services/bff-gateway

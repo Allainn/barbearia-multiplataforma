@@ -2,7 +2,7 @@
 
 Trabalho final da disciplina **Arquitetura de Software Multiplataforma** (pós em Arquitetura de Software Distribuído, PUC Minas), prof. Messias Barbosa Bittencourt.
 
-> **Situação (24/10/2026):** integração dos serviços em 25/10. O escopo, o contrato e a parte de cada pessoa estão no [roadmap](docs/roadmap.md) e nas [tarefas](docs/tarefas.md). Apresentação em **28/10/2026**. Para subir o sistema, veja [Como rodar](#como-rodar).
+> **Situação (26/10/2026):** código fechado para a apresentação de **28/10/2026**. O escopo, o contrato e a parte de cada pessoa estão no [roadmap](docs/roadmap.md) e nas [tarefas](docs/tarefas.md); as decisões, nos [ADRs](docs/adr/README.md). Para subir o sistema, veja [Como rodar](#como-rodar).
 
 ## O sistema
 
@@ -80,6 +80,8 @@ Como a demo é feita com curl, o token vem do *password grant*. Com um front-end
 
 Sem token, ou com token inválido, o BFF responde **401**; com a role errada, **403**; com o serviço fora do ar, 503. Os corpos de entrada e saída estão no [contrato](docs/tarefas.md#rotas). O barbearia-service cria ao subir a barbearia `11111111-1111-1111-1111-111111111111`, o profissional `22222222-2222-2222-2222-222222222222` e o serviço `33333333-3333-3333-3333-333333333333`, que os exemplos usam.
 
+Especificação OpenAPI da API pública: [`services/bff-gateway/openapi.yaml`](services/bff-gateway/openapi.yaml), que abre em qualquer visualizador OpenAPI (por exemplo, o Swagger Editor). Os serviços também geram o próprio Swagger (`/docs` nos serviços Python e `/swagger-ui.html` no agendamento-service), mas só dentro da rede Docker; para abrir no navegador, publique a porta do serviço num override do Compose.
+
 Exemplo de reserva:
 
 ```bash
@@ -131,7 +133,7 @@ Os serviços mandam logs, métricas e traces por OpenTelemetry para o Collector,
 
 - **Algum container reiniciando:** `docker compose -f infra/docker-compose.yml logs <container>`.
 - **`permission denied` nos logs do Grafana, Loki, Kafka ou Keycloak:** as pastas de `infra/data/` foram criadas sem permissão de escrita. Rode `sudo chmod -R 777 infra/data` e `bash scripts/up.sh` de novo.
-- **Porta em uso:** o Compose publica as portas 3100, 3200, 3333, 4317 a 4320, 5432, 8001, 8003, 8004, 8010, 8012, 8080, 8090, 8889, 9000, 9090, 9092, 9308 e 29092. Pare o que estiver usando a porta, por exemplo um PostgreSQL local na 5432.
+- **Porta em uso:** o Compose publica as portas 3100, 3200, 3333, 4317 a 4320, 5432, 8010, 8080, 8090, 8889, 9000, 9090, 9092, 9308 e 29092. Pare o que estiver usando a porta, por exemplo um PostgreSQL local na 5432.
 - **`demo.sh` não obtém os tokens:** o seed do Keycloak não rodou. Rode `bash scripts/up.sh` de novo; o seed pode ser repetido sem problema.
 
 ## Onde está cada coisa
