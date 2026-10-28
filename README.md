@@ -1,6 +1,6 @@
 # Barbearia Multiplataforma
 
-Trabalho final da disciplina **Arquitetura de Software Multiplataforma** (pós em Arquitetura de Software Distribuído, PUC Minas), prof. Messias Barbosa Bittencourt.
+Trabalho final do **Grupo 8** na disciplina **Arquitetura de Software Multiplataforma** (pós em Arquitetura de Software Distribuído, PUC Minas), prof. Messias Barbosa Bittencourt.
 
 > **Situação (26/10/2026):** código fechado para a apresentação de **28/10/2026**. O escopo, o contrato e a parte de cada pessoa estão no [roadmap](docs/roadmap.md) e nas [tarefas](docs/tarefas.md); as decisões, nos [ADRs](docs/adr/README.md). Para subir o sistema, veja [Como rodar](#como-rodar).
 
@@ -151,7 +151,7 @@ Os serviços mandam logs, métricas e traces por OpenTelemetry para o Collector,
 | Código dos serviços | `services/<container>/` |
 | Infraestrutura (Docker Compose, Grafana) | `infra/` |
 
-## Grupo
+## Grupo 8
 
 | Integrante | Parte |
 |---|---|
