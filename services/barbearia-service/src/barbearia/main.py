@@ -37,6 +37,7 @@ async def barbearia_nao_encontrada_handler(_: Request, __: BarbeariaNaoEncontrad
 @app.middleware("http")
 async def demo_latency_middleware(request: Request, call_next):
     """Latencia artificial via X-Demo-Delay-Ms, para mostrar o pico no Grafana."""
+    """Comentário de teste para o GitHub Actions, vendo workflow em execução."""
     try:
         delay_ms = int(request.headers.get("X-Demo-Delay-Ms", "0"))
     except ValueError:
