@@ -31,7 +31,7 @@ bash scripts/up.sh
 
 ### 2. Rode o app
 
-Flutter estável **3.47** (o `pubspec.lock` foi gerado com a 3.47.6) e um emulador Android aberto:
+Flutter estável **3.47** (o `pubspec.lock` foi gerado com a 3.47.6) e um emulador Android aberto. Com Flutter anterior à 3.44, o `pub get` reescreve o `pubspec.lock`: rode `flutter upgrade` em vez de commitar essa mudança.
 
 ```bash
 cd apps/barberhub-app

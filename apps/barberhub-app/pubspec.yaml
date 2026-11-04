@@ -4,8 +4,8 @@ publish_to: 'none'
 version: 0.1.0+1
 
 environment:
-  # Piso baixo (Dart 3.9 = Flutter 3.35, da Atividade 3) para não travar ninguém;
-  # a versão de referência do grupo está no README.
+  # Versão do grupo: Flutter 3.47 (ver README). O piso fica baixo só para o analisador
+  # não recusar o projeto; o pubspec.lock commitado pede Flutter 3.44 ou mais novo.
   sdk: ^3.9.0
 
 dependencies:
