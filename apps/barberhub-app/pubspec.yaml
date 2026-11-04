@@ -1,0 +1,25 @@
+name: barberhub_app
+description: "App mobile do BarberHub: agendamento em barbearias."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  # Piso baixo (Dart 3.9 = Flutter 3.35, da Atividade 3) para não travar ninguém;
+  # a versão de referência do grupo está no README.
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  http: ^1.2.2
+  shared_preferences: ^2.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
