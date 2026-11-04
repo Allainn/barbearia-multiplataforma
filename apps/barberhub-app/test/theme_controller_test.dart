@@ -11,23 +11,20 @@ void main() {
     expect(controller.value, ThemeMode.system);
   });
 
-  test(
-    'alterna para o oposto do que está na tela e lembra ao reabrir',
-    () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final controller = ThemeController(prefs);
+  test('guarda a escolha e lembra ao reabrir o app', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final controller = ThemeController(prefs);
 
-      await controller.toggle(Brightness.light); // aparelho claro → escuro
-      expect(controller.value, ThemeMode.dark);
+    await controller.setMode(ThemeMode.dark);
+    expect(controller.value, ThemeMode.dark);
 
-      // "reabrir o app" = novo controller lendo o mesmo armazenamento
-      expect(ThemeController(prefs).value, ThemeMode.dark);
+    // "reabrir o app" = novo controller lendo o mesmo armazenamento
+    expect(ThemeController(prefs).value, ThemeMode.dark);
 
-      await controller.toggle(Brightness.dark);
-      expect(controller.value, ThemeMode.light);
-    },
-  );
+    await controller.setMode(ThemeMode.system);
+    expect(ThemeController(prefs).value, ThemeMode.system);
+  });
 
   test('valor salvo inválido volta para o sistema', () async {
     SharedPreferences.setMockInitialValues({

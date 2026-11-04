@@ -16,10 +16,8 @@ class ThemeController extends ValueNotifier<ThemeMode> {
       ThemeMode.values.asNameMap()[prefs.getString(storageKey)] ??
       ThemeMode.system;
 
-  /// Passa para o tema oposto ao que está na tela. No modo sistema, [current] é o
-  /// tema do aparelho, então o primeiro toque sempre muda o que o usuário vê.
-  Future<void> toggle(Brightness current) async {
-    value = current == Brightness.dark ? ThemeMode.light : ThemeMode.dark;
-    await _prefs.setString(storageKey, value.name);
+  Future<void> setMode(ThemeMode mode) async {
+    value = mode;
+    await _prefs.setString(storageKey, mode.name);
   }
 }
