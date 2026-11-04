@@ -6,7 +6,7 @@
 
 **Data:** 2026-10-31 (registrado em 2026-11-04)
 **Autor:** Allainn Christiam Jacinto Tavares, pelo Grupo 8
-**Origem:** votação Q08 da disciplina Arquitetura de Software Multiplataforma ([issue #8](https://github.com/Allainn/barbearia-multiplataforma/issues/8)), que escolheu Dart/Flutter para o front cortado do back-end por prazo
+**Origem:** votação Q08 da disciplina Arquitetura de Software Multiplataforma ([issue #8](https://github.com/Allainn/barbearia-multiplataforma/issues/8)), que escolheu Dart/Flutter para o front cortado do back-end por prazo. Como o app entra na arquitetura do back-end (container novo, só o BFF, pendências no Keycloak): [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md)
 
 ## Contexto
 

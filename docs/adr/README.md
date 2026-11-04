@@ -6,7 +6,9 @@ Cada decisão arquitetural fica num arquivo numerado. Formato em [0000-template.
 
 Os ADRs foram escritos como rascunho em 07/10/2026 e votados nas issues #1 a #24, de 07 a 09/10. O [roadmap](../roadmap.md) de 21/10 cortou o escopo para caber no prazo. Desde então, quem implementa uma parte passa o ADR dela para *Aceito* no PR do código, com o que foi feito de fato. O dono de cada ADR vem do [tarefas.md](../tarefas.md); os gerais (0001 a 0005), que não pertencem a nenhuma parte, ficaram com o Allainn em 24/10. No PR do BFF, o 0009 original, que misturava três decisões, foi dividido em 0009, 0014 e 0015. O C4 nível 3 ficou fora do escopo.
 
-**Situação em 26/10/2026:**
+Em 04/11/2026 entrou o 0016: o front cortado em 21/10 voltou como app Flutter, Projeto Final de outra disciplina (Arquitetura de Aplicações Móveis e Multiplataforma).
+
+**Situação em 04/11/2026:**
 
 | ADR | Decisão | Status | Dono | Nível do C4 |
 |---|---|---|---|---|
@@ -24,6 +26,7 @@ Os ADRs foram escritos como rascunho em 07/10/2026 e votados nas issues #1 a #24
 | [0012](0012-garantia-de-publicacao-outbox.md) | Outbox Pattern, rejeitado por prazo: fica o dual write, com o risco documentado | Rejeitado (21/10) | Pedro | — |
 | [0013](0013-entrega-continua-e-observabilidade.md) | GitHub Actions, GHCR e deploy pelo Compose; stack Grafana (Loki, Tempo, Prometheus) | Aceito (22/10) | João | — |
 | [0014](0014-modelo-de-autorizacao-rbac.md) | RBAC com duas realm roles (cliente e gestor); só o dono cancela a reserva | Aceito (26/10) | Evandro | 2 |
+| [0016](0016-app-mobile-flutter.md) | App do cliente em Flutter, em `apps/barberhub-app`, consumindo só o BFF; framework e estado no [ADR.md do app](../../apps/barberhub-app/ADR.md) | Aceito (04/11) | Allainn | 1, 2 |
 | [0015](0015-onde-autenticar-e-autorizar.md) | Autenticação só no BFF; a regra por papel fica no BFF, a regra por recurso no serviço dono do dado | Aceito (26/10) | Evandro | 2 |
 
 ## Como as decisões se encaixam
@@ -33,3 +36,4 @@ Os ADRs foram escritos como rascunho em 07/10/2026 e votados nas issues #1 a #24
 - **Segurança:** o Keycloak emite o token ([0009](0009-seguranca-keycloak-e-validacao-jwt.md)); o BFF confere o token e a role da rota, e o serviço confere o dono do recurso ([0014](0014-modelo-de-autorizacao-rbac.md), [0015](0015-onde-autenticar-e-autorizar.md)).
 - **Multi-tenant:** `barbearia_id` nas tabelas, no modelo pool ([0011](0011-dados-por-servico.md)). O 403 entre barbearias ficou fora por prazo ([0014](0014-modelo-de-autorizacao-rbac.md)).
 - **Entrega:** pipeline, publicação da imagem e os três pilares da observabilidade no Grafana ([0013](0013-entrega-continua-e-observabilidade.md)).
+- **App mobile:** o cliente usa o app, que chama só o BFF com o token do Keycloak; o que o app exige do back-end (client público, seed, `GET /agendamentos`) está nas consequências do [0016](0016-app-mobile-flutter.md).

@@ -2,7 +2,7 @@
 
 App de agendamento em barbearias do **Grupo 8**, feito como Projeto Final de **Arquitetura de Aplicações Móveis e Multiplataforma** (PUC Minas IEC, prof. Jackson Smith Moisés Matias). É o front do back-end deste monorepo: o app só conversa com o BFF, que valida o token do Keycloak e chama os serviços.
 
-> **Situação (04/11/2026):** esqueleto. Camadas, tema claro e escuro, URL do BFF configurável, cliente HTTP do BFF e telas de carregando/vazio/erro estão prontos. As features entram uma por PR, uma por integrante. Decisões em [ADR.md](ADR.md).
+> **Situação (04/11/2026):** esqueleto. Camadas, tema claro e escuro, URL do BFF configurável, cliente HTTP do BFF e telas de carregando/vazio/erro estão prontos. As features entram uma por PR, uma por integrante. Decisões em [ADR.md](ADR.md) (framework e estado) e no [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md) do monorepo (como o app entra na arquitetura).
 
 ## Features
 
@@ -111,4 +111,4 @@ _A fazer: pelo menos 3 (lista, detalhe e reserva, em claro e escuro), quando as 
 
 ## Como contribuir
 
-Branch `feat/app-<feature>` a partir da `main`, PR com aprovação de um colega e do code owner, commits no padrão `feat(app): lista de barbearias (ADR.md do app)`. Regras gerais no [CONTRIBUTING.md](../../CONTRIBUTING.md).
+Branch `feat/app-<feature>` a partir da `main`, PR com aprovação de um colega e do code owner, commits no padrão `feat(app): lista de barbearias (ADR-0016)`. Regras gerais no [CONTRIBUTING.md](../../CONTRIBUTING.md).
