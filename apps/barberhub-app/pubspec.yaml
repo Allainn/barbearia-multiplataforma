@@ -15,6 +15,8 @@ dependencies:
     sdk: flutter
   http: ^1.2.2
   shared_preferences: ^2.3.3
+  # skeleton com brilho no carregamento das listas (dica do enunciado)
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -23,3 +25,18 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Fontes embarcadas (licença OFL em assets/fonts/): funcionam sem internet.
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Regular.ttf
+        - asset: assets/fonts/Manrope-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Manrope-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Manrope-Bold.ttf
+          weight: 700
+    - family: DM Serif Display
+      fonts:
+        - asset: assets/fonts/DMSerifDisplay-Regular.ttf
