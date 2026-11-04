@@ -22,6 +22,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # geram ícone e splash a partir de assets/icon/ (rodar só quando a arte mudar, ver README)
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 flutter:
   uses-material-design: true
@@ -40,3 +43,25 @@ flutter:
     - family: DM Serif Display
       fonts:
         - asset: assets/fonts/DMSerifDisplay-Regular.ttf
+
+# dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: assets/icon/icon.png
+  android: true
+  adaptive_icon_background: "#1F3A5F"
+  adaptive_icon_foreground: assets/icon/foreground.png
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    background_color: "#1F3A5F"
+    theme_color: "#1F3A5F"
+
+# dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#1F3A5F"
+  image: assets/icon/splash.png
+  android_12:
+    color: "#1F3A5F"
+    image: assets/icon/splash-android12.png
+  web: true
