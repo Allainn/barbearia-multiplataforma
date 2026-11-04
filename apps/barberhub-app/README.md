@@ -2,22 +2,22 @@
 
 App de agendamento em barbearias do **Grupo 8**, feito como Projeto Final de **Arquitetura de Aplicações Móveis e Multiplataforma** (PUC Minas IEC, prof. Jackson Smith Moisés Matias). É o front do back-end deste monorepo: o app só conversa com o BFF, que valida o token do Keycloak e chama os serviços.
 
-> **Situação (04/11/2026):** esqueleto. Camadas, tema claro e escuro, URL do BFF configurável, cliente HTTP do BFF e telas de carregando/vazio/erro estão prontos. As features entram uma por PR, uma por integrante. Decisões em [ADR.md](ADR.md) (framework e estado) e no [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md) do monorepo (como o app entra na arquitetura).
+> **Situação (04/11/2026):** base pronta, features a fazer. Já existem: camadas, navegação por abas, modelos do contrato, cliente HTTP do BFF, design (fontes, paleta, componentes e um guia visual), tema claro e escuro, ícone, splash e CI. As features entram uma por PR, uma por integrante. Decisões em [ADR.md](ADR.md) (framework e estado) e no [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md) do monorepo (como o app entra na arquitetura).
 
 ## Features
 
 Proposta do plano; o grupo fecha quem faz cada uma.
 
-| # | Feature | Rota do BFF | Responsável |
-|---|---|---|---|
-| 1 | Login do cliente | Keycloak (realm `barbearia`) | a definir |
-| 2 | Lista de barbearias | `GET /barbearias` | a definir |
-| 3 | Detalhe: profissionais e serviços | `GET /barbearias/{id}/profissionais` e `/servicos` | a definir |
-| 4 | Busca por nome | `GET /barbearias` | a definir |
-| 5 | Filtro | `GET /barbearias` | a definir |
-| 6 | Favoritos que sobrevivem a fechar o app | armazenamento local | a definir |
-| 7 | Horários livres e reserva, com o 409 | `GET /disponibilidade` e `POST /agendamentos` | a definir |
-| 8 | Meus agendamentos e cancelar | `DELETE /agendamentos/{id}` | a definir |
+| # | Feature | Onde entra | Rota do BFF | Responsável |
+|---|---|---|---|---|
+| 1 | Login do cliente | aba Conta | Keycloak (realm `barbearia`) | a definir |
+| 2 | Lista de barbearias | aba Barbearias | `GET /barbearias` | a definir |
+| 3 | Detalhe: profissionais e serviços | tela por cima da lista | `GET /barbearias/{id}/profissionais` e `/servicos` | a definir |
+| 4 | Busca por nome | aba Barbearias | `GET /barbearias` | a definir |
+| 5 | Filtro | aba Barbearias | `GET /barbearias` | a definir |
+| 6 | Favoritos que sobrevivem a fechar o app | aba Favoritos | armazenamento local | a definir |
+| 7 | Horários livres e reserva, com o 409 | a partir do detalhe | `GET /disponibilidade` e `POST /agendamentos` | a definir |
+| 8 | Meus agendamentos e cancelar | aba Agendamentos | `DELETE /agendamentos/{id}` | a definir |
 
 ## Como rodar
 
@@ -56,7 +56,7 @@ O app lê os endereços do `--dart-define`; sem ele, usa o padrão da plataforma
 | `KEYCLOAK_URL` | mesma regra, porta 8080 | login |
 | `KEYCLOAK_REALM` | `barbearia` | login |
 
-A tela inicial mostra os endereços em uso, para conferir.
+A aba **Conta** mostra os endereços em uso, para conferir.
 
 ### Usuários de teste
 
@@ -76,32 +76,48 @@ flutter test
 flutter build apk --debug   # gera build/app/outputs/flutter-apk/app-debug.apk
 ```
 
+O GitHub Actions ([barberhub-app.yml](../../.github/workflows/barberhub-app.yml)) roda os três em todo PR que mexe em `apps/barberhub-app/` e guarda o APK como artefato da execução por 7 dias: dá para instalar no celular sem ter o Android SDK.
+
 ## Arquitetura
 
 ```
 lib/
-├── main.dart              # lê a configuração e monta as dependências
-├── app.dart               # MaterialApp: tema claro/escuro, pt-BR, primeira tela
+├── main.dart                  # lê a configuração e monta as dependências
+├── app.dart                   # MaterialApp: tema claro/escuro, pt-BR, abas
 ├── core/
-│   └── app_config.dart    # BFF_URL, KEYCLOAK_URL e KEYCLOAK_REALM
-├── data/                  # fala com o mundo de fora: BFF e armazenamento local
-│   ├── bff_client.dart    # único cliente HTTP; põe o token e trata os erros
-│   └── api_exception.dart # erro do BFF já traduzido para a tela
-├── state/                 # estado das telas
+│   ├── app_config.dart        # BFF_URL, KEYCLOAK_URL e KEYCLOAK_REALM
+│   └── formatters.dart        # hora, dia, preço e duração; datas no fuso -03:00
+├── data/                      # fala com o mundo de fora: BFF e armazenamento local
+│   ├── bff_client.dart        # único cliente HTTP; põe o token e trata os erros
+│   ├── api_exception.dart     # erro do BFF já traduzido para a tela
+│   └── models/                # Barbearia, Profissional, Servico, Disponibilidade, Agendamento
+├── state/                     # estado das telas
 │   └── theme_controller.dart
 └── ui/
-    ├── theme/app_theme.dart     # cores, espaçamentos e raios num lugar só
-    ├── widgets/state_views.dart # LoadingView, EmptyView, ErrorView
-    └── screens/home_screen.dart # provisória, sai com a feature de lista
+    ├── theme/app_theme.dart   # cores, fontes, espaçamentos e raios num lugar só
+    ├── widgets/               # LoadingView/EmptyView/ErrorView, SkeletonList, Monogram, InfoChip, SectionHeader
+    └── screens/
+        ├── shell_screen.dart        # as quatro abas
+        ├── placeholder_screen.dart  # "em construção": cada feature troca pela sua tela
+        ├── conta_screen.dart        # login (a fazer), tema, back-end e guia visual
+        └── guia_visual_screen.dart  # catálogo do visual para o grupo
 ```
 
 Regras para cada feature:
 
 1. **A tela não faz HTTP.** O caminho é tela → estado → repositório em `lib/data/` → `BffClient`. O repositório converte o JSON em modelo (`Barbearia`, `Agendamento`...).
-2. **Toda tela com dados mostra carregando, vazio e erro** com os widgets de `state_views.dart`. `ErrorView` já tem texto para sem rede, 401, 403, 404, 409 e 503.
-3. **Nada de cor ou espaçamento solto:** use `Theme.of(context).colorScheme`, `AppSpacing` e `AppRadius`.
-4. **Pelo menos um teste** da lógica da sua feature em `test/`.
-5. Nomes: domínio em português, termos técnicos em inglês (`BarbeariaRepository`, `ReservaScreen`); arquivos Dart em `snake_case`.
+2. **Use os modelos de `lib/data/models/`**, que já leem o JSON do contrato. Se faltar um campo, ajuste o modelo e o teste dele em vez de criar outra classe.
+3. **Toda tela com dados mostra carregando, vazio e erro.** Lista carregando usa `SkeletonList`; o resto, `LoadingView`, `EmptyView` e `ErrorView`. O `ErrorView` já tem texto para sem rede, 401, 403, 404, 409 e 503.
+4. **Copie o visual do Guia visual** (aba Conta → Guia visual): cartão de lista, chips, botões. Nada de cor ou espaçamento solto: `Theme.of(context).colorScheme`, `AppSpacing` e `AppRadius`.
+5. **Hora e data sempre pelos formatadores** (`formatHora`, `formatDia`). Eles mostram o horário da barbearia (-03:00) mesmo com o emulador em outro fuso.
+6. **Pelo menos um teste** da lógica da sua feature em `test/`.
+7. Nomes: domínio em português, termos técnicos em inglês (`BarbeariaRepository`, `ReservaScreen`); arquivos Dart em `snake_case`.
+
+### Design
+
+- **Fontes:** Manrope no texto e DM Serif Display nos títulos grandes, embarcadas em `assets/fonts/` (licença OFL), então funcionam sem internet.
+- **Cores:** azul-marinho como `primary` e latão como `tertiary` (favorito, preço, destaques), geradas pelo Material 3 nos temas claro e escuro.
+- **Ícone e splash:** a arte fica em `assets/icon/` (SVG e PNG). Se ela mudar, gere de novo com `dart run flutter_launcher_icons` e `dart run flutter_native_splash:create`.
 
 O gerenciador de estado ainda não foi escolhido ([ADR.md](ADR.md)). Até lá, as dependências descem pelo construtor a partir do `BarberHubApp`.
 
