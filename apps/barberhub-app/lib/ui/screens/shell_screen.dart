@@ -5,6 +5,7 @@ import '../../data/models/barbearia.dart';
 import 'barbearia_detalhe_screen.dart';
 import 'barbearias_screen.dart';
 import 'conta_screen.dart';
+import 'favoritos_screen.dart';
 import 'placeholder_screen.dart';
 
 /// Estrutura do app: uma aba por área, com a barra de navegação embaixo.
@@ -43,14 +44,13 @@ class _ShellScreenState extends State<ShellScreen> {
         children: [
           BarbeariasScreen(
             controller: widget.dependencies.barbearias,
+            favoritos: widget.dependencies.favoritos,
             onAbrir: _abrirDetalhe,
           ),
-          const PlaceholderScreen(
-            title: 'Favoritos',
-            icon: Icons.favorite_outline,
-            message:
-                'As barbearias marcadas com o coração aparecem aqui e continuam '
-                'salvas depois de fechar o app (feature 6).',
+          FavoritosScreen(
+            favoritos: widget.dependencies.favoritos,
+            onAbrir: _abrirDetalhe,
+            onVerBarbearias: () => setState(() => _aba = 0),
           ),
           const PlaceholderScreen(
             title: 'Agendamentos',

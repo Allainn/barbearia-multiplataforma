@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/barbearia.dart';
 import '../../state/async_state.dart';
 import '../../state/barbearias_controller.dart';
+import '../../state/favoritos_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/barbearia_card.dart';
 import '../widgets/skeleton.dart';
@@ -14,10 +15,12 @@ class BarbeariasScreen extends StatefulWidget {
   const BarbeariasScreen({
     super.key,
     required this.controller,
+    required this.favoritos,
     required this.onAbrir,
   });
 
   final BarbeariasController controller;
+  final FavoritosController favoritos;
 
   /// Tocar num cartão abre o detalhe por cima das abas.
   final ValueChanged<Barbearia> onAbrir;
@@ -102,6 +105,7 @@ class _BarbeariasScreenState extends State<BarbeariasScreen> {
                   child: _Lista(
                     barbearias: _controller.visiveis,
                     filtrando: _controller.filtrando,
+                    favoritos: widget.favoritos,
                     onAbrir: widget.onAbrir,
                     onLimparFiltros: _limparFiltros,
                   ),
@@ -161,6 +165,7 @@ class _Lista extends StatelessWidget {
   const _Lista({
     required this.barbearias,
     required this.filtrando,
+    required this.favoritos,
     required this.onAbrir,
     required this.onLimparFiltros,
   });
@@ -169,6 +174,7 @@ class _Lista extends StatelessWidget {
 
   /// Lista vazia por causa da busca ou do filtro, e não porque o back-end está vazio.
   final bool filtrando;
+  final FavoritosController favoritos;
   final ValueChanged<Barbearia> onAbrir;
   final VoidCallback onLimparFiltros;
 
@@ -213,6 +219,7 @@ class _Lista extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, i) => BarbeariaCard(
         barbearia: barbearias[i],
+        favoritos: favoritos,
         onTap: () => onAbrir(barbearias[i]),
       ),
     );

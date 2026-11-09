@@ -8,6 +8,7 @@ import '../../data/models/servico.dart';
 import '../../state/async_state.dart';
 import '../../state/barbearia_detalhe_controller.dart';
 import '../theme/app_theme.dart';
+import '../widgets/favorito_button.dart';
 import '../widgets/info_chip.dart';
 import '../widgets/monogram.dart';
 import '../widgets/section_header.dart';
@@ -50,7 +51,15 @@ class _BarbeariaDetalheScreenState extends State<BarbeariaDetalheScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: [
+          FavoritoButton(
+            barbearia: widget.barbearia,
+            favoritos: widget.dependencies.favoritos,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+        ],
+      ),
       body: ListenableBuilder(
         listenable: _controller,
         builder: (context, _) => CustomScrollView(

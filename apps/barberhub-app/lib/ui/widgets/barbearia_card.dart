@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 
 import '../../data/models/barbearia.dart';
+import '../../state/favoritos_controller.dart';
 import '../theme/app_theme.dart';
+import 'favorito_button.dart';
 import 'info_chip.dart';
 import 'monogram.dart';
 
 /// Cartão de barbearia das listas (aba Barbearias e Favoritos), como no Guia visual.
 class BarbeariaCard extends StatelessWidget {
-  const BarbeariaCard({super.key, required this.barbearia, this.onTap});
+  const BarbeariaCard({
+    super.key,
+    required this.barbearia,
+    required this.favoritos,
+    this.onTap,
+  });
 
   final Barbearia barbearia;
+  final FavoritosController favoritos;
   final VoidCallback? onTap;
 
   @override
@@ -45,6 +53,7 @@ class BarbeariaCard extends StatelessWidget {
                   ],
                 ),
               ),
+              FavoritoButton(barbearia: barbearia, favoritos: favoritos),
             ],
           ),
         ),
