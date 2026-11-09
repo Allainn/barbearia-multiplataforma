@@ -14,8 +14,10 @@ import '../widgets/monogram.dart';
 import '../widgets/section_header.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/state_views.dart';
+import 'reserva_screen.dart';
 
-/// Detalhe de uma barbearia: serviços (com duração e preço) e profissionais.
+/// Detalhe de uma barbearia: serviços (com duração e preço) e profissionais. É daqui que
+/// a reserva começa.
 class BarbeariaDetalheScreen extends StatefulWidget {
   const BarbeariaDetalheScreen({
     super.key,
@@ -46,6 +48,21 @@ class _BarbeariaDetalheScreenState extends State<BarbeariaDetalheScreen> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Abre a reserva, com [servico] já marcado se o usuário tocou num serviço.
+  Future<void> _reservar(DetalheBarbearia detalhe, [Servico? servico]) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ReservaScreen(
+          barbearia: widget.barbearia,
+          profissionais: detalhe.profissionais,
+          servicos: detalhe.servicos,
+          servicoInicial: servico,
+          dependencies: widget.dependencies,
+        ),
+      ),
+    );
   }
 
   @override
@@ -80,8 +97,22 @@ class _BarbeariaDetalheScreenState extends State<BarbeariaDetalheScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: ListenableBuilder(
+        listenable: _controller,
+        builder: (context, _) => switch (_controller.estado) {
+          AsyncData(:final value) when value.podeReservar => _BarraDeReserva(
+            ehCliente: widget.dependencies.auth.sessao?.ehCliente ?? false,
+            onReservar: () => _reservar(value),
+          ),
+          _ => const SizedBox.shrink(),
+        },
+      ),
     );
   }
+
+  bool _podeReservar(DetalheBarbearia detalhe) =>
+      detalhe.podeReservar &&
+      (widget.dependencies.auth.sessao?.ehCliente ?? false);
 
   List<Widget> _conteudo(DetalheBarbearia detalhe) {
     if (detalhe.servicos.isEmpty && detalhe.profissionais.isEmpty) {
@@ -103,8 +134,12 @@ class _BarbeariaDetalheScreenState extends State<BarbeariaDetalheScreen> {
       else
         SliverList.builder(
           itemCount: detalhe.servicos.length,
-          itemBuilder: (context, i) =>
-              _ServicoTile(servico: detalhe.servicos[i]),
+          itemBuilder: (context, i) => _ServicoTile(
+            servico: detalhe.servicos[i],
+            onTap: _podeReservar(detalhe)
+                ? () => _reservar(detalhe, detalhe.servicos[i])
+                : null,
+          ),
         ),
       const SliverToBoxAdapter(child: SectionHeader(title: 'Profissionais')),
       if (detalhe.profissionais.isEmpty)
@@ -184,13 +219,18 @@ class _Cabecalho extends StatelessWidget {
 }
 
 class _ServicoTile extends StatelessWidget {
-  const _ServicoTile({required this.servico});
+  const _ServicoTile({required this.servico, this.onTap});
 
   final Servico servico;
+
+  /// Abre a reserva com este serviço marcado; null quando não dá para reservar.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      onTap: onTap,
+      trailing: onTap == null ? null : const Icon(Icons.chevron_right),
       title: Text(servico.nome),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: AppSpacing.xs),
@@ -238,6 +278,49 @@ class _SemItens extends StatelessWidget {
         texto,
         style: theme.textTheme.bodyMedium?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+/// Botão fixo no pé do detalhe. Gestor vê o motivo de não poder reservar: o BFF só aceita
+/// `POST /agendamentos` de quem tem a role `cliente`.
+class _BarraDeReserva extends StatelessWidget {
+  const _BarraDeReserva({required this.ehCliente, required this.onReservar});
+
+  final bool ehCliente;
+  final VoidCallback onReservar;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surfaceContainer,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!ehCliente) ...[
+                Text(
+                  'Só contas de cliente reservam horário pelo app.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
+              FilledButton.icon(
+                onPressed: ehCliente ? onReservar : null,
+                icon: const Icon(Icons.event_available),
+                label: const Text('Reservar horário'),
+              ),
+            ],
+          ),
         ),
       ),
     );

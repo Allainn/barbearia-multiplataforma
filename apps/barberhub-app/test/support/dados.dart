@@ -1,4 +1,8 @@
 // Dados no formato do contrato (docs/tarefas.md), para os testes.
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
 import 'fake_backend.dart';
 
 const barbeariaCentro = {
@@ -59,7 +63,44 @@ const corteEBarba = {
 
 final _idNavalha = navalhaDeOuro['id'];
 
-/// Back-end falso com a lista de barbearias e o detalhe da Navalha de Ouro no ar.
+/// A grade do disponibilidade-service: blocos de 30 min das 09:00 às 18:00 do dia pedido
+/// em `data`, menos os que começam em [ocupados] (ex.: `{'10:00'}`).
+http.Response gradeDoDia(
+  http.Request request, {
+  Set<String> ocupados = const {},
+}) {
+  final data = request.url.queryParameters['data']!;
+  String hora(int minutos) =>
+      '${(minutos ~/ 60).toString().padLeft(2, '0')}:'
+      '${(minutos % 60).toString().padLeft(2, '0')}';
+  return jsonResponse({
+    'profissional_id': request.url.queryParameters['profissional_id'],
+    'data': data,
+    'horarios_livres': [
+      for (var m = 9 * 60; m < 18 * 60; m += 30)
+        if (!ocupados.contains(hora(m)))
+          {
+            'inicio': '${data}T${hora(m)}:00-03:00',
+            'fim': '${data}T${hora(m + 30)}:00-03:00',
+          },
+    ],
+  });
+}
+
+/// O `POST /agendamentos` do contrato: devolve 201 com o que recebeu, mais id, cliente e
+/// status.
+http.Response agendamentoCriado(http.Request request, {String id = 'ag-1'}) {
+  final corpo = jsonDecode(request.body) as Map<String, dynamic>;
+  return jsonResponse({
+    ...corpo,
+    'id': id,
+    'cliente_id': 'id-cliente1',
+    'status': 'CONFIRMADO',
+  }, 201);
+}
+
+/// Back-end falso com a lista de barbearias, o detalhe da Navalha de Ouro, a grade de
+/// horários e a reserva no ar.
 FakeBackend backendComBarbearias() => FakeBackend(
   rotas: {
     'GET /barbearias': (_) => jsonResponse(barbearias),
@@ -67,5 +108,7 @@ FakeBackend backendComBarbearias() => FakeBackend(
         jsonResponse([rafael, bruno]),
     'GET /barbearias/$_idNavalha/servicos': (_) =>
         jsonResponse([corteEBarba, corte]),
+    'GET /disponibilidade': gradeDoDia,
+    'POST /agendamentos': agendamentoCriado,
   },
 );

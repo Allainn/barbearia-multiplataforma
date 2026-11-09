@@ -2,9 +2,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app_config.dart';
+import 'data/agendamento_repository.dart';
 import 'data/auth_repository.dart';
 import 'data/barbearia_repository.dart';
 import 'data/bff_client.dart';
+import 'data/disponibilidade_repository.dart';
 import 'data/favoritos_repository.dart';
 import 'state/auth_controller.dart';
 import 'state/barbearias_controller.dart';
@@ -22,6 +24,8 @@ class AppDependencies {
     required this.auth,
     required this.theme,
     required this.barbeariaRepository,
+    required this.disponibilidadeRepository,
+    required this.agendamentoRepository,
     required this.barbearias,
     required this.favoritos,
   });
@@ -51,6 +55,8 @@ class AppDependencies {
       auth: auth,
       theme: ThemeController(prefs),
       barbeariaRepository: barbeariaRepository,
+      disponibilidadeRepository: DisponibilidadeRepository(bffClient),
+      agendamentoRepository: AgendamentoRepository(bffClient),
       barbearias: BarbeariasController(barbeariaRepository),
       favoritos: FavoritosController(FavoritosRepository(prefs)),
     );
@@ -61,6 +67,8 @@ class AppDependencies {
   final AuthController auth;
   final ThemeController theme;
   final BarbeariaRepository barbeariaRepository;
+  final DisponibilidadeRepository disponibilidadeRepository;
+  final AgendamentoRepository agendamentoRepository;
   final BarbeariasController barbearias;
   final FavoritosController favoritos;
 }
