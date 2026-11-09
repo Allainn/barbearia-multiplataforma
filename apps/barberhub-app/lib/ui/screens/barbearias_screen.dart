@@ -8,7 +8,7 @@ import '../widgets/barbearia_card.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/state_views.dart';
 
-/// Aba "Barbearias": a lista que vem do `GET /barbearias`.
+/// Aba "Barbearias": a lista que vem do `GET /barbearias`, com a busca por nome.
 class BarbeariasScreen extends StatefulWidget {
   const BarbeariasScreen({
     super.key,
@@ -26,6 +26,8 @@ class BarbeariasScreen extends StatefulWidget {
 }
 
 class _BarbeariasScreenState extends State<BarbeariasScreen> {
+  late final _campoBusca = TextEditingController(text: _controller.busca);
+
   BarbeariasController get _controller => widget.controller;
 
   @override
@@ -33,6 +35,17 @@ class _BarbeariasScreenState extends State<BarbeariasScreen> {
     super.initState();
     // A aba nasce logo depois do login: é a hora de buscar com o token novo.
     WidgetsBinding.instance.addPostFrameCallback((_) => _controller.carregar());
+  }
+
+  @override
+  void dispose() {
+    _campoBusca.dispose();
+    super.dispose();
+  }
+
+  void _limparFiltros() {
+    _campoBusca.clear();
+    _controller.limparFiltros();
   }
 
   @override
@@ -47,9 +60,47 @@ class _BarbeariasScreenState extends State<BarbeariasScreen> {
             error: error,
             onRetry: _controller.carregar,
           ),
-          AsyncData(:final value) => RefreshIndicator(
-            onRefresh: () => _controller.carregar(silencioso: true),
-            child: _Lista(barbearias: value, onAbrir: widget.onAbrir),
+          AsyncData() => Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                child: TextField(
+                  controller: _campoBusca,
+                  onChanged: _controller.buscar,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar barbearia pelo nome',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _controller.busca.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: 'Limpar a busca',
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              _campoBusca.clear();
+                              _controller.buscar('');
+                            },
+                          ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () => _controller.carregar(silencioso: true),
+                  child: _Lista(
+                    barbearias: _controller.visiveis,
+                    filtrando: _controller.filtrando,
+                    onAbrir: widget.onAbrir,
+                    onLimparFiltros: _limparFiltros,
+                  ),
+                ),
+              ),
+            ],
           ),
         },
       ),
@@ -58,10 +109,19 @@ class _BarbeariasScreenState extends State<BarbeariasScreen> {
 }
 
 class _Lista extends StatelessWidget {
-  const _Lista({required this.barbearias, required this.onAbrir});
+  const _Lista({
+    required this.barbearias,
+    required this.filtrando,
+    required this.onAbrir,
+    required this.onLimparFiltros,
+  });
 
   final List<Barbearia> barbearias;
+
+  /// Lista vazia por causa da busca ou do filtro, e não porque o back-end está vazio.
+  final bool filtrando;
   final ValueChanged<Barbearia> onAbrir;
+  final VoidCallback onLimparFiltros;
 
   @override
   Widget build(BuildContext context) {
@@ -72,18 +132,34 @@ class _Lista extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           child: SizedBox(
             height: constraints.maxHeight,
-            child: const EmptyView(
-              icon: Icons.storefront_outlined,
-              title: 'Nenhuma barbearia cadastrada',
-              message: 'Puxe para baixo para atualizar.',
-            ),
+            child: filtrando
+                ? EmptyView(
+                    icon: Icons.search_off,
+                    title: 'Nenhuma barbearia encontrada',
+                    message: 'Tente outro nome ou limpe os filtros.',
+                    action: TextButton(
+                      onPressed: onLimparFiltros,
+                      child: const Text('Limpar filtros'),
+                    ),
+                  )
+                : const EmptyView(
+                    icon: Icons.storefront_outlined,
+                    title: 'Nenhuma barbearia cadastrada',
+                    message: 'Puxe para baixo para atualizar.',
+                  ),
           ),
         ),
       );
     }
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        0,
+        AppSpacing.md,
+        AppSpacing.md,
+      ),
       itemCount: barbearias.length,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, i) => BarbeariaCard(
