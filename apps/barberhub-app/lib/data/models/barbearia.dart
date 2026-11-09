@@ -16,6 +16,21 @@ class Barbearia {
   final String nome;
   final String endereco;
 
+  /// O bairro, quando o endereço segue o formato "Rua, número - Bairro" (o do seed do
+  /// app). O contrato não tem campo de bairro: endereço fora do formato devolve null.
+  String? get bairro {
+    final i = endereco.lastIndexOf(' - ');
+    if (i < 0) return null;
+    final bairro = endereco.substring(i + 3).split(',').first.trim();
+    return bairro.isEmpty ? null : bairro;
+  }
+
+  /// O endereço sem o bairro: "Av. Getúlio Vargas, 1420".
+  String get logradouro {
+    if (bairro == null) return endereco;
+    return endereco.substring(0, endereco.lastIndexOf(' - ')).trim();
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'nome': nome,

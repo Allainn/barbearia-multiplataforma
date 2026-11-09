@@ -8,7 +8,8 @@ import '../widgets/barbearia_card.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/state_views.dart';
 
-/// Aba "Barbearias": a lista que vem do `GET /barbearias`, com a busca por nome.
+/// Aba "Barbearias": a lista que vem do `GET /barbearias`, com a busca por nome e o
+/// filtro por bairro.
 class BarbeariasScreen extends StatefulWidget {
   const BarbeariasScreen({
     super.key,
@@ -89,6 +90,12 @@ class _BarbeariasScreenState extends State<BarbeariasScreen> {
                   ),
                 ),
               ),
+              if (_controller.bairros.isNotEmpty)
+                _FiltroDeBairro(
+                  bairros: _controller.bairros,
+                  selecionado: _controller.bairro,
+                  onSelecionar: _controller.filtrarPorBairro,
+                ),
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: () => _controller.carregar(silencioso: true),
@@ -103,6 +110,48 @@ class _BarbeariasScreenState extends State<BarbeariasScreen> {
             ],
           ),
         },
+      ),
+    );
+  }
+}
+
+/// Chips de bairro numa linha que rola para o lado.
+class _FiltroDeBairro extends StatelessWidget {
+  const _FiltroDeBairro({
+    required this.bairros,
+    required this.selecionado,
+    required this.onSelecionar,
+  });
+
+  final List<String> bairros;
+  final String? selecionado;
+  final ValueChanged<String?> onSelecionar;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Filtrar por bairro',
+      container: true,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          0,
+          AppSpacing.md,
+          AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            for (final (i, bairro) in bairros.indexed) ...[
+              if (i > 0) const SizedBox(width: AppSpacing.sm),
+              FilterChip(
+                label: Text(bairro),
+                selected: bairro == selecionado,
+                onSelected: (_) => onSelecionar(bairro),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

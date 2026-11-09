@@ -117,7 +117,8 @@ void main() {
 
       expect(find.byType(SkeletonList), findsNothing);
       expect(find.byType(BarbeariaCard), findsNWidgets(4));
-      expect(find.text('Av. Getúlio Vargas, 1420 - Savassi'), findsOneWidget);
+      expect(find.text('Av. Getúlio Vargas, 1420'), findsOneWidget);
+      expect(find.text('Rua da Bahia 1000'), findsOneWidget);
     });
 
     testWidgets('sem rede mostra o erro com o botão de tentar de novo', (

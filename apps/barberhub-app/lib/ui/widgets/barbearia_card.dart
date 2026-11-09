@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/barbearia.dart';
 import '../theme/app_theme.dart';
+import 'info_chip.dart';
 import 'monogram.dart';
 
 /// Cartão de barbearia das listas (aba Barbearias e Favoritos), como no Guia visual.
@@ -32,11 +33,15 @@ class BarbeariaCard extends StatelessWidget {
                     Text(barbearia.nome, style: theme.textTheme.titleMedium),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      barbearia.endereco,
+                      barbearia.logradouro,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
+                    if (barbearia.bairro case final bairro?) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      InfoChip(icon: Icons.place_outlined, label: bairro),
+                    ],
                   ],
                 ),
               ),
