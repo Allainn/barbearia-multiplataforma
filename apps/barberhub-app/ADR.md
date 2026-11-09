@@ -67,6 +67,18 @@ O app pede o token direto ao Keycloak (`lib/data/auth_repository.dart`), com o c
 
 Consequências: a sessão fica só na memória (fechar o app pede o login de novo), porque guardar o refresh token com segurança pede `flutter_secure_storage` e configuração nativa; o access token dura 30 minutos e o `AuthController` renova com o refresh token antes de vencer. Evolução: PKCE, quando o Keycloak tiver um hostname que o celular resolva.
 
+## Meus agendamentos e favoritos no aparelho (`Aceito`, 09/11)
+
+O contrato do back-end tem `POST /agendamentos` e `DELETE /agendamentos/{id}`, mas não tem rota para listar as reservas do cliente, nem favoritos. O app guarda os dois em `shared_preferences`: a resposta 201 de cada reserva, com os nomes que estavam na tela (`ReservaLocal`), e a barbearia inteira de cada favorito. O cancelamento continua indo ao BFF.
+
+| Opção | A favor | Contra |
+|---|---|---|
+| **Guardar no aparelho** (escolhida) | Não muda o contrato nem dois serviços Java no dia da entrega; as abas abrem sem rede; o cancelamento é o `DELETE` real | A aba só mostra reservas feitas neste aparelho: trocar de celular, ou reservar pelo `curl`, não aparece; o aparelho não fica sabendo de um cancelamento feito por fora |
+| `GET /agendamentos` no agendamento-service e no BFF | O servidor é a fonte da verdade; funciona em qualquer aparelho | Rota nova em dois serviços, filtro por `X-User-ID`, revisão e rebuild na véspera da demo |
+| Cortar a feature | Nenhum risco | O cliente reserva e não tem onde ver nem cancelar |
+
+Mitigações: as reservas são filtradas pelo `sub` do token, então duas contas no mesmo aparelho não veem as reservas uma da outra; um `DELETE` que volta 404 (reserva que não existe mais no servidor) marca a reserva como cancelada em vez de travar a tela. Evolução: `GET /agendamentos` no contrato, com o aparelho virando só cache.
+
 ## Referências
 
 - FLUTTER. *Flutter documentation*. Google, 2026. Disponível em: https://docs.flutter.dev. Acesso em: 4 nov. 2026.

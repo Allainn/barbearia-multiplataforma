@@ -13,4 +13,9 @@ class AgendamentoRepository {
     final json = await _bff.post('/agendamentos', novo.toJson());
     return Agendamento.fromJson(json as Map<String, dynamic>);
   }
+
+  /// `DELETE /agendamentos/{id}`: 204, ou 404 se a reserva não existe ou é de outro
+  /// cliente. Repetir o cancelamento não dá erro.
+  Future<void> cancelar(String agendamentoId) =>
+      _bff.delete('/agendamentos/$agendamentoId');
 }

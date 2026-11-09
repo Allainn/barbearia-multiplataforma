@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../app_dependencies.dart';
 import '../../data/models/barbearia.dart';
+import 'agendamentos_screen.dart';
 import 'barbearia_detalhe_screen.dart';
 import 'barbearias_screen.dart';
 import 'conta_screen.dart';
 import 'favoritos_screen.dart';
-import 'placeholder_screen.dart';
 
 /// Estrutura do app: uma aba por área, com a barra de navegação embaixo.
 ///
-/// Cada feature troca o `PlaceholderScreen` da sua aba pela tela de verdade. Telas que
-/// abrem por cima (detalhe, reserva) usam `Navigator.push` a partir da aba.
+/// Telas que abrem por cima (detalhe, reserva) usam `Navigator.push` a partir da aba.
 /// O `IndexedStack` mantém o estado de cada aba ao trocar de aba (rolagem, busca digitada).
 class ShellScreen extends StatefulWidget {
   const ShellScreen({super.key, required this.dependencies});
@@ -52,12 +51,10 @@ class _ShellScreenState extends State<ShellScreen> {
             onAbrir: _abrirDetalhe,
             onVerBarbearias: () => setState(() => _aba = 0),
           ),
-          const PlaceholderScreen(
-            title: 'Agendamentos',
-            icon: Icons.event_note_outlined,
-            message:
-                'Suas reservas e o cancelamento entram aqui (feature 8). A reserva '
-                'começa no detalhe da barbearia (feature 7).',
+          AgendamentosScreen(
+            controller: widget.dependencies.agendamentos,
+            auth: widget.dependencies.auth,
+            onVerBarbearias: () => setState(() => _aba = 0),
           ),
           ContaScreen(
             config: widget.dependencies.config,

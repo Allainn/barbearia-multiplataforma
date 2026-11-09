@@ -7,7 +7,9 @@ import '../data/models/agendamento.dart';
 import '../data/models/barbearia.dart';
 import '../data/models/disponibilidade.dart';
 import '../data/models/profissional.dart';
+import '../data/models/reserva_local.dart';
 import '../data/models/servico.dart';
+import 'agendamentos_controller.dart';
 import 'async_state.dart';
 import 'horarios.dart';
 
@@ -19,11 +21,13 @@ class ReservaController extends ChangeNotifier {
     required this.servicos,
     required DisponibilidadeRepository disponibilidade,
     required AgendamentoRepository agendamentos,
+    AgendamentosController? registro,
     Servico? servicoInicial,
     DateTime Function()? agora,
   }) : assert(profissionais.isNotEmpty && servicos.isNotEmpty),
        _disponibilidade = disponibilidade,
        _agendamentos = agendamentos,
+       _registro = registro,
        _agora = agora ?? DateTime.now,
        _servico = servicoInicial ?? servicos.first,
        _profissional = profissionais.first {
@@ -36,6 +40,9 @@ class ReservaController extends ChangeNotifier {
   final List<Servico> servicos;
   final DisponibilidadeRepository _disponibilidade;
   final AgendamentoRepository _agendamentos;
+
+  /// Onde a reserva confirmada fica guardada para a aba Agendamentos.
+  final AgendamentosController? _registro;
   final DateTime Function() _agora;
 
   /// Hoje e os próximos dias, no calendário da barbearia.
@@ -155,19 +162,31 @@ class ReservaController extends ChangeNotifier {
     _reservando = true;
     _falha = null;
     _avisar();
+    final servico = _servico;
+    final profissional = _profissional;
     try {
-      return await _agendamentos.reservar(
+      final agendamento = await _agendamentos.reservar(
         NovoAgendamento(
           barbeariaId: barbearia.id,
-          profissionalId: _profissional.id,
-          servicoId: _servico.id,
+          profissionalId: profissional.id,
+          servicoId: servico.id,
           horario: horario,
         ),
       );
+      await _registro?.registrar(
+        ReservaLocal(
+          agendamento: agendamento,
+          barbeariaNome: barbearia.nome,
+          profissionalNome: profissional.nome,
+          servicoNome: servico.nome,
+          preco: servico.preco,
+        ),
+      );
+      return agendamento;
     } on ApiException catch (erro) {
       _falha = erro;
       if (erro.kind == ApiErrorKind.conflict) {
-        (_recusados[_profissional.id] ??= []).add(horario);
+        (_recusados[profissional.id] ??= []).add(horario);
         _reservando = false;
         await carregarHorarios(manterAviso: true);
       }

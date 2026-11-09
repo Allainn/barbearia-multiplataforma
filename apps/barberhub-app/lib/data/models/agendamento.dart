@@ -39,6 +39,18 @@ class Agendamento {
   final DateTime fim;
   final StatusAgendamento status;
 
+  /// O mesmo agendamento depois do `DELETE /agendamentos/{id}`.
+  Agendamento comoCancelado() => Agendamento(
+    id: id,
+    barbeariaId: barbeariaId,
+    profissionalId: profissionalId,
+    servicoId: servicoId,
+    clienteId: clienteId,
+    inicio: inicio,
+    fim: fim,
+    status: StatusAgendamento.cancelado,
+  );
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'barbearia_id': barbeariaId,

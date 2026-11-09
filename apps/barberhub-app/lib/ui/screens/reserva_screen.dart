@@ -47,6 +47,7 @@ class _ReservaScreenState extends State<ReservaScreen> {
     servicos: widget.servicos,
     disponibilidade: widget.dependencies.disponibilidadeRepository,
     agendamentos: widget.dependencies.agendamentoRepository,
+    registro: widget.dependencies.agendamentos,
     servicoInicial: widget.servicoInicial,
   );
 
@@ -79,7 +80,8 @@ class _ReservaScreenState extends State<ReservaScreen> {
         content: Text(
           '${servico.nome} com ${profissional.nome}\n'
           '${_quando(agendamento.inicio)}\n'
-          '${widget.barbearia.nome}',
+          '${widget.barbearia.nome}\n\n'
+          'Ela fica na aba Agendamentos, onde dá para cancelar.',
           textAlign: TextAlign.center,
         ),
         actions: [
