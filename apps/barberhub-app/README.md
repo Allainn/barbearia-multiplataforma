@@ -8,16 +8,16 @@ App de agendamento em barbearias do **Grupo 8**, feito como Projeto Final de **A
 
 O cliente entra com a conta do Keycloak, encontra uma barbearia (lista, busca por nome e filtro por bairro), vê os serviços e os profissionais, escolhe um horário livre e reserva. Se outro cliente confirmar o mesmo horário primeiro, o app explica a disputa (409) e atualiza os horários. As reservas e as barbearias favoritas ficam guardadas no aparelho.
 
-| # | Feature | Onde fica | De onde vêm os dados | Branch |
-|---|---|---|---|---|
-| 1 | Login do cliente | tela de entrada e aba Conta | Keycloak (realm `barbearia`, client `barberhub-app`) | `feat/app-login` |
-| 2 | **Lista** de barbearias | aba Barbearias | `GET /barbearias` | `feat/app-lista` |
-| 3 | **Detalhe**: serviços e profissionais | tela por cima da lista | `GET /barbearias/{id}/profissionais` e `/servicos` | `feat/app-detalhe` |
-| 4 | **Busca** por nome | aba Barbearias | lista já carregada (filtra no app) | `feat/app-busca` |
-| 5 | **Filtro** por bairro | aba Barbearias | bairro tirado do endereço | `feat/app-filtro` |
-| 6 | **Favoritos** que sobrevivem a fechar o app | coração na lista e no detalhe; aba Favoritos | armazenamento local | `feat/app-favoritos` |
-| 7 | Horários livres e reserva, com o 409 | a partir do detalhe | `GET /disponibilidade` e `POST /agendamentos` | `feat/app-reserva` |
-| 8 | Meus agendamentos e cancelar | aba Agendamentos | armazenamento local e `DELETE /agendamentos/{id}` | `feat/app-agendamentos` |
+| # | Feature | Onde fica | De onde vêm os dados |
+|---|---|---|---|
+| 1 | Login do cliente | tela de entrada e aba Conta | Keycloak (realm `barbearia`, client `barberhub-app`) |
+| 2 | **Lista** de barbearias | aba Barbearias | `GET /barbearias` |
+| 3 | **Detalhe**: serviços e profissionais | tela por cima da lista | `GET /barbearias/{id}/profissionais` e `/servicos` |
+| 4 | **Busca** por nome | aba Barbearias | lista já carregada (filtra no app) |
+| 5 | **Filtro** por bairro | aba Barbearias | bairro tirado do endereço |
+| 6 | **Favoritos** que sobrevivem a fechar o app | coração na lista e no detalhe; aba Favoritos | armazenamento local |
+| 7 | Horários livres e reserva, com o 409 | a partir do detalhe | `GET /disponibilidade` e `POST /agendamentos` |
+| 8 | Meus agendamentos e cancelar | aba Agendamentos | armazenamento local e `DELETE /agendamentos/{id}` |
 
 As cinco em negrito são as do enunciado. Toda tela com dados do back-end trata **carregando** (skeleton), **vazio** e **erro** (sem rede, 401, 403, 404, 409 e 503), com o botão de tentar de novo.
 
