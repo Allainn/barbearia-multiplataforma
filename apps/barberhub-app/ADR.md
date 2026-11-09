@@ -2,10 +2,10 @@
 
 ## Status
 
-`Aceito` para o framework. Gerenciador de estado: `Proposto`, em aberto no grupo (seção no fim). Fluxo de login: em aberto (ver Consequências).
+`Aceito`. Framework em 31/10; gerenciador de estado e fluxo de login em 09/11 (seções no fim).
 
-**Data:** 2026-10-31 (registrado em 2026-11-04)
-**Autor:** Allainn Christiam Jacinto Tavares, pelo Grupo 8
+**Data:** 2026-10-31 (registrado em 2026-11-04; estado e login em 2026-11-09)
+**Autor:** Allainn Christiam Jacinto Tavares, pelo Grupo 8. Seções de estado e login: Evandro Junior, no PR do login
 **Origem:** votação Q08 da disciplina Arquitetura de Software Multiplataforma ([issue #8](https://github.com/Allainn/barbearia-multiplataforma/issues/8)), que escolheu Dart/Flutter para o front cortado do back-end por prazo. Como o app entra na arquitetura do back-end (container novo, só o BFF, pendências no Keycloak): [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md)
 
 ## Contexto
@@ -39,18 +39,33 @@ Adotaremos **Flutter** (Dart, Material 3), porque desenha a mesma tela no Androi
 
 **Negativas:**
 - O time aprende Dart e o modelo de widgets durante a semana de entrega.
-- O PKCE esbarra no `KC_HOSTNAME` fixo em `http://keycloak:8080` (o navegador do celular não resolve esse nome): ou muda a configuração do Keycloak, ou a demo usa o password grant com um client público.
+- O PKCE esbarra no `KC_HOSTNAME` fixo em `http://keycloak:8080` (o navegador do celular não resolve esse nome). A demo usa o password grant com um client público (seção "Login").
 - Web não é alvo: o BFF não tem CORS, e o app no navegador cai no estado "Sem conexão".
 
-## Gerenciador de estado (`Proposto`)
+## Gerenciador de estado: `ChangeNotifier` do Flutter (`Aceito`, 09/11)
 
-O esqueleto não usa biblioteca: o tema fica num `ValueNotifier` do Flutter e as dependências descem pelo construtor. Falta o grupo escolher, antes das features:
+O app não usa biblioteca de estado. Cada feature tem um controller que estende `ChangeNotifier` (`lib/state/`), e a tela escuta com `ListenableBuilder`. O que vem de fora fica num `AsyncState<T>` selado (`AsyncLoading`, `AsyncData`, `AsyncError`): a tela faz um `switch` e o compilador exige os três casos, que é a garantia que o `AsyncValue` do Riverpod daria. As dependências descem pelo construtor a partir de `AppDependencies` (`lib/app_dependencies.dart`), a raiz de composição.
 
 | Opção | A favor | Contra |
 |---|---|---|
-| Riverpod | Usado na A3; `AsyncValue` já separa carregando, erro e dados; provider testável sem widget; "recomendação atual" na Aula 3 | Mais conceitos (`ref`, tipos de provider) |
-| Provider | O mais simples; `ChangeNotifier` | Carregando e erro feitos à mão em cada tela; a Aula 3 o trata como legado |
-| Bloc | Eventos → estados num padrão rígido, código parecido entre 7 pessoas | Mais código por feature; curva maior para uma semana |
+| **`ChangeNotifier` + `ListenableBuilder`** (escolhida) | Já vem no Flutter: nenhuma dependência nova no build eliminatório; o esqueleto já usava (`ThemeController`); controller testável sem widget; um conceito só para quem vem do back-end | Carregando e erro são modelados à mão (resolvido com o `AsyncState`); injeção manual pelo construtor; sem `select`: quem escuta o controller reconstrói a cada aviso, o que não pesa em telas deste tamanho |
+| Riverpod | Usado na A3; `AsyncValue` pronto; providers substituíveis no teste; "recomendação atual" na Aula 3 | Trocar a injeção por `ProviderScope` e ensinar `ref` e os tipos de provider no dia da entrega; mais uma dependência com geração de código opcional |
+| Provider | `ChangeNotifier` com injeção pela árvore de widgets | A Aula 3 o trata como legado; ganho pequeno sobre o construtor num app de quatro abas |
+| Bloc | Eventos → estados num padrão rígido | Mais código por feature; curva maior para uma semana |
+
+Quando rever: se as telas passarem a compartilhar muito estado derivado ou a injeção pelo construtor atravessar mais de dois níveis, o Riverpod volta à mesa.
+
+## Login: password grant com client público (`Aceito`, 09/11)
+
+O app pede o token direto ao Keycloak (`lib/data/auth_repository.dart`), com o client público `barberhub-app` criado pelo `scripts/keycloak_seed.py`, e manda o access token em toda chamada ao BFF. É a única chamada que não passa pelo BFF, como o [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md) previu.
+
+| Opção | A favor | Contra |
+|---|---|---|
+| **Password grant (ROPC) com client público** (escolhida) | Funciona com o Keycloak e o BFF como estão: o `iss` continua `http://keycloak:8080`, e o mapper de audience põe `bff-gateway` no `aud`; nenhuma configuração nativa | É antipadrão: a senha passa pelo app, e o OAuth 2.1 retira esse fluxo. Só se justifica como atalho de demo com usuários de teste |
+| Authorization Code + PKCE (`flutter_appauth`) | O fluxo certo para cliente público (RFC 8252): a senha só é digitada na página do Keycloak | O navegador do celular não resolve `keycloak:8080`; exige mudar o `KC_HOSTNAME` do compose ou o BFF aceitar dois issuers, mais o esquema de redirect no Android |
+| Client `bff-gateway` com o secret no app | Zero mudança no back-end | O secret sai do APK com qualquer descompilador; um client confidencial em app instalado deixa de ser confidencial |
+
+Consequências: a sessão fica só na memória (fechar o app pede o login de novo), porque guardar o refresh token com segurança pede `flutter_secure_storage` e configuração nativa; o access token dura 30 minutos e o `AuthController` renova com o refresh token antes de vencer. Evolução: PKCE, quando o Keycloak tiver um hostname que o celular resolva.
 
 ## Referências
 

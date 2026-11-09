@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/app_config.dart';
-import '../../state/theme_controller.dart';
+import '../../app_dependencies.dart';
 import 'conta_screen.dart';
 import 'placeholder_screen.dart';
 
@@ -11,14 +10,9 @@ import 'placeholder_screen.dart';
 /// abrem por cima (detalhe, reserva) usam `Navigator.push` a partir da aba.
 /// O `IndexedStack` mantém o estado de cada aba ao trocar de aba (rolagem, busca digitada).
 class ShellScreen extends StatefulWidget {
-  const ShellScreen({
-    super.key,
-    required this.config,
-    required this.themeController,
-  });
+  const ShellScreen({super.key, required this.dependencies});
 
-  final AppConfig config;
-  final ThemeController themeController;
+  final AppDependencies dependencies;
 
   @override
   State<ShellScreen> createState() => _ShellScreenState();
@@ -55,8 +49,9 @@ class _ShellScreenState extends State<ShellScreen> {
                 'começa no detalhe da barbearia (feature 7).',
           ),
           ContaScreen(
-            config: widget.config,
-            themeController: widget.themeController,
+            config: widget.dependencies.config,
+            themeController: widget.dependencies.theme,
+            auth: widget.dependencies.auth,
           ),
         ],
       ),

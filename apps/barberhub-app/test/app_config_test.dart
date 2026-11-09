@@ -14,6 +14,23 @@ void main() {
       expect(config.realm, 'barbearia');
     });
 
+    test(
+      'o endpoint de token sai do Keycloak, do realm e do client do app',
+      () {
+        final config = AppConfig.resolve(
+          keycloakUrl: 'http://192.168.0.10:8080/',
+          realm: 'outro',
+          isWeb: false,
+          platform: TargetPlatform.android,
+        );
+        expect(
+          config.tokenUrl.toString(),
+          'http://192.168.0.10:8080/realms/outro/protocol/openid-connect/token',
+        );
+        expect(config.clientId, 'barberhub-app');
+      },
+    );
+
     test('na web e no iOS, o padrão é localhost', () {
       for (final (isWeb, platform) in [
         (true, TargetPlatform.android), // Chrome no Android continua web

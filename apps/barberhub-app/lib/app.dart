@@ -1,34 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'core/app_config.dart';
-import 'data/bff_client.dart';
-import 'state/theme_controller.dart';
+import 'app_dependencies.dart';
+import 'ui/screens/login_screen.dart';
 import 'ui/screens/shell_screen.dart';
 import 'ui/theme/app_theme.dart';
 
-/// Raiz do app: tema claro/escuro, português do Brasil e as abas.
-///
-/// Até o grupo escolher o gerenciador de estado (ADR.md), as dependências descem
-/// pelo construtor: quem precisar do BFF recebe [bffClient] daqui.
-class BarberHubApp extends StatelessWidget {
-  const BarberHubApp({
-    super.key,
-    required this.config,
-    required this.bffClient,
-    required this.themeController,
-  });
+/// Raiz do app: tema claro/escuro, português do Brasil e a troca entre login e abas.
+class BarberHubApp extends StatefulWidget {
+  const BarberHubApp({super.key, required this.dependencies});
 
-  final AppConfig config;
-  final BffClient bffClient;
-  final ThemeController themeController;
+  final AppDependencies dependencies;
+
+  @override
+  State<BarberHubApp> createState() => _BarberHubAppState();
+}
+
+class _BarberHubAppState extends State<BarberHubApp> {
+  final _navigator = GlobalKey<NavigatorState>();
+
+  AppDependencies get _deps => widget.dependencies;
+
+  @override
+  void initState() {
+    super.initState();
+    _deps.auth.addListener(_aoMudarSessao);
+  }
+
+  @override
+  void dispose() {
+    _deps.auth.removeListener(_aoMudarSessao);
+    super.dispose();
+  }
+
+  /// Saiu (ou a sessão caiu) com uma tela aberta por cima das abas: fecha tudo, para o
+  /// login não ficar escondido atrás do detalhe ou da reserva.
+  void _aoMudarSessao() {
+    if (!_deps.auth.logado) {
+      _navigator.currentState?.popUntil((route) => route.isFirst);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
-      valueListenable: themeController,
+      valueListenable: _deps.theme,
       builder: (context, themeMode, _) => MaterialApp(
         title: 'BarberHub',
+        navigatorKey: _navigator,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
@@ -37,7 +56,12 @@ class BarberHubApp extends StatelessWidget {
         locale: const Locale('pt', 'BR'),
         supportedLocales: const [Locale('pt', 'BR')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: ShellScreen(config: config, themeController: themeController),
+        home: ListenableBuilder(
+          listenable: _deps.auth,
+          builder: (context, _) => _deps.auth.logado
+              ? ShellScreen(dependencies: _deps)
+              : LoginScreen(auth: _deps.auth),
+        ),
       ),
     );
   }

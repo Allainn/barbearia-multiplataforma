@@ -11,6 +11,7 @@ class AppConfig {
     required this.bffUrl,
     required this.keycloakUrl,
     required this.realm,
+    this.clientId = 'barberhub-app',
   });
 
   /// Entrada da API (bff-gateway, porta 8010). Sem barra no final.
@@ -21,12 +22,24 @@ class AppConfig {
 
   final String realm;
 
+  /// Client público do app no Keycloak (sem secret), criado pelo `scripts/keycloak_seed.py`.
+  final String clientId;
+
+  /// Endpoint de token do realm: login (password grant) e renovação (refresh token).
+  Uri get tokenUrl => keycloakUrl.replace(
+    path: '${keycloakUrl.path}/realms/$realm/protocol/openid-connect/token',
+  );
+
   factory AppConfig.fromEnvironment() => AppConfig.resolve(
     bffUrl: const String.fromEnvironment('BFF_URL'),
     keycloakUrl: const String.fromEnvironment('KEYCLOAK_URL'),
     realm: const String.fromEnvironment(
       'KEYCLOAK_REALM',
       defaultValue: 'barbearia',
+    ),
+    clientId: const String.fromEnvironment(
+      'KEYCLOAK_CLIENT_ID',
+      defaultValue: 'barberhub-app',
     ),
     isWeb: kIsWeb,
     platform: defaultTargetPlatform,
@@ -37,6 +50,7 @@ class AppConfig {
     String bffUrl = '',
     String keycloakUrl = '',
     String realm = 'barbearia',
+    String clientId = 'barberhub-app',
     required bool isWeb,
     required TargetPlatform platform,
   }) {
@@ -50,6 +64,7 @@ class AppConfig {
         keycloakUrl.isEmpty ? 'http://$host:8080' : keycloakUrl,
       ),
       realm: realm,
+      clientId: clientId,
     );
   }
 

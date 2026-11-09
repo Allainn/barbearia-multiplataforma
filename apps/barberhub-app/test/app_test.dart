@@ -1,31 +1,18 @@
-import 'package:barberhub_app/app.dart';
-import 'package:barberhub_app/core/app_config.dart';
 import 'package:barberhub_app/data/api_exception.dart';
-import 'package:barberhub_app/data/bff_client.dart';
-import 'package:barberhub_app/state/theme_controller.dart';
 import 'package:barberhub_app/ui/screens/guia_visual_screen.dart';
 import 'package:barberhub_app/ui/theme/app_theme.dart';
 import 'package:barberhub_app/ui/widgets/monogram.dart';
 import 'package:barberhub_app/ui/widgets/state_views.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'support/fake_backend.dart';
+import 'support/pump_app.dart';
+
+/// Abre o app já logado como cliente1, com o back-end falso.
 Future<void> _abrirApp(WidgetTester tester) async {
-  SharedPreferences.setMockInitialValues({});
-  final config = AppConfig.resolve(
-    isWeb: false,
-    platform: TargetPlatform.android,
-  );
-  tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
-  addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-  await tester.pumpWidget(
-    BarberHubApp(
-      config: config,
-      bffClient: BffClient(baseUrl: config.bffUrl),
-      themeController: ThemeController(await SharedPreferences.getInstance()),
-    ),
-  );
+  await pumpApp(tester, FakeBackend());
+  await entrarComo(tester, 'cliente1', 'cliente123');
 }
 
 Brightness _brilho(WidgetTester tester) =>
