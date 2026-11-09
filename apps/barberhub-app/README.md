@@ -69,6 +69,18 @@ flutter pub get
 flutter run
 ```
 
+### Sem emulador: no navegador
+
+Para testar sem Android SDK (precisa de `python3`):
+
+```bash
+bash apps/barberhub-app/tool/web.sh   # build web e servidor em http://localhost:5173
+```
+
+Abra <http://localhost:5173> e entre com um dos [usuários de teste](#usuários-de-teste). Para ver no tamanho de celular, use o modo de dispositivo do navegador (F12). Outra porta: `bash apps/barberhub-app/tool/web.sh 8088`. Depois de mudar o código, pare com Ctrl+C e rode de novo.
+
+O BFF e o Keycloak não liberam CORS, então o navegador bloqueia as chamadas feitas direto para as portas 8010 e 8080 (por isso com `flutter run -d chrome` o app abre, mas as chamadas falham). O script contorna isso sem mexer no back-end: o build aponta `BFF_URL` e `KEYCLOAK_URL` para o próprio servidor local, e o `tool/web_proxy.py` repassa `/bff` e `/kc` para o back-end. Serve para desenvolver e conferir as telas; a entrega e a demo são no Android.
+
 ### Endereço do back-end
 
 O app lê os endereços do `--dart-define`; sem ele, usa o padrão da plataforma.
@@ -78,7 +90,8 @@ O app lê os endereços do `--dart-define`; sem ele, usa o padrão da plataforma
 | Emulador Android | nada: o padrão é `http://10.0.2.2:8010`, o computador visto de dentro do emulador |
 | Celular no USB | `adb reverse tcp:8010 tcp:8010` e `adb reverse tcp:8080 tcp:8080`, depois `flutter run --dart-define=BFF_URL=http://localhost:8010 --dart-define=KEYCLOAK_URL=http://localhost:8080` |
 | Celular no mesmo Wi-Fi | `flutter run --dart-define=BFF_URL=http://<IP do computador>:8010 --dart-define=KEYCLOAK_URL=http://<IP do computador>:8080` |
-| Simulador iOS ou navegador | nada: o padrão é `http://localhost:8010`. No navegador as chamadas falham, porque o BFF não tem CORS |
+| Simulador iOS | nada: o padrão é `http://localhost:8010` |
+| Navegador | `bash apps/barberhub-app/tool/web.sh` (ver [Sem emulador: no navegador](#sem-emulador-no-navegador)) |
 
 | Variável | Padrão | Uso |
 |---|---|---|
@@ -176,7 +189,7 @@ Estão justificadas no [ADR.md](ADR.md):
 - **Sessão só na memória.** Fechar o app pede o login de novo (os favoritos e as reservas continuam).
 - **Agendamentos do aparelho.** O back-end não tem rota para listar reservas: a aba mostra as que foram feitas neste aparelho.
 - **Bairro vem do endereço.** O contrato não tem campo de bairro; endereço fora do formato "Rua, número - Bairro" entra no filtro como "Outros".
-- **Web não é alvo.** O BFF não tem CORS: no navegador as chamadas falham.
+- **Web não é alvo.** O BFF não tem CORS: no navegador o app só funciona pelo `tool/web.sh`, que é apoio de desenvolvimento.
 
 ## Como contribuir
 
