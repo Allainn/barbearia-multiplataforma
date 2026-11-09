@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: Alignment.center,
                             child: CircleAvatar(
                               radius: 32,
                               backgroundColor: scheme.primary,
@@ -69,11 +69,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: AppSpacing.lg),
                           Text(
                             'BarberHub',
+                            textAlign: TextAlign.center,
                             style: theme.textTheme.displaySmall,
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
                             'Entre para encontrar uma barbearia e reservar seu horário.',
+                            textAlign: TextAlign.center,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: scheme.onSurfaceVariant,
                             ),
@@ -165,19 +167,21 @@ class _AvisoDeErro extends StatelessWidget {
       liveRegion: true,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
+        // Fundo só tingido de erro, com borda: avisa sem virar um bloco vermelho na tela.
         decoration: BoxDecoration(
-          color: scheme.errorContainer,
+          color: scheme.error.withValues(alpha: 0.10),
+          border: Border.all(color: scheme.error.withValues(alpha: 0.45)),
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Row(
           children: [
-            Icon(Icons.error_outline, color: scheme.onErrorContainer),
+            Icon(Icons.error_outline, size: 20, color: scheme.error),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
                 mensagem,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onErrorContainer,
+                  color: scheme.onSurface,
                 ),
               ),
             ),
