@@ -19,6 +19,7 @@ class AppDependencies {
     required this.bffClient,
     required this.auth,
     required this.theme,
+    required this.barbeariaRepository,
     required this.barbearias,
   });
 
@@ -40,12 +41,14 @@ class AppDependencies {
       tokenProvider: auth.token,
       httpClient: httpClient,
     );
+    final barbeariaRepository = BarbeariaRepository(bffClient);
     return AppDependencies._(
       config: config,
       bffClient: bffClient,
       auth: auth,
       theme: ThemeController(prefs),
-      barbearias: BarbeariasController(BarbeariaRepository(bffClient)),
+      barbeariaRepository: barbeariaRepository,
+      barbearias: BarbeariasController(barbeariaRepository),
     );
   }
 
@@ -53,5 +56,6 @@ class AppDependencies {
   final BffClient bffClient;
   final AuthController auth;
   final ThemeController theme;
+  final BarbeariaRepository barbeariaRepository;
   final BarbeariasController barbearias;
 }

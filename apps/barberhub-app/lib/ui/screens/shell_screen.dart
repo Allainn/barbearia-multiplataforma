@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../app_dependencies.dart';
+import '../../data/models/barbearia.dart';
+import 'barbearia_detalhe_screen.dart';
 import 'barbearias_screen.dart';
 import 'conta_screen.dart';
 import 'placeholder_screen.dart';
@@ -22,13 +24,27 @@ class ShellScreen extends StatefulWidget {
 class _ShellScreenState extends State<ShellScreen> {
   var _aba = 0;
 
+  void _abrirDetalhe(Barbearia barbearia) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BarbeariaDetalheScreen(
+          barbearia: barbearia,
+          dependencies: widget.dependencies,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _aba,
         children: [
-          BarbeariasScreen(controller: widget.dependencies.barbearias),
+          BarbeariasScreen(
+            controller: widget.dependencies.barbearias,
+            onAbrir: _abrirDetalhe,
+          ),
           const PlaceholderScreen(
             title: 'Favoritos',
             icon: Icons.favorite_outline,

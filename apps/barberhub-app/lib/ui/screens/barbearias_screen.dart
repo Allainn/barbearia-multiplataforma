@@ -10,9 +10,16 @@ import '../widgets/state_views.dart';
 
 /// Aba "Barbearias": a lista que vem do `GET /barbearias`.
 class BarbeariasScreen extends StatefulWidget {
-  const BarbeariasScreen({super.key, required this.controller});
+  const BarbeariasScreen({
+    super.key,
+    required this.controller,
+    required this.onAbrir,
+  });
 
   final BarbeariasController controller;
+
+  /// Tocar num cartão abre o detalhe por cima das abas.
+  final ValueChanged<Barbearia> onAbrir;
 
   @override
   State<BarbeariasScreen> createState() => _BarbeariasScreenState();
@@ -42,7 +49,7 @@ class _BarbeariasScreenState extends State<BarbeariasScreen> {
           ),
           AsyncData(:final value) => RefreshIndicator(
             onRefresh: () => _controller.carregar(silencioso: true),
-            child: _Lista(barbearias: value),
+            child: _Lista(barbearias: value, onAbrir: widget.onAbrir),
           ),
         },
       ),
@@ -51,9 +58,10 @@ class _BarbeariasScreenState extends State<BarbeariasScreen> {
 }
 
 class _Lista extends StatelessWidget {
-  const _Lista({required this.barbearias});
+  const _Lista({required this.barbearias, required this.onAbrir});
 
   final List<Barbearia> barbearias;
+  final ValueChanged<Barbearia> onAbrir;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +86,10 @@ class _Lista extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       itemCount: barbearias.length,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-      itemBuilder: (context, i) => BarbeariaCard(barbearia: barbearias[i]),
+      itemBuilder: (context, i) => BarbeariaCard(
+        barbearia: barbearias[i],
+        onTap: () => onAbrir(barbearias[i]),
+      ),
     );
   }
 }

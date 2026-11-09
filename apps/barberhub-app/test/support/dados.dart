@@ -28,6 +28,44 @@ const domBigode = {
 /// Fora de ordem de propósito: quem ordena é o repositório.
 const barbearias = [navalhaDeOuro, barbeariaCentro, savassiClassica, domBigode];
 
-/// Back-end falso com a lista de barbearias no ar.
-FakeBackend backendComBarbearias() =>
-    FakeBackend(rotas: {'GET /barbearias': (_) => jsonResponse(barbearias)});
+const rafael = {
+  'id': 'bbbbbbbb-0000-0000-0000-000000000001',
+  'barbearia_id': 'aaaaaaaa-0000-0000-0000-000000000001',
+  'nome': 'Rafael',
+};
+
+const bruno = {
+  'id': 'bbbbbbbb-0000-0000-0000-000000000002',
+  'barbearia_id': 'aaaaaaaa-0000-0000-0000-000000000001',
+  'nome': 'Bruno',
+};
+
+/// O preço vem como texto: o barbearia-service usa Decimal.
+const corte = {
+  'id': 'cccccccc-0000-0000-0000-000000000001',
+  'barbearia_id': 'aaaaaaaa-0000-0000-0000-000000000001',
+  'nome': 'Corte',
+  'duracao_min': 30,
+  'preco': '55.00',
+};
+
+const corteEBarba = {
+  'id': 'cccccccc-0000-0000-0000-000000000002',
+  'barbearia_id': 'aaaaaaaa-0000-0000-0000-000000000001',
+  'nome': 'Corte e barba',
+  'duracao_min': 60,
+  'preco': '85.00',
+};
+
+final _idNavalha = navalhaDeOuro['id'];
+
+/// Back-end falso com a lista de barbearias e o detalhe da Navalha de Ouro no ar.
+FakeBackend backendComBarbearias() => FakeBackend(
+  rotas: {
+    'GET /barbearias': (_) => jsonResponse(barbearias),
+    'GET /barbearias/$_idNavalha/profissionais': (_) =>
+        jsonResponse([rafael, bruno]),
+    'GET /barbearias/$_idNavalha/servicos': (_) =>
+        jsonResponse([corteEBarba, corte]),
+  },
+);

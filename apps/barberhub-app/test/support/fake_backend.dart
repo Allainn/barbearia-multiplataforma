@@ -81,7 +81,7 @@ class FakeBackend {
       return _token(request);
     }
     final rota = rotas['${request.method} ${request.url.path}'];
-    if (rota == null) return jsonResponse({'detail': 'Não encontrado'}, 404);
+    if (rota == null) return jsonResponse({'detail': 'Barbearia não encontrada'}, 404);
     return rota(request);
   }
 
