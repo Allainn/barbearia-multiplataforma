@@ -1,6 +1,6 @@
 # Arquitetura: C4 do BarberHub
 
-> **Versão do roadmap de 21/10/2026, conferida com o código em 24/10/2026.** Só entra o que existe no código da demo; o contrato completo (portas, rotas, eventos, banco) está em [docs/tarefas.md](../tarefas.md#contrato).
+> **Versão do roadmap de 21/10/2026, conferida com o código em 24/10/2026; app mobile acrescentado em 04/11/2026 ([ADR-0016](../adr/0016-app-mobile-flutter.md)).** Só entra o que existe no código da demo; o contrato completo (portas, rotas, eventos, banco) está em [docs/tarefas.md](../tarefas.md#contrato).
 
 - **Board no Miro (fonte dos diagramas dos slides):** <https://miro.com/app/board/uXjVEdd_Nsc=/>
 - **Esta página:** espelho em Mermaid para revisar no GitHub e versionar junto do código. Quem mudar um container, tópico ou seta avisa o Allainn, que atualiza os dois.
@@ -19,7 +19,7 @@ flowchart TB
     keycloak["<b>Keycloak 26</b><br/>[Sistema externo · IdP]<br/>Autentica usuários e emite JWT<br/>com as roles cliente e gestor"]
     mensagens["<b>Provedor de mensagens</b><br/>[Sistema externo · simulado]<br/>WhatsApp ou SMS; na demo,<br/>a mensagem vai para o log"]
 
-    cliente -->|"Consulta horários, agenda e cancela [HTTPS]"| sistema
+    cliente -->|"Consulta horários, agenda e cancela [app mobile · HTTPS]"| sistema
     gestor -->|"Cadastra barbearias, profissionais e serviços [HTTPS]"| sistema
     cliente -->|"Faz login e obtém o token [OAuth2/OIDC]"| keycloak
     gestor -->|"Faz login e obtém o token [OAuth2/OIDC]"| keycloak
@@ -38,11 +38,13 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    pessoas["<b>Cliente · Gestor da barbearia</b><br/>[Pessoas]<br/>Na demo, chamadas com curl (scripts/demo.sh)"]
+    cliente["<b>Cliente</b><br/>[Pessoa]<br/>Usa o app no celular"]
+    gestor["<b>Gestor da barbearia</b><br/>[Pessoa]<br/>Na demo, chamadas com curl (scripts/demo.sh)"]
     keycloak["<b>Keycloak 26</b><br/>[Sistema externo · IdP]<br/>Realm barbearia; roles cliente e gestor"]
     mensagens["<b>Provedor de mensagens</b><br/>[Sistema externo · simulado]<br/>Na demo, a mensagem vai para o log"]
 
     subgraph barberhub["BarberHub · um PostgreSQL 16 (banco barbearia) com um schema e um usuário por serviço"]
+        app["<b>barberhub-app</b><br/>[Flutter · Dart · Android]<br/>App do cliente: barbearias, favoritos<br/>e reserva; endereços por --dart-define"]
         bff["<b>bff-gateway</b><br/>[Java 21 · Spring Boot 3 · :8010]<br/>Entrada única; valida o JWT (401/403)<br/>e repassa o X-User-ID"]
         barbearia["<b>barbearia-service</b><br/>[Python 3.12 · FastAPI · :8001]<br/>Barbearias, profissionais e serviços"]
         agendamento["<b>agendamento-service</b><br/>[Java 21 · Spring Boot 3 · :8012]<br/>Reserva e cancela; 409 se o horário<br/>já estiver ocupado"]
@@ -55,8 +57,11 @@ flowchart TB
         pgN[("<b>PostgreSQL 16</b><br/>schema notificacao")]
     end
 
-    pessoas -->|"HTTPS/REST com JWT"| bff
-    pessoas -->|"Obtém o token [OAuth2 · password grant na demo]"| keycloak
+    cliente -->|"Usa"| app
+    app -->|"REST com JWT [HTTP · :8010]"| bff
+    app -->|"Obtém o token [OAuth2 · fluxo em aberto no ADR-0016]"| keycloak
+    gestor -->|"HTTPS/REST com JWT"| bff
+    gestor -->|"Obtém o token [OAuth2 · password grant na demo]"| keycloak
     bff -->|"Valida o JWT [JWKS]"| keycloak
     bff -->|"Cadastros e consultas [REST · X-User-ID]"| barbearia
     bff -->|"Reserva e cancela [REST · X-User-ID]"| agendamento
@@ -74,8 +79,8 @@ flowchart TB
     classDef interno fill:#1168bd,stroke:#0b4884,color:#ffffff
     classDef infra fill:#438dd5,stroke:#2e6295,color:#ffffff
     classDef externo fill:#999999,stroke:#6b6b6b,color:#ffffff
-    class pessoas pessoa
-    class bff,barbearia,agendamento,disponibilidade,notificacao interno
+    class cliente,gestor pessoa
+    class app,bff,barbearia,agendamento,disponibilidade,notificacao interno
     class kafka,pgB,pgA,pgD,pgN infra
     class keycloak,mensagens externo
 ```
@@ -86,6 +91,7 @@ No Miro, cada elemento tem uma etiqueta verde com link para o ADR. Aqui, a mesma
 
 | Elemento | ADR |
 |---|---|
+| barberhub-app (Flutter) e as setas dele para o BFF e o Keycloak | [ADR-0016](../adr/0016-app-mobile-flutter.md) |
 | BarberHub e o volume que justifica a arquitetura | [ADR-0003](../adr/0003-enquadramento-plataforma-multi-tenant.md) |
 | Os 5 containers e os 2 tópicos | [ADR-0004](../adr/0004-decomposicao-em-servicos.md) |
 | Java nos dois serviços com Spring Boot, Python nos três com FastAPI | [ADR-0005](../adr/0005-linguagens-por-servico.md) |

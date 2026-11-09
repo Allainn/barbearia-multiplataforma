@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Seed do Keycloak da plataforma (ADR-0009 e ADR-0014).
+"""Seed do Keycloak da plataforma (ADR-0009, ADR-0014 e ADR-0016).
 
 Cria ou atualiza, pela Admin REST API, tudo o que o contrato exige:
 
 - realm `barbearia`;
 - client `bff-gateway`, confidencial, com *direct access grants* e o mapper de
   audience que coloca `bff-gateway` no `aud` do access token;
+- client `barberhub-app`, público (sem secret), para o app mobile, com o mesmo
+  mapper de audience (ADR-0016);
 - realm roles `cliente` e `gestor`;
 - usuários de teste `cliente1`, `cliente2` e `gestor1`, cada um com a sua role.
 
@@ -42,6 +44,8 @@ import urllib.request
 REALM = "barbearia"
 CLIENT_ID = "bff-gateway"
 CLIENT_SECRET = "bff-secret"
+# Client do app mobile (ADR-0016): público, porque um app instalado não guarda secret.
+APP_CLIENT_ID = "barberhub-app"
 ROLES = ("cliente", "gestor")
 USUARIOS = (
     {"username": "cliente1", "password": "cliente123", "role": "cliente", "firstName": "Cliente", "lastName": "Um"},
@@ -171,21 +175,51 @@ def garantir_client(kc: KeycloakAdmin) -> str:
         "serviceAccountsEnabled": False,
         "fullScopeAllowed": True,
     }
-    existentes = kc.get(f"/{REALM}/clients?clientId={CLIENT_ID}") or []
+    return _garantir_client(kc, desejado)
+
+
+def garantir_client_app(kc: KeycloakAdmin) -> str:
+    """Client público do app mobile (ADR-0016). Devolve o id interno (UUID) do client.
+
+    Sem secret: o APK pode ser aberto por qualquer um. O fluxo é o password grant, atalho
+    de demo registrado no ADR.md do app; o Authorization Code com PKCE esbarra no
+    KC_HOSTNAME fixo em http://keycloak:8080, que o navegador do celular não resolve.
+    """
+    desejado = {
+        "clientId": APP_CLIENT_ID,
+        "name": "BarberHub App",
+        "enabled": True,
+        "protocol": "openid-connect",
+        "publicClient": True,
+        "directAccessGrantsEnabled": True,
+        "standardFlowEnabled": False,
+        "implicitFlowEnabled": False,
+        "serviceAccountsEnabled": False,
+        "fullScopeAllowed": True,
+    }
+    return _garantir_client(kc, desejado)
+
+
+def _garantir_client(kc: KeycloakAdmin, desejado: dict) -> str:
+    client_id = desejado["clientId"]
+    existentes = kc.get(f"/{REALM}/clients?clientId={client_id}") or []
     if not existentes:
         client_uuid = kc.post(f"/{REALM}/clients", desejado)
-        log("criado", f"client {CLIENT_ID}")
+        log("criado", f"client {client_id}")
     else:
         client_uuid = existentes[0]["id"]
         kc.put(f"/{REALM}/clients/{client_uuid}", {"id": client_uuid, **desejado})
-        log("atualizado", f"client {CLIENT_ID}")
+        log("atualizado", f"client {client_id}")
     if not client_uuid:
-        raise SystemExit(f"Não foi possível obter o id do client {CLIENT_ID}.")
+        raise SystemExit(f"Não foi possível obter o id do client {client_id}.")
     return client_uuid
 
 
 def garantir_mapper_audience(kc: KeycloakAdmin, client_uuid: str) -> None:
-    """Coloca `bff-gateway` no `aud` do access token. Sem isso o BFF rejeita o token (ADR-0015)."""
+    """Coloca `bff-gateway` no `aud` do access token. Sem isso o BFF rejeita o token (ADR-0015).
+
+    Vale para os dois clients: o token emitido para o app também é conferido pelo BFF.
+    """
     nome = f"audience-{CLIENT_ID}"
     desejado = {
         "name": nome,
@@ -264,12 +298,14 @@ def main() -> int:
     garantir_realm(kc)
     client_uuid = garantir_client(kc)
     garantir_mapper_audience(kc, client_uuid)
+    garantir_mapper_audience(kc, garantir_client_app(kc))
     roles = garantir_roles(kc)
     garantir_usuarios(kc, roles)
     print("Seed concluído.")
     print(f"Token: curl -s -X POST {KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/token "
           f"-d grant_type=password -d client_id={CLIENT_ID} -d client_secret={CLIENT_SECRET} "
           f"-d username=cliente1 -d password=cliente123")
+    print(f"Token do app (client público, sem secret): troque por -d client_id={APP_CLIENT_ID} e tire o client_secret.")
     return 0
 
 
