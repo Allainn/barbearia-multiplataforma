@@ -86,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             textInputAction: TextInputAction.next,
                             autofillHints: const [AutofillHints.username],
                             decoration: const InputDecoration(
-                              labelText: 'Usuário',
+                              hintText: 'Usuário',
                               prefixIcon: Icon(Icons.person_outline),
                             ),
                             validator: (valor) => (valor ?? '').trim().isEmpty
@@ -102,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             autofillHints: const [AutofillHints.password],
                             onFieldSubmitted: (_) => _entrar(),
                             decoration: InputDecoration(
-                              labelText: 'Senha',
+                              hintText: 'Senha',
                               prefixIcon: const Icon(Icons.lock_outline),
                               suffixIcon: IconButton(
                                 tooltip: _senhaVisivel

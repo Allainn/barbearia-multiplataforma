@@ -2,22 +2,40 @@
 
 App de agendamento em barbearias do **Grupo 8**, feito como Projeto Final de **Arquitetura de Aplicações Móveis e Multiplataforma** (PUC Minas IEC, prof. Jackson Smith Moisés Matias). É o front do back-end deste monorepo: o app só conversa com o BFF, que valida o token do Keycloak e chama os serviços.
 
-> **Situação (04/11/2026):** base pronta, features a fazer. Já existem: camadas, navegação por abas, modelos do contrato, cliente HTTP do BFF, design (fontes, paleta, componentes e um guia visual), tema claro e escuro, ícone, splash e CI. As features entram uma por PR, uma por integrante. Decisões em [ADR.md](ADR.md) (framework e estado) e no [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md) do monorepo (como o app entra na arquitetura).
+> **Situação (09/11/2026):** as 8 features estão implementadas, com testes. Decisões em [ADR.md](ADR.md) (framework, estado, login e dados no aparelho) e no [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md) do monorepo (como o app entra na arquitetura).
 
-## Features
+## O que o app faz
 
-Proposta do plano; o grupo fecha quem faz cada uma.
+O cliente entra com a conta do Keycloak, encontra uma barbearia (lista, busca por nome e filtro por bairro), vê os serviços e os profissionais, escolhe um horário livre e reserva. Se outro cliente confirmar o mesmo horário primeiro, o app explica a disputa (409) e atualiza os horários. As reservas e as barbearias favoritas ficam guardadas no aparelho.
 
-| # | Feature | Onde entra | Rota do BFF | Responsável |
+| # | Feature | Onde fica | De onde vêm os dados | Branch |
 |---|---|---|---|---|
-| 1 | Login do cliente | aba Conta | Keycloak (realm `barbearia`) | a definir |
-| 2 | Lista de barbearias | aba Barbearias | `GET /barbearias` | a definir |
-| 3 | Detalhe: profissionais e serviços | tela por cima da lista | `GET /barbearias/{id}/profissionais` e `/servicos` | a definir |
-| 4 | Busca por nome | aba Barbearias | `GET /barbearias` | a definir |
-| 5 | Filtro | aba Barbearias | `GET /barbearias` | a definir |
-| 6 | Favoritos que sobrevivem a fechar o app | aba Favoritos | armazenamento local | a definir |
-| 7 | Horários livres e reserva, com o 409 | a partir do detalhe | `GET /disponibilidade` e `POST /agendamentos` | a definir |
-| 8 | Meus agendamentos e cancelar | aba Agendamentos | `DELETE /agendamentos/{id}` | a definir |
+| 1 | Login do cliente | tela de entrada e aba Conta | Keycloak (realm `barbearia`, client `barberhub-app`) | `feat/app-login` |
+| 2 | **Lista** de barbearias | aba Barbearias | `GET /barbearias` | `feat/app-lista` |
+| 3 | **Detalhe**: serviços e profissionais | tela por cima da lista | `GET /barbearias/{id}/profissionais` e `/servicos` | `feat/app-detalhe` |
+| 4 | **Busca** por nome | aba Barbearias | lista já carregada (filtra no app) | `feat/app-busca` |
+| 5 | **Filtro** por bairro | aba Barbearias | bairro tirado do endereço | `feat/app-filtro` |
+| 6 | **Favoritos** que sobrevivem a fechar o app | coração na lista e no detalhe; aba Favoritos | armazenamento local | `feat/app-favoritos` |
+| 7 | Horários livres e reserva, com o 409 | a partir do detalhe | `GET /disponibilidade` e `POST /agendamentos` | `feat/app-reserva` |
+| 8 | Meus agendamentos e cancelar | aba Agendamentos | armazenamento local e `DELETE /agendamentos/{id}` | `feat/app-agendamentos` |
+
+As cinco em negrito são as do enunciado. Toda tela com dados do back-end trata **carregando** (skeleton), **vazio** e **erro** (sem rede, 401, 403, 404, 409 e 503), com o botão de tentar de novo.
+
+## Screenshots
+
+| Login | Lista | Filtro por bairro |
+|---|---|---|
+| ![Login](docs/screenshots/01-login.png) | ![Lista de barbearias](docs/screenshots/02-lista.png) | ![Filtro por bairro](docs/screenshots/03-filtro.png) |
+
+| Detalhe | Reserva | Disputa de horário (409) |
+|---|---|---|
+| ![Detalhe da barbearia](docs/screenshots/05-detalhe.png) | ![Reserva](docs/screenshots/06-reserva.png) | ![Horário disputado](docs/screenshots/10-disputa-409.png) |
+
+| Agendamentos | Lista no tema escuro | Sem conexão |
+|---|---|---|
+| ![Meus agendamentos](docs/screenshots/08-agendamentos.png) | ![Lista no tema escuro](docs/screenshots/11-lista-escuro.png) | ![Sem conexão](docs/screenshots/13-sem-conexao-escuro.png) |
+
+As imagens são as telas do app desenhadas pelo Flutter com dados de exemplo, geradas por `flutter test tool/screenshots_test.dart` (não vêm de um emulador; por isso não têm a barra de status do Android). As demais estão em [docs/screenshots](docs/screenshots).
 
 ## Como rodar
 
@@ -29,7 +47,19 @@ Na raiz do monorepo (Docker com 8 GB livres; detalhes em [Como rodar](../../READ
 bash scripts/up.sh
 ```
 
-### 2. Rode o app
+O `up.sh` aplica o seed do Keycloak, que cria o client público do app (`barberhub-app`). Num ambiente que já estava no ar antes dessa mudança, rode `bash scripts/keycloak-seed.sh`.
+
+### 2. Cadastre barbearias de exemplo
+
+O back-end sobe com uma barbearia só. O seed do app cadastra mais dez, com profissionais e serviços, pelas rotas do gestor no BFF (precisa de `curl` e `jq`; pode rodar de novo):
+
+```bash
+bash apps/barberhub-app/tool/seed.sh
+```
+
+Os nomes são fictícios; as ruas e os bairros são de Belo Horizonte.
+
+### 3. Rode o app
 
 Flutter estável **3.47** (o `pubspec.lock` foi gerado com a 3.47.6) e um emulador Android aberto. Com Flutter anterior à 3.44, o `pub get` reescreve o `pubspec.lock`: rode `flutter upgrade` em vez de commitar essa mudança.
 
@@ -55,8 +85,9 @@ O app lê os endereços do `--dart-define`; sem ele, usa o padrão da plataforma
 | `BFF_URL` | `http://10.0.2.2:8010` (Android) ou `http://localhost:8010` | toda chamada da API |
 | `KEYCLOAK_URL` | mesma regra, porta 8080 | login |
 | `KEYCLOAK_REALM` | `barbearia` | login |
+| `KEYCLOAK_CLIENT_ID` | `barberhub-app` | login (client público, sem secret) |
 
-A aba **Conta** mostra os endereços em uso, para conferir.
+A aba **Conta** mostra os endereços em uso, para conferir. No emulador Android o `10.0.2.2` é o computador; se o login responder "Sem conexão", é esse endereço que está errado para o seu caso.
 
 ### Usuários de teste
 
@@ -66,9 +97,21 @@ A aba **Conta** mostra os endereços em uso, para conferir.
 | `cliente2` | `cliente123` | `cliente` |
 | `gestor1` | `gestor123` | `gestor` |
 
+O `gestor1` entra e navega, mas não reserva: o BFF só aceita `POST /agendamentos` da role `cliente`, e o app mostra o motivo.
+
+### Roteiro da demo
+
+1. Entre como `cliente1`. A lista aparece com o skeleton e depois os cartões.
+2. Busque por "navalha" e filtre por um bairro; limpe os filtros.
+3. Toque no coração de duas barbearias e veja a aba Favoritos. Feche o app e abra de novo: elas continuam lá.
+4. Abra uma barbearia, toque em **Reservar horário**, escolha serviço, profissional, dia e horário, e confirme.
+5. Veja a reserva na aba Agendamentos e cancele.
+6. Disputa (409): num segundo aparelho ou emulador, entre como `cliente2` e pare na mesma tela de horários; confirme o mesmo horário nos dois. O segundo recebe o aviso e a lista atualizada. Com um aparelho só: abra os horários de amanhã da **Barbearia Centro** (profissional Carlos), rode `bash scripts/disputa.sh` na raiz do monorepo (ele ocupa um bloco de amanhã do Carlos e mostra qual) e, sem atualizar a tela, confirme esse mesmo horário no app.
+7. Erro: pare o back-end (`bash scripts/down.sh`) e puxe a lista para atualizar.
+
 ## Testes e build
 
-Rode os três antes de abrir PR. O build é **critério eliminatório** da disciplina: app que não builda zera a Funcionalidade.
+São 104 casos de teste em `test/`: regras (busca, bairro, horários por duração do serviço, renovação do token), repositórios e controllers contra um back-end falso (`test/support/fake_backend.dart`), e as telas de ponta a ponta (login, lista, reserva com 409, cancelamento). Rode os três antes de abrir PR. O build é **critério eliminatório** da disciplina: app que não builda zera a Funcionalidade.
 
 ```bash
 flutter analyze
@@ -83,25 +126,31 @@ O GitHub Actions ([barberhub-app.yml](../../.github/workflows/barberhub-app.yml)
 ```
 lib/
 ├── main.dart                  # lê a configuração e monta as dependências
-├── app.dart                   # MaterialApp: tema claro/escuro, pt-BR, abas
+├── app.dart                   # MaterialApp: tema, pt-BR e a troca entre login e abas
+├── app_dependencies.dart      # raiz de composição: repositórios e controllers
 ├── core/
-│   ├── app_config.dart        # BFF_URL, KEYCLOAK_URL e KEYCLOAK_REALM
+│   ├── app_config.dart        # BFF_URL, KEYCLOAK_URL, realm e client
 │   └── formatters.dart        # hora, dia, preço e duração; datas no fuso -03:00
-├── data/                      # fala com o mundo de fora: BFF e armazenamento local
-│   ├── bff_client.dart        # único cliente HTTP; põe o token e trata os erros
-│   ├── api_exception.dart     # erro do BFF já traduzido para a tela
-│   └── models/                # Barbearia, Profissional, Servico, Disponibilidade, Agendamento
-├── state/                     # estado das telas
-│   └── theme_controller.dart
+├── data/                      # fala com o mundo de fora: BFF, Keycloak e armazenamento local
+│   ├── bff_client.dart        # único cliente HTTP do BFF; põe o token e trata os erros
+│   ├── api_exception.dart     # erro já traduzido para a tela
+│   ├── auth_repository.dart   # login e renovação do token no Keycloak
+│   ├── barbearia_repository.dart, disponibilidade_repository.dart, agendamento_repository.dart
+│   ├── favoritos_repository.dart, reservas_local_repository.dart   # shared_preferences
+│   └── models/                # Barbearia, Profissional, Servico, Disponibilidade, Agendamento, Sessao, ReservaLocal
+├── state/                     # estado das telas: um ChangeNotifier por feature
+│   ├── async_state.dart       # carregando, dados ou erro
+│   ├── auth_controller.dart, barbearias_controller.dart, barbearia_detalhe_controller.dart
+│   ├── favoritos_controller.dart, reserva_controller.dart, agendamentos_controller.dart
+│   ├── filtro_barbearias.dart # busca e filtro por bairro (funções puras)
+│   └── horarios.dart          # horários por duração do serviço (funções puras)
 └── ui/
     ├── theme/app_theme.dart   # cores, fontes, espaçamentos e raios num lugar só
-    ├── widgets/               # LoadingView/EmptyView/ErrorView, SkeletonList, Monogram, InfoChip, SectionHeader
-    └── screens/
-        ├── shell_screen.dart        # as quatro abas
-        ├── placeholder_screen.dart  # "em construção": cada feature troca pela sua tela
-        ├── conta_screen.dart        # login (a fazer), tema, back-end e guia visual
-        └── guia_visual_screen.dart  # catálogo do visual para o grupo
+    ├── widgets/               # LoadingView/EmptyView/ErrorView, SkeletonList, BarbeariaCard, FavoritoButton...
+    └── screens/               # login, abas (shell), barbearias, detalhe, reserva, favoritos, agendamentos, conta
 ```
+
+O caminho de um dado é sempre **tela → controller (`state/`) → repositório (`data/`) → `BffClient`**. A tela nunca faz HTTP nem lê o armazenamento; o controller não conhece widget. As dependências descem pelo construtor a partir de `AppDependencies`.
 
 Regras para cada feature:
 
@@ -119,11 +168,15 @@ Regras para cada feature:
 - **Cores:** azul-marinho como `primary` e latão como `tertiary` (favorito, preço, destaques), geradas pelo Material 3 nos temas claro e escuro.
 - **Ícone e splash:** a arte fica em `assets/icon/` (SVG e PNG). Se ela mudar, gere de novo com `dart run flutter_launcher_icons` e `dart run flutter_native_splash:create`.
 
-O gerenciador de estado ainda não foi escolhido ([ADR.md](ADR.md)). Até lá, as dependências descem pelo construtor a partir do `BarberHubApp`.
+## Limitações conhecidas
 
-## Screenshots
+Estão justificadas no [ADR.md](ADR.md):
 
-_A fazer: pelo menos 3 (lista, detalhe e reserva, em claro e escuro), quando as features entrarem._
+- **Login por password grant.** É atalho de demo; o fluxo certo para app é Authorization Code com PKCE.
+- **Sessão só na memória.** Fechar o app pede o login de novo (os favoritos e as reservas continuam).
+- **Agendamentos do aparelho.** O back-end não tem rota para listar reservas: a aba mostra as que foram feitas neste aparelho.
+- **Bairro vem do endereço.** O contrato não tem campo de bairro; endereço fora do formato "Rua, número - Bairro" entra no filtro como "Outros".
+- **Web não é alvo.** O BFF não tem CORS: no navegador as chamadas falham.
 
 ## Como contribuir
 
