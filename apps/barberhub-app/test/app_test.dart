@@ -6,12 +6,12 @@ import 'package:barberhub_app/ui/widgets/state_views.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'support/fake_backend.dart';
+import 'support/dados.dart';
 import 'support/pump_app.dart';
 
 /// Abre o app já logado como cliente1, com o back-end falso.
 Future<void> _abrirApp(WidgetTester tester) async {
-  await pumpApp(tester, FakeBackend());
+  await pumpApp(tester, backendComBarbearias());
   await entrarComo(tester, 'cliente1', 'cliente123');
 }
 

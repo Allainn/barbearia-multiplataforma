@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app_dependencies.dart';
+import 'barbearias_screen.dart';
 import 'conta_screen.dart';
 import 'placeholder_screen.dart';
 
@@ -27,13 +28,7 @@ class _ShellScreenState extends State<ShellScreen> {
       body: IndexedStack(
         index: _aba,
         children: [
-          const PlaceholderScreen(
-            title: 'Barbearias',
-            icon: Icons.storefront_outlined,
-            message:
-                'A lista, a busca e o filtro entram aqui (features 2, 4 e 5). '
-                'Tocar numa barbearia abre o detalhe por cima (feature 3).',
-          ),
+          BarbeariasScreen(controller: widget.dependencies.barbearias),
           const PlaceholderScreen(
             title: 'Favoritos',
             icon: Icons.favorite_outline,

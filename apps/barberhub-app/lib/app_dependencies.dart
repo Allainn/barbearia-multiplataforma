@@ -3,8 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app_config.dart';
 import 'data/auth_repository.dart';
+import 'data/barbearia_repository.dart';
 import 'data/bff_client.dart';
 import 'state/auth_controller.dart';
+import 'state/barbearias_controller.dart';
 import 'state/theme_controller.dart';
 
 /// Raiz de composição: monta repositórios e controllers uma vez e entrega para as telas.
@@ -17,6 +19,7 @@ class AppDependencies {
     required this.bffClient,
     required this.auth,
     required this.theme,
+    required this.barbearias,
   });
 
   /// [httpClient] entra nos testes (um `MockClient` no lugar da rede).
@@ -42,6 +45,7 @@ class AppDependencies {
       bffClient: bffClient,
       auth: auth,
       theme: ThemeController(prefs),
+      barbearias: BarbeariasController(BarbeariaRepository(bffClient)),
     );
   }
 
@@ -49,4 +53,5 @@ class AppDependencies {
   final BffClient bffClient;
   final AuthController auth;
   final ThemeController theme;
+  final BarbeariasController barbearias;
 }
