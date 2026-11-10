@@ -49,6 +49,7 @@ class AppDependencies {
     final bffClient = BffClient(
       baseUrl: config.bffUrl,
       tokenProvider: auth.token,
+      onUnauthorized: auth.tokenRecusado,
       httpClient: httpClient,
     );
     final barbeariaRepository = BarbeariaRepository(bffClient);

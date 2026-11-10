@@ -139,6 +139,48 @@ void main() {
       },
     );
 
+    test(
+      'uma reserva ilegível no aparelho fica de fora sem apagar as outras',
+      () async {
+        final valida = _reserva('valida', inicio: '2026-11-10T10:00:00-03:00');
+        // status que esta versão do app não conhece (ex.: o back-end ganhou um novo)
+        final desconhecida = {
+          ..._reserva('futura', inicio: '2026-11-11T10:00:00-03:00').toJson(),
+        };
+        desconhecida['agendamento'] = {
+          ...(desconhecida['agendamento'] as Map<String, dynamic>),
+          'status': 'CONCLUIDO',
+        };
+        final deps = await criarDependencias(
+          FakeBackend(),
+          prefs: {
+            ReservasLocalRepository.storageKey: jsonEncode([
+              valida.toJson(),
+              desconhecida,
+            ]),
+          },
+        );
+
+        expect(_ids(deps.agendamentos.proximas('id-cliente1', _agora)), [
+          'valida',
+        ]);
+
+        await deps.agendamentos.registrar(
+          _reserva('nova', inicio: '2026-11-12T10:00:00-03:00'),
+        );
+
+        final prefs = await SharedPreferences.getInstance();
+        final salvo =
+            jsonDecode(prefs.getString(ReservasLocalRepository.storageKey)!)
+                as List;
+        expect(
+          [for (final r in salvo) r['agendamento']['id']],
+          ['valida', 'nova', 'futura'],
+        );
+        expect(salvo.last['agendamento']['status'], 'CONCLUIDO');
+      },
+    );
+
     test('409 não guarda nada no aparelho', () async {
       final backend = backendComBarbearias();
       backend.rotas['POST /agendamentos'] = (_) => jsonResponse({

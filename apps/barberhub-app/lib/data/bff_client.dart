@@ -8,6 +8,9 @@ import 'api_exception.dart';
 /// Devolve o access token do usuário logado, ou null se ninguém entrou ainda.
 typedef TokenProvider = Future<String?> Function();
 
+/// Avisado quando o BFF responde 401 a uma chamada feita com [token].
+typedef UnauthorizedHandler = void Function(String token);
+
 /// Único ponto do app que fala HTTP com o BFF.
 ///
 /// A tela não chama este cliente: cada feature cria o seu repositório em `lib/data/`,
@@ -17,14 +20,19 @@ class BffClient {
   BffClient({
     required this.baseUrl,
     TokenProvider? tokenProvider,
+    UnauthorizedHandler? onUnauthorized,
     http.Client? httpClient,
     this.timeout = const Duration(seconds: 10),
   }) : _tokenProvider = tokenProvider,
+       _onUnauthorized = onUnauthorized,
        _http = httpClient ?? http.Client();
 
   final Uri baseUrl;
   final Duration timeout;
   final TokenProvider? _tokenProvider;
+
+  /// Quem cuida da sessão: um 401 com token quer dizer que o token deixou de valer.
+  final UnauthorizedHandler? _onUnauthorized;
   final http.Client _http;
 
   /// JSON decodificado (`List` ou `Map`). [path] começa com "/", ex.: `/barbearias`.
@@ -67,6 +75,9 @@ class BffClient {
     final text = utf8.decode(response.bodyBytes);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return text.isEmpty ? null : jsonDecode(text);
+    }
+    if (response.statusCode == 401 && token != null) {
+      _onUnauthorized?.call(token);
     }
     throw ApiException.fromResponse(response.statusCode, text);
   }

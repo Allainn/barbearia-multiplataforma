@@ -95,6 +95,34 @@ void main() {
     },
   );
 
+  test(
+    '401 com token avisa quem cuida da sessão; 403 e 401 sem token, não',
+    () async {
+      final recusados = <String>[];
+      BffClient cliente(int status, {String? token}) => BffClient(
+        baseUrl: Uri.parse('http://10.0.2.2:8010'),
+        tokenProvider: () async => token,
+        onUnauthorized: recusados.add,
+        httpClient: MockClient((_) async => http.Response('', status)),
+      );
+
+      await expectLater(
+        cliente(401, token: 'abc').get('/barbearias'),
+        throwsA(isA<ApiException>()),
+      );
+      await expectLater(
+        cliente(403, token: 'abc').get('/barbearias'),
+        throwsA(isA<ApiException>()),
+      );
+      await expectLater(
+        cliente(401).get('/barbearias'),
+        throwsA(isA<ApiException>()),
+      );
+
+      expect(recusados, ['abc']);
+    },
+  );
+
   test('falha de rede vira offline, não uma exceção do http', () async {
     final client = _client(
       (_) async => throw http.ClientException('Connection refused'),

@@ -1,34 +1,26 @@
-import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'lista_local.dart';
 import 'models/reserva_local.dart';
 
 /// As reservas feitas neste aparelho, guardadas em `shared_preferences` (ver ADR.md:
 /// o contrato não tem `GET /agendamentos`).
 class ReservasLocalRepository {
-  ReservasLocalRepository(this._prefs);
+  ReservasLocalRepository(SharedPreferences prefs)
+    : _lista = ListaLocal(
+        prefs,
+        storageKey,
+        fromJson: ReservaLocal.fromJson,
+        toJson: (reserva) => reserva.toJson(),
+      );
 
   static const storageKey = 'agendamentos';
 
-  final SharedPreferences _prefs;
+  final ListaLocal<ReservaLocal> _lista;
 
-  /// Dado corrompido vira lista vazia, não erro.
-  List<ReservaLocal> ler() {
-    final texto = _prefs.getString(storageKey);
-    if (texto == null) return [];
-    try {
-      return [
-        for (final item in jsonDecode(texto) as List)
-          ReservaLocal.fromJson(item as Map<String, dynamic>),
-      ];
-    } on Object {
-      return [];
-    }
-  }
+  /// Reserva ilegível fica de fora, mas continua guardada (ver [ListaLocal]): é a única
+  /// cópia que o cliente tem dela.
+  List<ReservaLocal> ler() => _lista.ler();
 
-  Future<void> salvar(List<ReservaLocal> reservas) => _prefs.setString(
-    storageKey,
-    jsonEncode([for (final r in reservas) r.toJson()]),
-  );
+  Future<void> salvar(List<ReservaLocal> reservas) => _lista.salvar(reservas);
 }
