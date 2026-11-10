@@ -83,6 +83,31 @@ void main() {
     );
   });
 
+  test(
+    'favorito ilegível fica de fora, mas não some do aparelho ao favoritar outro',
+    () async {
+      final favoritos = await _controller({
+        FavoritosRepository.storageKey: jsonEncode([
+          navalhaDeOuro,
+          {'id': 'sem-nome'},
+        ]),
+      });
+      expect(favoritos.favoritas, [_navalha]);
+
+      await favoritos.alternar(_bigode);
+
+      final prefs = await SharedPreferences.getInstance();
+      final salvo = jsonDecode(
+        prefs.getString(FavoritosRepository.storageKey)!,
+      );
+      expect(salvo, [
+        navalhaDeOuro,
+        domBigode,
+        {'id': 'sem-nome'},
+      ]);
+    },
+  );
+
   group('favoritos nas telas', () {
     testWidgets('a aba começa vazia e leva para as barbearias', (tester) async {
       await pumpApp(tester, backendComBarbearias());

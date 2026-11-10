@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'lista_local.dart';
 import 'models/barbearia.dart';
 
 /// Barbearias favoritas, guardadas no aparelho (`shared_preferences`).
@@ -9,28 +8,21 @@ import 'models/barbearia.dart';
 /// Guarda a barbearia inteira, não só o id: a aba Favoritos abre sem rede e sem esperar
 /// o BFF. O contrato não tem favoritos no servidor, então eles são do aparelho, não da conta.
 class FavoritosRepository {
-  FavoritosRepository(this._prefs);
+  FavoritosRepository(SharedPreferences prefs)
+    : _lista = ListaLocal(
+        prefs,
+        storageKey,
+        fromJson: Barbearia.fromJson,
+        toJson: (barbearia) => barbearia.toJson(),
+      );
 
   static const storageKey = 'favoritos';
 
-  final SharedPreferences _prefs;
+  final ListaLocal<Barbearia> _lista;
 
-  /// Na ordem em que foram favoritadas. Dado corrompido vira lista vazia, não erro.
-  List<Barbearia> ler() {
-    final texto = _prefs.getString(storageKey);
-    if (texto == null) return [];
-    try {
-      return [
-        for (final item in jsonDecode(texto) as List)
-          Barbearia.fromJson(item as Map<String, dynamic>),
-      ];
-    } on Object {
-      return [];
-    }
-  }
+  /// Na ordem em que foram favoritadas. Item ilegível fica de fora, mas continua
+  /// guardado (ver [ListaLocal]).
+  List<Barbearia> ler() => _lista.ler();
 
-  Future<void> salvar(List<Barbearia> favoritas) => _prefs.setString(
-    storageKey,
-    jsonEncode([for (final b in favoritas) b.toJson()]),
-  );
+  Future<void> salvar(List<Barbearia> favoritas) => _lista.salvar(favoritas);
 }
