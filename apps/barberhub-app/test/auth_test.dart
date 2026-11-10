@@ -153,6 +153,30 @@ void main() {
       expect(await auth.token(), isNotNull);
       expect(auth.logado, isTrue);
     });
+
+    test('token recusado pelo BFF derruba a sessão e avisa o motivo', () async {
+      await auth.entrar('cliente1', 'cliente123');
+      var avisos = 0;
+      auth.addListener(() => avisos++);
+
+      auth.tokenRecusado(auth.sessao!.accessToken);
+
+      expect(auth.logado, isFalse);
+      expect(auth.erro?.message, 'Sua sessão expirou. Entre de novo.');
+      expect(avisos, 1);
+    });
+
+    test('401 de um token antigo não derruba a sessão nova', () async {
+      await auth.entrar('cliente1', 'cliente123');
+      final antigo = auth.sessao!.accessToken;
+      auth.sair();
+      await auth.entrar('cliente2', 'cliente123');
+
+      auth.tokenRecusado(antigo);
+
+      expect(auth.logado, isTrue);
+      expect(auth.sessao!.usuario, 'cliente2');
+    });
   });
 
   group('tela de login', () {
@@ -213,5 +237,28 @@ void main() {
       expect(find.byType(NavigationBar), findsNothing);
       expect(find.widgetWithText(FilledButton, 'Entrar'), findsOneWidget);
     });
+
+    testWidgets(
+      '401 do BFF volta para o login com o motivo, sem prender a aba',
+      (tester) async {
+        // back-end recriado: o Keycloak emite o token, mas o BFF não aceita mais
+        final backend = FakeBackend(
+          rotas: {
+            'GET /barbearias': (_) =>
+                jsonResponse({'detail': 'Não autenticado'}, 401),
+          },
+        );
+        await pumpApp(tester, backend);
+        await entrarComo(tester, 'cliente1', 'cliente123');
+
+        expect(find.byType(NavigationBar), findsNothing);
+        expect(find.text('Sua sessão expirou. Entre de novo.'), findsOneWidget);
+
+        // entrar de novo funciona quando o BFF volta a aceitar
+        backend.rotas['GET /barbearias'] = (_) => jsonResponse([]);
+        await entrarComo(tester, 'cliente1', 'cliente123');
+        expect(find.byType(NavigationBar), findsOneWidget);
+      },
+    );
   });
 }

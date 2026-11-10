@@ -49,6 +49,23 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// O BFF respondeu 401 a uma chamada feita com [token]: o token deixou de valer antes
+  /// de vencer (back-end recriado com chave nova no Keycloak, client sem o mapper de
+  /// audience). Renovar não resolve, porque o refresh token vem do mesmo lugar: a sessão
+  /// cai e o app volta para o login com o motivo, em vez de prender as telas no erro.
+  ///
+  /// Um 401 de um token antigo (a resposta chegou depois de um novo login) não derruba a
+  /// sessão nova.
+  void tokenRecusado(String token) {
+    if (_sessao?.accessToken != token) return;
+    _sessao = null;
+    _erro = const ApiException(
+      ApiErrorKind.unauthorized,
+      'Sua sessão expirou. Entre de novo.',
+    );
+    notifyListeners();
+  }
+
   /// Access token válido, ou null se ninguém entrou. É o `TokenProvider` do `BffClient`.
   ///
   /// Perto do vencimento, renova antes de devolver. Se o Keycloak recusar a renovação, a
