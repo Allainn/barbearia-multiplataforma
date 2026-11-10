@@ -124,7 +124,7 @@ O `gestor1` entra e navega, mas não reserva: o BFF só aceita `POST /agendament
 
 ## Testes e build
 
-São 104 casos de teste em `test/`: regras (busca, bairro, horários por duração do serviço, renovação do token), repositórios e controllers contra um back-end falso (`test/support/fake_backend.dart`), e as telas de ponta a ponta (login, lista, reserva com 409, cancelamento). Rode os três antes de abrir PR. O build é **critério eliminatório** da disciplina: app que não builda zera a Funcionalidade.
+São 111 casos de teste em `test/`: regras (busca, bairro, horários por duração do serviço, renovação do token), repositórios e controllers contra um back-end falso (`test/support/fake_backend.dart`), e as telas de ponta a ponta (login, lista, reserva com 409, cancelamento). Rode os três antes de abrir PR. O build é **critério eliminatório** da disciplina: app que não builda zera a Funcionalidade.
 
 ```bash
 flutter analyze
