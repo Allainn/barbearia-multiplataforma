@@ -173,15 +173,21 @@ class ReservaController extends ChangeNotifier {
           horario: horario,
         ),
       );
-      await _registro?.registrar(
-        ReservaLocal(
-          agendamento: agendamento,
-          barbeariaNome: barbearia.nome,
-          profissionalNome: profissional.nome,
-          servicoNome: servico.nome,
-          preco: servico.preco,
-        ),
-      );
+      try {
+        await _registro?.registrar(
+          ReservaLocal(
+            agendamento: agendamento,
+            barbeariaNome: barbearia.nome,
+            profissionalNome: profissional.nome,
+            servicoNome: servico.nome,
+            preco: servico.preco,
+          ),
+        );
+      } on Object catch (erro) {
+        // A reserva já existe no servidor: o cliente precisa ver a confirmação. Ela fica
+        // na aba Agendamentos enquanto o app estiver aberto; só não sobrevive a fechar.
+        debugPrint('Reserva ${agendamento.id} sem cópia no aparelho: $erro');
+      }
       return agendamento;
     } on ApiException catch (erro) {
       _falha = erro;

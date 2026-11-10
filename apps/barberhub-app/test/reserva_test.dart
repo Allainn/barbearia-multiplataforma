@@ -6,11 +6,15 @@ import 'package:barberhub_app/data/api_exception.dart';
 import 'package:barberhub_app/data/models/barbearia.dart';
 import 'package:barberhub_app/data/models/disponibilidade.dart';
 import 'package:barberhub_app/data/models/profissional.dart';
+import 'package:barberhub_app/data/models/reserva_local.dart';
 import 'package:barberhub_app/data/models/servico.dart';
+import 'package:barberhub_app/data/reservas_local_repository.dart';
+import 'package:barberhub_app/state/agendamentos_controller.dart';
 import 'package:barberhub_app/state/async_state.dart';
 import 'package:barberhub_app/state/reserva_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/dados.dart';
 import 'support/fake_backend.dart';
@@ -44,6 +48,15 @@ HorarioLivre _as(ReservaController c, String hora) =>
     (c.horarios as AsyncData<List<HorarioLivre>>).value.firstWhere(
       (h) => formatHora(h.inicio) == hora,
     );
+
+/// Armazenamento que falha ao gravar (aparelho sem espaço, por exemplo).
+class _LocalQueNaoGrava extends ReservasLocalRepository {
+  _LocalQueNaoGrava(super.prefs);
+
+  @override
+  Future<void> salvar(List<ReservaLocal> reservas) =>
+      Future.error(Exception('sem espaço no aparelho'));
+}
 
 Future<AppDependencies> _logado(
   FakeBackend backend, [
@@ -154,6 +167,40 @@ void main() {
       expect(controller.falha, isNull);
       expect(controller.reservando, isFalse);
     });
+
+    test(
+      'falha ao guardar no aparelho não esconde a reserva que o servidor confirmou',
+      () async {
+        final backend = backendComBarbearias();
+        final deps = await _logado(backend);
+        final registro = AgendamentosController(
+          _LocalQueNaoGrava(await SharedPreferences.getInstance()),
+          deps.agendamentoRepository,
+        );
+        final controller = ReservaController(
+          barbearia: _navalha,
+          profissionais: [_bruno, _rafael],
+          servicos: [_corte, _corteEBarba],
+          disponibilidade: deps.disponibilidadeRepository,
+          agendamentos: deps.agendamentoRepository,
+          registro: registro,
+          agora: () => _manha,
+        );
+        await controller.iniciar();
+        controller.escolherHorario(_as(controller, '10:00'));
+
+        final agendamento = await controller.reservar();
+
+        expect(agendamento?.id, 'ag-1');
+        expect(controller.falha, isNull);
+        expect(controller.reservando, isFalse);
+        // enquanto o app está aberto, a reserva aparece na aba Agendamentos
+        expect(
+          registro.proximas(agendamento!.clienteId, _manha).map((r) => r.id),
+          ['ag-1'],
+        );
+      },
+    );
 
     test('409: avisa, tira o horário da lista e recarrega a grade', () async {
       final backend = backendComBarbearias();
