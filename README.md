@@ -1,14 +1,36 @@
 # Barbearia Multiplataforma
 
-Trabalho final do **Grupo 8** na disciplina **Arquitetura de Software Multiplataforma** (pós em Arquitetura de Software Distribuído, PUC Minas), prof. Messias Barbosa Bittencourt.
+Trabalho final do **Grupo 8** em duas disciplinas da pós em Arquitetura de Software Distribuído (PUC Minas):
 
-> **Situação (26/10/2026):** código fechado para a apresentação de **28/10/2026**. O escopo, o contrato e a parte de cada pessoa estão no [roadmap](docs/roadmap.md) e nas [tarefas](docs/tarefas.md); as decisões, nos [ADRs](docs/adr/README.md). Para subir o sistema, veja [Como rodar](#como-rodar).
+- **Back-end:** **Arquitetura de Software Multiplataforma**, prof. Messias Barbosa Bittencourt. BFF, quatro serviços, Kafka e Keycloak, apresentados em 28/10/2026.
+- **App mobile:** **Arquitetura de Aplicações Móveis e Multiplataforma**, prof. Jackson Smith Moisés Matias. App Flutter do cliente em [`apps/barberhub-app`](apps/barberhub-app/README.md), que consome este back-end (Projeto Final, entrega em 09/11/2026).
+
+> **Situação (10/11/2026):** back-end e app na `main`. O escopo, o contrato e a parte de cada pessoa no back-end estão no [roadmap](docs/roadmap.md) e nas [tarefas](docs/tarefas.md); as decisões, nos [ADRs](docs/adr/README.md). Para subir o sistema, veja [Como rodar](#como-rodar); para o app, [App mobile](#app-mobile).
 
 ## O sistema
 
 Plataforma **multi-tenant** de agendamento para barbearias (nome votado na Q02: **BarberHub**): muitas barbearias usam a mesma plataforma, e os clientes consultam horários livres e agendam. O enquadramento com escala e a volumetria assumida estão no [ADR-0003](docs/adr/0003-enquadramento-plataforma-multi-tenant.md).
 
-Na demo: o cliente obtém o token no Keycloak e chama o BFF, que valida o token (401/403) e encaminha para os serviços. O agendamento grava a reserva, e uma constraint do PostgreSQL impede dois agendamentos sobrepostos para o mesmo profissional (409 para o segundo). O evento vai para o Kafka e é consumido pela notificação e pela disponibilidade (lado de leitura do CQRS).
+Na demo do back-end (com curl): o cliente obtém o token no Keycloak e chama o BFF, que valida o token (401/403) e encaminha para os serviços. O agendamento grava a reserva, e uma constraint do PostgreSQL impede dois agendamentos sobrepostos para o mesmo profissional (409 para o segundo). O evento vai para o Kafka e é consumido pela notificação e pela disponibilidade (lado de leitura do CQRS).
+
+## App mobile
+
+O cliente usa o **BarberHub** pelo app Flutter: entra com a conta do Keycloak, encontra uma barbearia (lista, busca por nome e filtro por bairro), vê serviços e profissionais, escolhe um horário livre e reserva. Se outro cliente confirmar o mesmo horário primeiro, o app explica a disputa (o 409 da constraint) e atualiza os horários. Favoritos e reservas ficam no aparelho.
+
+| Lista | Reserva | Disputa de horário (409) |
+|---|---|---|
+| ![Lista de barbearias](apps/barberhub-app/docs/screenshots/02-lista.png) | ![Reserva](apps/barberhub-app/docs/screenshots/06-reserva.png) | ![Horário disputado](apps/barberhub-app/docs/screenshots/10-disputa-409.png) |
+
+Com o back-end no ar ([Como rodar](#como-rodar)), Flutter 3.47 e um emulador Android aberto:
+
+```bash
+bash apps/barberhub-app/tool/seed.sh   # mais 10 barbearias de BH, com profissionais e serviços
+cd apps/barberhub-app
+flutter pub get
+flutter run
+```
+
+O app só fala com o BFF (porta 8010) e com o Keycloak para obter o token; no emulador, o computador é `10.0.2.2`. Outros aparelhos, o modo navegador, os usuários de teste, as screenshots e o roteiro da demo estão no [README do app](apps/barberhub-app/README.md). As decisões estão no [ADR.md do app](apps/barberhub-app/ADR.md) (framework, gerenciador de estado, login e dados no aparelho) e no [ADR-0016](docs/adr/0016-app-mobile-flutter.md) (como o app entra nesta arquitetura).
 
 ## Como rodar
 
@@ -26,7 +48,7 @@ cd barbearia-multiplataforma
 bash scripts/up.sh
 ```
 
-O `up.sh` constrói as imagens, sobe os containers, espera o Keycloak e aplica o seed (realm `barbearia`, client, roles e usuários de teste). A primeira subida leva alguns minutos por causa do download das imagens e do build do Java. Para ver o estado de cada container:
+O `up.sh` constrói as imagens, sobe os containers, espera o Keycloak e aplica o seed (realm `barbearia`, os clients `bff-gateway` e `barberhub-app`, roles e usuários de teste). A primeira subida leva alguns minutos por causa do download das imagens e do build do Java. Para ver o estado de cada container:
 
 ```bash
 docker compose -f infra/docker-compose.yml ps
@@ -62,7 +84,7 @@ TOKEN=$(curl -s -X POST http://localhost:8080/realms/barbearia/protocol/openid-c
 curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8010/barbearias | jq
 ```
 
-Como a demo é feita com curl, o token vem do *password grant*. Com um front-end, o fluxo seria Authorization Code com PKCE.
+Os exemplos com curl usam o client confidencial `bff-gateway`. O app usa o client público `barberhub-app` (sem secret), também com *password grant*, como atalho de demo; o fluxo certo para app é Authorization Code com PKCE, que esbarra no `KC_HOSTNAME` fixo do Keycloak ([ADR.md do app](apps/barberhub-app/ADR.md)).
 
 ### Rotas da API (pelo BFF, porta 8010)
 
@@ -117,6 +139,8 @@ O `demo.sh` mostra:
 
 Decisão e alternativas no [ADR-0013](docs/adr/0013-entrega-continua-e-observabilidade.md).
 
+O app tem um workflow próprio, [`barberhub-app.yml`](.github/workflows/barberhub-app.yml): em todo PR que mexe em `apps/barberhub-app/`, roda `flutter analyze`, os testes e `flutter build apk --debug`, e guarda o APK como artefato da execução por 7 dias.
+
 ### Observabilidade
 
 Os serviços mandam logs, métricas e traces por OpenTelemetry para o Collector, que distribui para o Loki, o Prometheus e o Tempo. Os dashboards já vêm carregados no Grafana:
@@ -144,11 +168,13 @@ Os serviços mandam logs, métricas e traces por OpenTelemetry para o Collector,
 | Passo a passo de cada pessoa (para entregar à IA de cada um) | [docs/tarefas.md](docs/tarefas.md) |
 | Regras do trabalho e checklist do professor | [docs/enunciado.md](docs/enunciado.md) |
 | Decisões arquiteturais (ADRs) | [docs/adr/](docs/adr/README.md) |
+| App mobile (Flutter): como rodar, screenshots, roteiro da demo | [apps/barberhub-app/README.md](apps/barberhub-app/README.md) e [ADR.md](apps/barberhub-app/ADR.md) |
 | C4 (níveis 1 e 2) | [Board no Miro](https://miro.com/app/board/uXjVEdd_Nsc=/) + espelho em Mermaid em [docs/arquitetura](docs/arquitetura/README.md) |
 | Questões votadas de 07 a 09/10 (histórico) | [docs/questoes-abertas.md](docs/questoes-abertas.md) e issues #1 a #24 |
 | Como contribuir (branches, PR, aprovação) | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Contexto para o Claude Code | [CLAUDE.md](CLAUDE.md) |
 | Código dos serviços | `services/<container>/` |
+| Código do app | `apps/barberhub-app/lib/` |
 | Infraestrutura (Docker Compose, Grafana) | `infra/` |
 
 ## Grupo 8
@@ -173,3 +199,5 @@ Os serviços mandam logs, métricas e traces por OpenTelemetry para o Collector,
 | Seg 26/10 | Pipeline e Grafana funcionando, slides e ADRs prontos, código congelado |
 | Ter 27/10 | Ensaio de 20 min e gravação da demo como reserva |
 | Qua 28/10 | Apresentação e postagem no Canvas |
+| Qua 04/11 | App: base em Flutter (camadas, design, abas, CI) e ADR-0016 |
+| Seg 09/11 | App: as features e a entrega do Projeto Final de Arquitetura de Aplicações Móveis |
