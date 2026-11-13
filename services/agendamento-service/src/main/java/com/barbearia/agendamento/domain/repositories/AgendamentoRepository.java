@@ -3,6 +3,7 @@ package com.barbearia.agendamento.domain.repositories;
 import com.barbearia.agendamento.domain.entities.Agendamento;
 import com.barbearia.agendamento.domain.exceptions.HorarioIndisponivelException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +16,7 @@ public interface AgendamentoRepository {
     boolean updateStatus(Agendamento agendamento);
 
     Optional<Agendamento> findById(UUID id);
+
+    /** Os agendamentos do cliente, confirmados e cancelados, do que começa mais tarde para o mais cedo. */
+    List<Agendamento> findByClienteId(String clienteId);
 }
