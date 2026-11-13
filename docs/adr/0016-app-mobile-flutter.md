@@ -45,7 +45,7 @@ A escolha do framework (Flutter contra React Native e KMP) e do gerenciador de e
   - **Client público no Keycloak** (ex.: `barberhub-app`), sem secret, com um *audience mapper* que ponha `bff-gateway` no `aud`; sem ele o BFF devolve 401.
   - **Fluxo de login:** Authorization Code com PKCE é o certo para cliente público (RFC 8252), mas o `KC_HOSTNAME` fixo em `http://keycloak:8080` não resolve no navegador do celular. A alternativa é o password grant com o client público, como atalho de demo. Decisão registrada no ADR.md do app.
   - **Seed com mais barbearias**, para a lista, a busca e o filtro fazerem sentido.
-  - **`GET /agendamentos`** do cliente, se a feature "meus agendamentos" entrar; hoje não há rota de listagem.
+  - **`GET /agendamentos`** do cliente, se a feature "meus agendamentos" entrar. Acrescentada em 13/11/2026 no agendamento-service e no BFF (role `cliente`, filtrada pelo `sub` do token); o app ainda guarda as reservas no aparelho até passar a ler dessa rota.
   - **CORS no BFF** só se o app rodar no navegador; no Android não é preciso.
 - O CI ganha um workflow para o app (analyze, testes e build do APK em todo PR que mexer em `apps/barberhub-app`).
 
