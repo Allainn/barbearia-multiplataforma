@@ -28,7 +28,8 @@ final class RegrasDeAutorizacao {
                 .requestMatchers(HttpMethod.GET, "/disponibilidade").authenticated()
                 // Cadastro da barbearia, dos profissionais e dos serviços: gestor.
                 .requestMatchers(HttpMethod.POST, "/barbearias/**").hasRole(ROLE_GESTOR)
-                // Reserva e cancelamento: cliente.
+                // Reservas do próprio cliente, reserva e cancelamento: cliente.
+                .requestMatchers(HttpMethod.GET, "/agendamentos").hasRole(ROLE_CLIENTE)
                 .requestMatchers(HttpMethod.POST, "/agendamentos").hasRole(ROLE_CLIENTE)
                 .requestMatchers(HttpMethod.DELETE, "/agendamentos/*").hasRole(ROLE_CLIENTE)
                 .anyRequest().denyAll();

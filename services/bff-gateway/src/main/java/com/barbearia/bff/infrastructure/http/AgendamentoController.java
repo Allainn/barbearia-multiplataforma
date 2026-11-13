@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,12 @@ public class AgendamentoController {
 
     public AgendamentoController(AgendamentoClient client) {
         this.client = client;
+    }
+
+    /** Lista as reservas do próprio cliente: o serviço filtra pelo X-User-ID, nunca por um parâmetro. */
+    @GetMapping
+    public ResponseEntity<String> listar(HttpServletRequest requisicao, Authentication usuario) {
+        return client.encaminhar(requisicao, null, usuario.getName());
     }
 
     @PostMapping

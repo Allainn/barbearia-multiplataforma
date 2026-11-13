@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-/** agendamento-service: reserva e cancelamento. O X-User-ID vira o cliente_id lá. */
+/** agendamento-service: listagem, reserva e cancelamento. O X-User-ID vira o cliente_id lá. */
 @Component
 public class AgendamentoClient extends ServicoClient {
 
