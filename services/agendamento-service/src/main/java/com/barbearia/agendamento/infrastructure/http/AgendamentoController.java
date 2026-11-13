@@ -6,11 +6,13 @@ import com.barbearia.agendamento.application.commands.CriarAgendamentoCommand;
 import com.barbearia.agendamento.application.commands.CriarAgendamentoHandler;
 import com.barbearia.agendamento.application.dtos.AgendamentoResponseDTO;
 import com.barbearia.agendamento.application.dtos.CriarAgendamentoDTO;
+import com.barbearia.agendamento.application.queries.ListarAgendamentosDoClienteHandler;
 import com.barbearia.agendamento.domain.entities.Agendamento;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,12 +22,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
  * Rotas HTTP do agendamento (contrato em docs/tarefas.md). Não valida token: quem
  * chama é o BFF, que já validou o JWT e repassa o sub no header X-User-ID (ADR-0009).
- * O X-User-ID vira o cliente_id no POST, e no DELETE só o cliente que reservou cancela.
+ * O X-User-ID vira o cliente_id no POST, filtra a lista no GET, e no DELETE só o cliente
+ * que reservou cancela.
  */
 @RestController
 @RequestMapping("/agendamentos")
@@ -33,12 +37,15 @@ public class AgendamentoController {
 
     private final CriarAgendamentoHandler criarAgendamentoHandler;
     private final CancelarAgendamentoHandler cancelarAgendamentoHandler;
+    private final ListarAgendamentosDoClienteHandler listarAgendamentosDoClienteHandler;
 
     public AgendamentoController(
             CriarAgendamentoHandler criarAgendamentoHandler,
-            CancelarAgendamentoHandler cancelarAgendamentoHandler) {
+            CancelarAgendamentoHandler cancelarAgendamentoHandler,
+            ListarAgendamentosDoClienteHandler listarAgendamentosDoClienteHandler) {
         this.criarAgendamentoHandler = criarAgendamentoHandler;
         this.cancelarAgendamentoHandler = cancelarAgendamentoHandler;
+        this.listarAgendamentosDoClienteHandler = listarAgendamentosDoClienteHandler;
     }
 
     /**
@@ -54,6 +61,18 @@ public class AgendamentoController {
         Agendamento agendamento = criarAgendamentoHandler.handle(new CriarAgendamentoCommand(
                 body.barbeariaId(), body.profissionalId(), body.servicoId(), clienteId, body.inicio(), body.fim()));
         return AgendamentoResponseDTO.from(agendamento);
+    }
+
+    /**
+     * Os agendamentos do cliente do X-User-ID, confirmados e cancelados, o que começa mais tarde
+     * primeiro. Cliente sem nenhum recebe 200 com a lista vazia. Não há como pedir os de outro cliente.
+     */
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<AgendamentoResponseDTO> listar(@RequestHeader("X-User-ID") String clienteId) {
+        exigirClienteId(clienteId);
+        return listarAgendamentosDoClienteHandler.handle(clienteId).stream()
+                .map(AgendamentoResponseDTO::from)
+                .toList();
     }
 
     /** Só o cliente que fez o agendamento cancela. Para os outros, a resposta é 404. */

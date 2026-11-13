@@ -40,6 +40,7 @@ O BFF valida o token. Os serviços confiam no BFF e não validam nada. O BFF rep
 |---|---|---|---|
 | `GET /barbearias`, `GET /barbearias/{id}/profissionais`, `GET /barbearias/{id}/servicos` | barbearia | qualquer usuário logado | 200 |
 | `POST /barbearias`, `POST /barbearias/{id}/profissionais`, `POST /barbearias/{id}/servicos` | barbearia | `gestor` | 201 |
+| `GET /agendamentos` | agendamento | `cliente` | 200, os agendamentos do próprio cliente |
 | `POST /agendamentos` | agendamento | `cliente` | 201, ou 409 se o horário já estiver ocupado |
 | `DELETE /agendamentos/{id}` | agendamento | `cliente` | 204 |
 | `GET /disponibilidade?profissional_id=...&data=2026-10-28` | disponibilidade | qualquer usuário logado | 200, lista de horários livres |

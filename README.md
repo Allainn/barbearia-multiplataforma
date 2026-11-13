@@ -75,6 +75,7 @@ Como a demo é feita com curl, o token vem do *password grant*. Com um front-end
 | `GET /barbearias/{id}/servicos` | qualquer usuário logado | 200 ou 404 |
 | `POST /barbearias/{id}/servicos` | `gestor` | 201 ou 404 |
 | `GET /disponibilidade?profissional_id=...&data=AAAA-MM-DD` | qualquer usuário logado | 200, horários livres do dia |
+| `GET /agendamentos` | `cliente` | 200, os agendamentos do próprio cliente (confirmados e cancelados) |
 | `POST /agendamentos` | `cliente` | 201, ou **409** se o horário já estiver ocupado |
 | `DELETE /agendamentos/{id}` | `cliente` | 204 ou 404 |
 

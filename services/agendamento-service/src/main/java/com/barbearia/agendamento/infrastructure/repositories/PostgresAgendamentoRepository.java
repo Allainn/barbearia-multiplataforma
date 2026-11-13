@@ -88,6 +88,17 @@ public class PostgresAgendamentoRepository implements AgendamentoRepository {
         return rows.stream().findFirst();
     }
 
+    /** O desempate por id mantém a ordem estável quando dois agendamentos começam juntos (profissionais diferentes). */
+    @Override
+    public List<Agendamento> findByClienteId(String clienteId) {
+        return jdbcTemplate.query("""
+                        SELECT id, barbearia_id, profissional_id, servico_id, cliente_id, inicio, fim, status
+                        FROM agendamento.agendamento WHERE cliente_id = ?
+                        ORDER BY inicio DESC, id
+                        """,
+                this::hydrate, clienteId);
+    }
+
     private Agendamento hydrate(ResultSet rs, int rowNum) throws SQLException {
         return Agendamento.reconstruir(
                 rs.getObject("id", UUID.class),

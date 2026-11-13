@@ -35,7 +35,7 @@ info:
     |---|---|
     | qualquer usuário autenticado | consultar barbearias, profissionais, serviços e horários livres |
     | `gestor` | cadastrar barbearias, profissionais e serviços |
-    | `cliente` | reservar e cancelar os próprios horários |
+    | `cliente` | listar, reservar e cancelar os próprios horários |
 
     Role insuficiente é **403**. A identidade do chamador (claim `sub`) é repassada aos serviços no
     header interno `X-User-ID`; no agendamento ela vira o `cliente_id` da reserva, e o corpo da
@@ -66,7 +66,7 @@ tags:
   - name: Disponibilidade
     description: Horários livres de um profissional (read model do CQRS). Servido pelo disponibilidade-service.
   - name: Agendamentos
-    description: Reserva e cancelamento de horários. Servido pelo agendamento-service.
+    description: Listagem, reserva e cancelamento de horários. Servido pelo agendamento-service.
   - name: Saúde
     description: Liveness do próprio BFF.
 
@@ -320,6 +320,50 @@ paths:
         '503': { $ref: '#/components/responses/ServicoIndisponivel' }
 
   /agendamentos:
+    get:
+      tags: [Agendamentos]
+      summary: Lista as reservas do próprio cliente
+      description: |
+        Exige a role **`cliente`**. Devolve as reservas cujo `cliente_id` é o `sub` do token, as
+        **confirmadas e as canceladas**, da que começa mais tarde para a mais cedo. Não há filtro
+        nem parâmetro para pedir as de outro cliente. Quem ainda não reservou recebe **200** com
+        `[]`.
+
+        A resposta traz só ids (`barbearia_id`, `profissional_id`, `servico_id`), como no `POST`: os
+        nomes vêm de `GET /barbearias` e das rotas de profissionais e serviços.
+      operationId: listarAgendamentos
+      parameters:
+        - $ref: '#/components/parameters/DemoDelay'
+      responses:
+        '200':
+          description: Reservas do cliente (pode ser vazia).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Agendamento'
+              example:
+                - id: 7ec11d10-3115-4ac7-8c26-9ecd4fd823a4
+                  inicio: "2026-10-28T10:00:00-03:00"
+                  fim: "2026-10-28T10:30:00-03:00"
+                  status: CONFIRMADO
+                  barbearia_id: 11111111-1111-1111-1111-111111111111
+                  profissional_id: 22222222-2222-2222-2222-222222222222
+                  servico_id: 33333333-3333-3333-3333-333333333333
+                  cliente_id: f271e632-ecc7-43ea-acd0-d547ff943ee3
+                - id: 0c9a7b9e-5a64-4f43-8d0f-3a1f6f8f1b52
+                  inicio: "2026-10-20T15:00:00-03:00"
+                  fim: "2026-10-20T15:30:00-03:00"
+                  status: CANCELADO
+                  barbearia_id: 11111111-1111-1111-1111-111111111111
+                  profissional_id: 22222222-2222-2222-2222-222222222222
+                  servico_id: 33333333-3333-3333-3333-333333333333
+                  cliente_id: f271e632-ecc7-43ea-acd0-d547ff943ee3
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+        '503': { $ref: '#/components/responses/ServicoIndisponivel' }
+
     post:
       tags: [Agendamentos]
       summary: Reserva um horário

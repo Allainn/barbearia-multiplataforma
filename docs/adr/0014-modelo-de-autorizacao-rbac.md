@@ -62,6 +62,7 @@ Atribuir roles a grupos e colocar usuários nos grupos é a prática recomendada
 | `GET /barbearias`, `GET /barbearias/{id}/profissionais`, `GET /barbearias/{id}/servicos` | logado | 401 | — | — |
 | `GET /disponibilidade` | logado | 401 | — | — |
 | `POST /barbearias`, `POST /barbearias/{id}/profissionais`, `POST /barbearias/{id}/servicos` | `gestor` | 401 | 403 | nenhuma (qualquer gestor altera qualquer barbearia: risco aceito) |
+| `GET /agendamentos` | `cliente` | 401 | 403 | a lista é filtrada pelo `cliente_id` do token; não há parâmetro para pedir a de outro |
 | `POST /agendamentos` | `cliente` | 401 | 403 | o `cliente_id` é sempre o do token, nunca vem do corpo |
 | `DELETE /agendamentos/{id}` | `cliente` | 401 | 403 | só o dono cancela; para os outros, 404 |
 

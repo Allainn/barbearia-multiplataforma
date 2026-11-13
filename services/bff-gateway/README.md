@@ -38,11 +38,11 @@ Roles lidas de `realm_access.roles` e convertidas em `ROLE_<role>` (`RealmRolesC
 | `GET /barbearias`, `GET /barbearias/{id}/profissionais`, `GET /barbearias/{id}/servicos` | autenticado |
 | `GET /disponibilidade` | autenticado |
 | `POST /barbearias`, `POST /barbearias/{id}/profissionais`, `POST /barbearias/{id}/servicos` | role `gestor` |
-| `POST /agendamentos`, `DELETE /agendamentos/{id}` | role `cliente` |
+| `GET /agendamentos`, `POST /agendamentos`, `DELETE /agendamentos/{id}` | role `cliente` |
 
 Role insuficiente: **403** `{"detail": "Permissão insuficiente para esta operação"}`.
 
-Regras por recurso ficam nos serviços: o agendamento-service usa `X-User-ID` como `cliente_id` da reserva e só deixa o dono cancelar (404 para os outros). O isolamento por barbearia do gestor não existe nesta versão (risco aceito no ADR-0014).
+Regras por recurso ficam nos serviços: o agendamento-service usa `X-User-ID` como `cliente_id` da reserva, lista só as reservas desse cliente e só deixa o dono cancelar (404 para os outros). O isolamento por barbearia do gestor não existe nesta versão (risco aceito no ADR-0014).
 
 ## Configuração
 

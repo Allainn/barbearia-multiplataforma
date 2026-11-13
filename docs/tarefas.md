@@ -102,6 +102,7 @@ Os clientes externos só falam com o BFF (porta 8010). O BFF valida o token e ch
 | `POST /barbearias/{id}/profissionais` | barbearia | `gestor` | `{"nome"}` | 201 ou 404 |
 | `GET /barbearias/{id}/servicos` | barbearia | qualquer usuário logado | | 200 ou 404 |
 | `POST /barbearias/{id}/servicos` | barbearia | `gestor` | `{"nome", "duracao_min", "preco"}` | 201 ou 404 |
+| `GET /agendamentos` | agendamento | `cliente` | | 200, lista dos agendamentos do próprio cliente (ver abaixo) |
 | `POST /agendamentos` | agendamento | `cliente` | ver abaixo | 201, ou 409 se o horário estiver ocupado |
 | `DELETE /agendamentos/{id}` | agendamento | `cliente` | | 204 ou 404 |
 | `GET /disponibilidade?profissional_id=...&data=AAAA-MM-DD` | disponibilidade | qualquer usuário logado | | 200, ver abaixo |
@@ -136,6 +137,8 @@ Todo objeto devolvido tem `id` (UUID). Erro sempre no formato `{"detail": "mensa
   "status": "CONFIRMADO"
 }
 ```
+
+`GET /agendamentos`, resposta 200 (rota acrescentada em 13/11/2026 para o app mobile, [ADR-0016](adr/0016-app-mobile-flutter.md)): lista com os agendamentos cujo `cliente_id` é o `X-User-ID`, no mesmo formato do 201 acima, **confirmados e cancelados**, do que começa mais tarde para o mais cedo. Não tem parâmetro nem filtro: o cliente só vê os próprios. Quem ainda não reservou recebe `[]`.
 
 `GET /disponibilidade`, resposta 200:
 

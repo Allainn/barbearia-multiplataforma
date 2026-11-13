@@ -37,5 +37,10 @@ public class MigrationRunner {
                     ) WHERE (status = 'CONFIRMADO')
                 )
                 """);
+        // Para o GET /agendamentos: os agendamentos de um cliente, do mais tarde para o mais cedo.
+        jdbcTemplate.execute("""
+                CREATE INDEX IF NOT EXISTS agendamento_cliente_inicio_idx
+                    ON agendamento.agendamento (cliente_id, inicio DESC)
+                """);
     }
 }

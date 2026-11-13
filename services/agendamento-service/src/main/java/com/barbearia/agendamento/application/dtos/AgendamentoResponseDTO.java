@@ -7,8 +7,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 /**
- * Resposta do POST /agendamentos. Os horários vão como texto ISO com offset
- * (2026-10-28T18:00:00-03:00), no mesmo formato dos eventos.
+ * Resposta do POST /agendamentos e item do GET /agendamentos. Os horários vão como texto ISO
+ * com offset (2026-10-28T18:00:00-03:00), no mesmo formato dos eventos.
  */
 public record AgendamentoResponseDTO(
         UUID id,
