@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:barberhub_app/app_dependencies.dart';
 import 'package:barberhub_app/core/formatters.dart';
 import 'package:barberhub_app/data/api_exception.dart';
+import 'package:barberhub_app/data/catalogo_nomes.dart';
 import 'package:barberhub_app/data/models/barbearia.dart';
 import 'package:barberhub_app/data/models/disponibilidade.dart';
 import 'package:barberhub_app/data/models/profissional.dart';
@@ -176,7 +177,9 @@ void main() {
         final registro = AgendamentosController(
           _LocalQueNaoGrava(await SharedPreferences.getInstance()),
           deps.agendamentoRepository,
+          CatalogoNomes(deps.barbeariaRepository),
         );
+        await registro.carregar('id-cliente1'); // a aba já aberta, ainda vazia
         final controller = ReservaController(
           barbearia: _navalha,
           profissionais: [_bruno, _rafael],

@@ -184,8 +184,9 @@ class ReservaController extends ChangeNotifier {
           ),
         );
       } on Object catch (erro) {
-        // A reserva já existe no servidor: o cliente precisa ver a confirmação. Ela fica
-        // na aba Agendamentos enquanto o app estiver aberto; só não sobrevive a fechar.
+        // A reserva já existe no servidor: o cliente precisa ver a confirmação. Ela
+        // aparece na aba Agendamentos pelo `GET /agendamentos`; sem o cache, os nomes
+        // vêm do catálogo de barbearias.
         debugPrint('Reserva ${agendamento.id} sem cópia no aparelho: $erro');
       }
       return agendamento;
