@@ -6,12 +6,14 @@ import 'data/agendamento_repository.dart';
 import 'data/auth_repository.dart';
 import 'data/barbearia_repository.dart';
 import 'data/bff_client.dart';
+import 'data/buscas_recentes_repository.dart';
 import 'data/disponibilidade_repository.dart';
 import 'data/favoritos_repository.dart';
 import 'data/reservas_local_repository.dart';
 import 'state/agendamentos_controller.dart';
 import 'state/auth_controller.dart';
 import 'state/barbearias_controller.dart';
+import 'state/buscas_recentes_controller.dart';
 import 'state/favoritos_controller.dart';
 import 'state/theme_controller.dart';
 
@@ -29,6 +31,7 @@ class AppDependencies {
     required this.disponibilidadeRepository,
     required this.agendamentoRepository,
     required this.barbearias,
+    required this.buscasRecentes,
     required this.favoritos,
     required this.agendamentos,
   });
@@ -63,6 +66,7 @@ class AppDependencies {
       disponibilidadeRepository: DisponibilidadeRepository(bffClient),
       agendamentoRepository: agendamentoRepository,
       barbearias: BarbeariasController(barbeariaRepository),
+      buscasRecentes: BuscasRecentesController(BuscasRecentesRepository(prefs)),
       favoritos: FavoritosController(FavoritosRepository(prefs)),
       agendamentos: AgendamentosController(
         ReservasLocalRepository(prefs),
@@ -79,6 +83,7 @@ class AppDependencies {
   final DisponibilidadeRepository disponibilidadeRepository;
   final AgendamentoRepository agendamentoRepository;
   final BarbeariasController barbearias;
+  final BuscasRecentesController buscasRecentes;
   final FavoritosController favoritos;
   final AgendamentosController agendamentos;
 }

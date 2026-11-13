@@ -13,7 +13,7 @@ O cliente entra com a conta do Keycloak, encontra uma barbearia (lista, busca po
 | 1 | Login do cliente | tela de entrada e aba Conta | Keycloak (realm `barbearia`, client `barberhub-app`) |
 | 2 | **Lista** de barbearias | aba Barbearias | `GET /barbearias` |
 | 3 | **Detalhe**: serviços e profissionais | tela por cima da lista | `GET /barbearias/{id}/profissionais` e `/servicos` |
-| 4 | **Busca** por nome | aba Barbearias | lista já carregada (filtra no app) |
+| 4 | **Busca** por nome, com as 5 buscas recentes | aba Barbearias | lista já carregada (filtra no app); recentes no armazenamento local |
 | 5 | **Filtro** por bairro | aba Barbearias | bairro tirado do endereço |
 | 6 | **Favoritos** que sobrevivem a fechar o app | coração na lista e no detalhe; aba Favoritos | armazenamento local |
 | 7 | Horários livres e reserva, com o 409 | a partir do detalhe | `GET /disponibilidade` e `POST /agendamentos` |
@@ -115,7 +115,7 @@ O `gestor1` entra e navega, mas não reserva: o BFF só aceita `POST /agendament
 ### Roteiro da demo
 
 1. Entre como `cliente1`. A lista aparece com o skeleton e depois os cartões.
-2. Busque por "navalha" e filtre por um bairro; limpe os filtros.
+2. Busque por "navalha" e confirme no teclado; filtre por um bairro e limpe os filtros. Toque de novo no campo vazio: "navalha" aparece em **Buscas recentes**, e um toque refaz a busca.
 3. Toque no coração de duas barbearias e veja a aba Favoritos. Feche o app e abra de novo: elas continuam lá.
 4. Abra uma barbearia, toque em **Reservar horário**, escolha serviço, profissional, dia e horário, e confirme.
 5. Veja a reserva na aba Agendamentos e cancele.
@@ -149,12 +149,13 @@ lib/
 │   ├── api_exception.dart     # erro já traduzido para a tela
 │   ├── auth_repository.dart   # login e renovação do token no Keycloak
 │   ├── barbearia_repository.dart, disponibilidade_repository.dart, agendamento_repository.dart
-│   ├── favoritos_repository.dart, reservas_local_repository.dart   # shared_preferences
+│   ├── favoritos_repository.dart, reservas_local_repository.dart, buscas_recentes_repository.dart   # shared_preferences
 │   └── models/                # Barbearia, Profissional, Servico, Disponibilidade, Agendamento, Sessao, ReservaLocal
 ├── state/                     # estado das telas: um ChangeNotifier por feature
 │   ├── async_state.dart       # carregando, dados ou erro
 │   ├── auth_controller.dart, barbearias_controller.dart, barbearia_detalhe_controller.dart
 │   ├── favoritos_controller.dart, reserva_controller.dart, agendamentos_controller.dart
+│   ├── buscas_recentes_controller.dart   # últimas buscas da aba Barbearias
 │   ├── filtro_barbearias.dart # busca e filtro por bairro (funções puras)
 │   └── horarios.dart          # horários por duração do serviço (funções puras)
 └── ui/
