@@ -2,9 +2,9 @@
 
 ## Status
 
-`Aceito`. Framework em 31/10; gerenciador de estado e fluxo de login em 09/11 (seções no fim).
+`Aceito`. Framework em 31/10; gerenciador de estado e fluxo de login em 09/11; agendamentos revistos em 13/11 (seções no fim).
 
-**Data:** 2026-10-31 (registrado em 2026-11-04; estado e login em 2026-11-09)
+**Data:** 2026-10-31 (registrado em 2026-11-04; estado e login em 2026-11-09; agendamentos em 2026-11-13)
 **Autor:** Allainn Christiam Jacinto Tavares, pelo Grupo 8. Seções de estado e login: Evandro Junior, no PR do login
 **Origem:** votação Q08 da disciplina Arquitetura de Software Multiplataforma ([issue #8](https://github.com/Allainn/barbearia-multiplataforma/issues/8)), que escolheu Dart/Flutter para o front cortado do back-end por prazo. Como o app entra na arquitetura do back-end (container novo, só o BFF, pendências no Keycloak): [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md)
 
@@ -67,17 +67,27 @@ O app pede o token direto ao Keycloak (`lib/data/auth_repository.dart`), com o c
 
 Consequências: a sessão fica só na memória (fechar o app pede o login de novo), porque guardar o refresh token com segurança pede `flutter_secure_storage` e configuração nativa; o access token dura 30 minutos e o `AuthController` renova com o refresh token antes de vencer. Evolução: PKCE, quando o Keycloak tiver um hostname que o celular resolva.
 
-## Meus agendamentos e favoritos no aparelho (`Aceito`, 09/11)
+## Favoritos no aparelho (`Aceito`, 09/11)
 
-O contrato do back-end tem `POST /agendamentos` e `DELETE /agendamentos/{id}`, mas não tem rota para listar as reservas do cliente, nem favoritos. O app guarda os dois em `shared_preferences`: a resposta 201 de cada reserva, com os nomes que estavam na tela (`ReservaLocal`), e a barbearia inteira de cada favorito. O cancelamento continua indo ao BFF.
+O contrato do back-end não tem favoritos. O app guarda a barbearia inteira de cada favorito em `shared_preferences`, então a aba abre sem rede e sobrevive a fechar o app; trocar de aparelho perde a lista. Evolução: uma rota de favoritos no contrato, se o produto pedir.
 
-| Opção | A favor | Contra |
+## Meus agendamentos: servidor como fonte da verdade, aparelho como cache dos nomes (`Aceito`, 13/11)
+
+**Revisão:** em 09/11 o contrato não tinha rota para listar as reservas do cliente, e o app guardava no aparelho a resposta 201 de cada reserva, com os nomes que estavam na tela. A aba só mostrava o que fora reservado naquele aparelho e não ficava sabendo de um cancelamento feito por fora. Em 13/11 o `GET /agendamentos` entrou no agendamento-service e no BFF ([ADR-0016](../../docs/adr/0016-app-mobile-flutter.md)), e a aba passou a ler dele. Autor da revisão: Gabriel Santiago, no PR da feature.
+
+**Decisão:** o `AgendamentosController` lê o `GET /agendamentos` sempre que a aba abre, ao puxar para atualizar e depois de cada cancelamento. A existência e o status de cada reserva vêm sempre do servidor: o que foi cancelado por fora aparece cancelado, e o que sumiu do servidor some da lista e do aparelho. O `shared_preferences` vira **cache dos nomes**: por id do agendamento, os nomes da barbearia, do profissional e do serviço e o preço (`ReservaLocal`), que o contrato não traz.
+
+O problema que sobra é o dos nomes: o `GET /agendamentos` só devolve ids. Para uma reserva que não está no cache (feita em outro aparelho ou pelo `curl`), o app resolve os nomes pelo catálogo que já existe (`CatalogoNomes`): um `GET /barbearias` e, para cada barbearia diferente, `/profissionais` e `/servicos`. São chamadas por barbearia, não por agendamento.
+
+| Opção para os nomes | A favor | Contra |
 |---|---|---|
-| **Guardar no aparelho** (escolhida) | Não muda o contrato nem dois serviços Java no dia da entrega; as abas abrem sem rede; o cancelamento é o `DELETE` real | A aba só mostra reservas feitas neste aparelho: trocar de celular, ou reservar pelo `curl`, não aparece; o aparelho não fica sabendo de um cancelamento feito por fora |
-| `GET /agendamentos` no agendamento-service e no BFF | O servidor é a fonte da verdade; funciona em qualquer aparelho | Rota nova em dois serviços, filtro por `X-User-ID`, revisão e rebuild na véspera da demo |
-| Cortar a feature | Nenhum risco | O cliente reserva e não tem onde ver nem cancelar |
+| **Cache no aparelho + catálogo para o que faltar** (escolhida) | Nenhuma mudança no contrato; a reserva feita aqui mostra os nomes e o preço da hora da reserva, sem nenhuma chamada a mais; o que veio de outro aparelho custa três chamadas por barbearia, uma vez (depois fica no cache) | O preço de uma reserva de outro aparelho é o do catálogo de hoje, não o da hora da reserva; um profissional ou serviço apagado do catálogo vira texto neutro ("Barbearia não identificada", "Detalhes indisponíveis no momento") |
+| Nomes no `GET /agendamentos` (o agendamento-service guarda ou o BFF agrega) | Uma chamada só; o preço da hora da reserva em qualquer aparelho | Muda o contrato de novo, em dois serviços: o agendamento-service teria que guardar nomes de outro serviço, ou o BFF passaria a agregar (o BFF por canal que o ADR-0016 deixou como evolução) |
+| Catálogo para tudo, sem cache | Uma regra só | Chamadas a cada abertura da aba; sem rede, a aba não mostra nada |
 
-Mitigações: as reservas são filtradas pelo `sub` do token, então duas contas no mesmo aparelho não veem as reservas uma da outra; um `DELETE` que volta 404 (reserva que não existe mais no servidor) marca a reserva como cancelada em vez de travar a tela. Evolução: `GET /agendamentos` no contrato, com o aparelho virando só cache.
+Estados: carregando, vazio e erro como nas outras abas, com puxar para atualizar. **Sem rede ou com o serviço fora (503)**, a aba mostra o que está no cache com um aviso de que pode estar desatualizado, em vez de um erro sem nada. Sem cache, ela mostra o erro com "Tentar de novo". Um 401 segue o fluxo da sessão (o `BffClient` encerra a sessão e volta ao login). Se o catálogo falhar, a reserva aparece com o texto neutro, e a próxima carga tenta os nomes de novo.
+
+Mitigações que continuam: o cache é separado por conta (o `cliente_id` de cada reserva), então duas contas no mesmo aparelho não veem as reservas uma da outra; um `DELETE` que volta 404 (reserva que não existe mais no servidor) conta como cancelado, e a releitura tira a reserva da lista.
 
 ## Referências
 
