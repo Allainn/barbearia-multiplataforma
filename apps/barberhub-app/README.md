@@ -2,11 +2,11 @@
 
 App de agendamento em barbearias do **Grupo 8**, feito como Projeto Final de **Arquitetura de Aplicações Móveis e Multiplataforma** (PUC Minas IEC, prof. Jackson Smith Moisés Matias). É o front do back-end deste monorepo: o app só conversa com o BFF, que valida o token do Keycloak e chama os serviços.
 
-> **Situação (09/11/2026):** as 8 features estão implementadas, com testes. Decisões em [ADR.md](ADR.md) (framework, estado, login e dados no aparelho) e no [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md) do monorepo (como o app entra na arquitetura).
+> **Situação (09/11/2026):** as 8 features estão implementadas, com testes. Decisões em [ADR.md](ADR.md) (framework, estado, login, favoritos no aparelho e agendamentos do servidor) e no [ADR-0016](../../docs/adr/0016-app-mobile-flutter.md) do monorepo (como o app entra na arquitetura).
 
 ## O que o app faz
 
-O cliente entra com a conta do Keycloak, encontra uma barbearia (lista, busca por nome e filtro por bairro), vê os serviços e os profissionais, escolhe um horário livre e reserva. Se outro cliente confirmar o mesmo horário primeiro, o app explica a disputa (409) e atualiza os horários. As reservas e as barbearias favoritas ficam guardadas no aparelho.
+O cliente entra com a conta do Keycloak, encontra uma barbearia (lista, busca por nome e filtro por bairro), vê os serviços e os profissionais, escolhe um horário livre e reserva. Se outro cliente confirmar o mesmo horário primeiro, o app explica a disputa (409) e atualiza os horários. Na aba Agendamentos, o cliente vê as próprias reservas, lidas do servidor, e pode cancelar. As barbearias favoritas ficam guardadas no aparelho.
 
 | # | Feature | Onde fica | De onde vêm os dados |
 |---|---|---|---|
@@ -17,7 +17,7 @@ O cliente entra com a conta do Keycloak, encontra uma barbearia (lista, busca po
 | 5 | **Filtro** por bairro | aba Barbearias | bairro tirado do endereço |
 | 6 | **Favoritos** que sobrevivem a fechar o app | coração na lista e no detalhe; aba Favoritos | armazenamento local |
 | 7 | Horários livres e reserva, com o 409 | a partir do detalhe | `GET /disponibilidade` e `POST /agendamentos` |
-| 8 | Meus agendamentos e cancelar | aba Agendamentos | armazenamento local e `DELETE /agendamentos/{id}` |
+| 8 | Meus agendamentos e cancelar | aba Agendamentos | `GET /agendamentos` (nomes em cache no aparelho) e `DELETE /agendamentos/{id}` |
 
 As cinco em negrito são as do enunciado. Toda tela com dados do back-end trata **carregando** (skeleton), **vazio** e **erro** (sem rede, 401, 403, 404, 409 e 503), com o botão de tentar de novo.
 
@@ -124,7 +124,7 @@ O `gestor1` entra e navega, mas não reserva: o BFF só aceita `POST /agendament
 
 ## Testes e build
 
-São 111 casos de teste em `test/`: regras (busca, bairro, horários por duração do serviço, renovação do token), repositórios e controllers contra um back-end falso (`test/support/fake_backend.dart`), e as telas de ponta a ponta (login, lista, reserva com 409, cancelamento). Rode os três antes de abrir PR. O build é **critério eliminatório** da disciplina: app que não builda zera a Funcionalidade.
+São 120 casos de teste em `test/`: regras (busca, bairro, horários por duração do serviço, renovação do token), repositórios e controllers contra um back-end falso (`test/support/fake_backend.dart`), e as telas de ponta a ponta (login, lista, reserva com 409, cancelamento). Rode os três antes de abrir PR. O build é **critério eliminatório** da disciplina: app que não builda zera a Funcionalidade.
 
 ```bash
 flutter analyze
@@ -186,8 +186,7 @@ Regras para cada feature:
 Estão justificadas no [ADR.md](ADR.md):
 
 - **Login por password grant.** É atalho de demo; o fluxo certo para app é Authorization Code com PKCE.
-- **Sessão só na memória.** Fechar o app pede o login de novo (os favoritos e as reservas continuam).
-- **Agendamentos do aparelho.** O back-end não tem rota para listar reservas: a aba mostra as que foram feitas neste aparelho.
+- **Sessão só na memória.** Fechar o app pede o login de novo (os favoritos continuam, e as reservas voltam do servidor).
 - **Bairro vem do endereço.** O contrato não tem campo de bairro; endereço fora do formato "Rua, número - Bairro" entra no filtro como "Outros".
 - **Web não é alvo.** O BFF não tem CORS: no navegador o app só funciona pelo `tool/web.sh`, que é apoio de desenvolvimento.
 
