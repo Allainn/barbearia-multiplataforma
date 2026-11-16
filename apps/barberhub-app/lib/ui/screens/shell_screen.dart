@@ -43,6 +43,7 @@ class _ShellScreenState extends State<ShellScreen> {
         children: [
           BarbeariasScreen(
             controller: widget.dependencies.barbearias,
+            buscasRecentes: widget.dependencies.buscasRecentes,
             favoritos: widget.dependencies.favoritos,
             onAbrir: _abrirDetalhe,
           ),
