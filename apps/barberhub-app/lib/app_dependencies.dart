@@ -7,6 +7,7 @@ import 'data/auth_repository.dart';
 import 'data/barbearia_repository.dart';
 import 'data/bff_client.dart';
 import 'data/buscas_recentes_repository.dart';
+import 'data/catalogo_nomes.dart';
 import 'data/disponibilidade_repository.dart';
 import 'data/favoritos_repository.dart';
 import 'data/reservas_local_repository.dart';
@@ -71,6 +72,7 @@ class AppDependencies {
       agendamentos: AgendamentosController(
         ReservasLocalRepository(prefs),
         agendamentoRepository,
+        CatalogoNomes(barbeariaRepository),
       ),
     );
   }

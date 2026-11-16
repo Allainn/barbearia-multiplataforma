@@ -1,11 +1,21 @@
 import 'bff_client.dart';
 import 'models/agendamento.dart';
 
-/// Reservas, no lado de escrita (agendamento-service).
+/// Reservas do cliente no agendamento-service, pelo BFF.
 class AgendamentoRepository {
   AgendamentoRepository(this._bff);
 
   final BffClient _bff;
+
+  /// `GET /agendamentos`: as reservas do cliente do token, confirmadas e canceladas, no
+  /// formato do 201. `[]` para quem ainda não reservou (ADR-0016).
+  Future<List<Agendamento>> listar() async {
+    final json = await _bff.get('/agendamentos') as List;
+    return [
+      for (final item in json)
+        Agendamento.fromJson(item as Map<String, dynamic>),
+    ];
+  }
 
   /// `POST /agendamentos`: 201 com a reserva, ou `ApiException` de conflito (409) se outro
   /// cliente reservou o mesmo horário primeiro (ADR-0007).
